@@ -218,59 +218,6 @@ void AddExistingFilesDialog::slotOk() {
 
 	KFileItemListIterator items(*importView->items());
 
-	// contains at the end only the imported files outside the subproject directory
-// 	KFileItemList outsideList;
-
-// 	QStringList stringList;
-
-	// collect "outside" files
-// 	for (; items.current(); ++items) {
-// 		// kdDebug ( 9020 ) << " **** " << (  *items )->url().directory() << "***** " << m_spitem->path << endl;
-// 		if ((*items)->url().directory() != m_spitem->path) {
-// 			stringList.append((*items)->name());
-// 			outsideList.append((*items));
-// 		}
-// 	}
-
-// 	progressBar->setTotalSteps(outsideList.count() + importView->items()->count());
-
-// 	if (outsideList.count() > 0) {
-// 		if (KMessageBox::questionYesNoList(this, i18n(
-// 		                                       "The following file(s) are not in the Subproject directory.\n"
-// 		                                       "Press Link to add the files by creating symbolic links.\n"
-// 		                                       "Press Copy to copy the files into the directory."),
-// 		                                   stringList, i18n("Warning"), KGuiItem(i18n("Link (recommended)")), KGuiItem(i18n("Copy (not recommended)"))) == KMessageBox::No) {
-// 			// Copy files into the Subproject directory
-// 			KFileItemListIterator it(outsideList) ;
-// 
-// 			for (; it.current(); ++it) {
-// 				KProcess proc;
-// 
-// 				proc << "cp";
-// 				proc << (*it)->url().path();
-// 				proc << m_spitem->path;
-// 				proc.start(KProcess::DontCare);
-// 
-// 				progressBar->setValue(progressBar->value() + 1);
-// 			}
-// 		} else {
-// 			// Link them into the Subproject directory
-// 			KFileItemListIterator it(outsideList) ;
-// 
-// 			for (; it.current(); ++it) {
-// 				KProcess proc;
-// 
-// 				proc << "ln";
-// 				proc << "-s";
-// 				proc << URLUtil::relativePathToFile(m_spitem->path, (*it)->url().path());
-// 				proc << m_spitem->path;
-// 				proc.start(KProcess::DontCare);
-// 
-// 				progressBar->setValue(progressBar->value() + 1);
-// 			}
-// 		}
-// 	}
-
 	items.toFirst();
 
 	QString canontargetname = AutoProjectTool::canonicalize(m_titem->name);
@@ -301,8 +248,7 @@ void AddExistingFilesDialog::slotOk() {
       }
     }
     else {
-      sNewPath = m_spitem->path.mid(m_part->projectDirectory().length() + 1) + "/" + (*items)->name();
-//       m_spitem->variables [ varname ] += (" " + (*items)->name());
+      sNewPath = sNewName;
     }
 
     m_spitem->variables [ varname ] += (" " + sNewPath);  // add to Makefile.am source variable
@@ -313,7 +259,6 @@ void AddExistingFilesDialog::slotOk() {
 		m_titem->sources.append(fitem);
 		m_titem->insertItem(fitem);
 
-// 		fileList.append(m_spitem->path.mid(m_part->projectDirectory().length() + 1) + "/" + (*items)->name());
     fileList.append(sNewPath);
 
 		progressBar->setValue(progressBar->value() + 1);
