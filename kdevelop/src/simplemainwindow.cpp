@@ -201,7 +201,7 @@ void SimpleMainWindow::contextMenu(QPopupMenu *popupMenu, const Context *context
   }
 }
 
-void SimpleMainWindow::embedPartView(QWidget *view, const QString &title, const QString &/*toolTip*/) {
+void SimpleMainWindow::embedPartView(QWidget *view, const QString &title, const QString &toolTip) {
   kdDebug() << "SimpleMainWindow::embedPartView: " << view << endl;
   if (!view)
     return;
@@ -210,6 +210,7 @@ void SimpleMainWindow::embedPartView(QWidget *view, const QString &title, const 
   shortName = shortName.right(shortName.length() - (shortName.findRev('/') + 1));
 
   addWidget(view, title);
+  m_activeTabWidget->setTabToolTip(view, QString("<strong>Path: </strong>" + toolTip));
   view->show();
 }
 
