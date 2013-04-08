@@ -14,8 +14,8 @@
     <ignoreparts/>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description/>
-    <defaultencoding/>
+    <description></description>
+    <defaultencoding></defaultencoding>
     <versioncontrol/>
   </general>
   <kdevfileview>
@@ -73,11 +73,11 @@
   </kdevdoctreeview>
   <kdevdebugger>
     <general>
-      <dbgshell/>
-      <gdbpath/>
-      <configGdbScript/>
-      <runShellScript/>
-      <runGdbScript/>
+      <dbgshell></dbgshell>
+      <gdbpath></gdbpath>
+      <configGdbScript></configGdbScript>
+      <runShellScript></runShellScript>
+      <runGdbScript></runGdbScript>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
@@ -132,7 +132,7 @@
       <includePaths>.;</includePaths>
     </codecompletion>
     <creategettersetter>
-      <prefixGet/>
+      <prefixGet></prefixGet>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
@@ -162,31 +162,31 @@
     <configurations>
       <default>
         <envvars/>
-        <configargs>--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
-        <builddir/>
-        <topsourcedir/>
-        <cppflags/>
-        <ldflags/>
+        <configargs>--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc --disable-vstudioproject</configargs>
+        <builddir></builddir>
+        <topsourcedir></topsourcedir>
+        <cppflags></cppflags>
+        <ldflags></ldflags>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
-        <ccompilerbinary/>
-        <cxxcompilerbinary/>
-        <f77compilerbinary/>
+        <ccompilerbinary></ccompilerbinary>
+        <cxxcompilerbinary></cxxcompilerbinary>
+        <f77compilerbinary></f77compilerbinary>
         <cflags>-O0 -ggdb3 -Wall</cflags>
         <cxxflags>-O0 -ggdb3 -Wall</cxxflags>
-        <f77flags/>
+        <f77flags></f77flags>
       </default>
     </configurations>
     <general>
       <useconfiguration>default</useconfiguration>
     </general>
     <run>
-      <mainprogram>/home/rainman/projects/kde/kdevelop/src/kdevelop</mainprogram>
-      <programargs>--profile CandCppIDE</programargs>
+      <mainprogram/>
+      <programargs/>
       <globaldebugarguments/>
-      <globalcwd>/home/rainman/projects/kde/kdevelop</globalcwd>
-      <useglobalprogram>true</useglobalprogram>
+      <globalcwd/>
+      <useglobalprogram>false</useglobalprogram>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
       <autoinstall>false</autoinstall>

@@ -18,7 +18,6 @@ service_DATA = libvsslnexplorer.desktop
 rcdir = $(kde_datadir)/kdevclassview
 rc_DATA = kdevclassview.rc
 
-
 QTDIR = /home/bernd/kdesrc/qt-copy
 
 foo: digraphview.cpp digraphview.h

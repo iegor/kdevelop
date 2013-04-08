@@ -147,9 +147,12 @@ AM_CONDITIONAL(include_customproject, test "$customproject" = "yes")
 AC_ARG_ENABLE(scriptproject, AC_HELP_STRING([--disable-scriptproject], [disable build tool support for script]), [scriptproject=${enableval}], [scriptproject=yes])
 AM_CONDITIONAL(include_scriptproject, test "$scriptproject" = "yes")
 
+AC_ARG_ENABLE(vstudioproject, AC_HELP_STRING([--disable-vstudioproject], [disable build tool support vstudio]), [vstudioproject=$(enableval)],
+[vstudioproject=yes])
+AM_CONDITIONAL(include_vstudioproject, test "$vstudioproject" = "yes")
+
 AC_ARG_ENABLE(trollproject, AC_HELP_STRING([--disable-trollproject], [disable build tool support for qmake]), [trollproject=${enableval}], [trollproject=yes])
 AM_CONDITIONAL(include_trollproject, test "$trollproject" = "yes")
-
 
 dnl  **********
 dnl  Check which version control systems support should be compiled
@@ -359,6 +362,7 @@ AC_CONFIG_FILES([ buildtools/lib/widgets/Makefile ])
 AC_CONFIG_FILES([ buildtools/pascal/Makefile ])
 AC_CONFIG_FILES([ buildtools/qmake/Makefile ])
 AC_CONFIG_FILES([ buildtools/script/Makefile ])
+AC_CONFIG_FILES([ buildtools/vstudio/Makefile ])
 AC_CONFIG_FILES([ doc/Makefile ])
 AC_CONFIG_FILES([ doc/extras/Makefile ])
 AC_CONFIG_FILES([ doc/extras/w3c/Makefile ])
