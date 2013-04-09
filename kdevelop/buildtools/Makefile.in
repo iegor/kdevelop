@@ -412,7 +412,7 @@ xdg_menudir = @xdg_menudir@
 @include_scriptproject_TRUE@SCRIPT_BUILDTOOL = script
 
 #kdevelop: VSTUDIO_BUILDTOOL = vstudio
-@include_vstudioproject_TRUE@VSTUDIO_BUILDTOOL = vstudio
+@include_vstudio_TRUE@VSTUDIO_BUILDTOOL = vstudio
 SUBDIRS = lib $(ADA_BUILDTOOL) $(ANT_BUILDTOOL) $(AUTOTOOLS_BUILDTOOL) \
 	$(CUSTOMMAKEFILES_BUILDTOOL) $(PASCAL_BUILDTOOL) $(QMAKE_BUILDTOOL) $(SCRIPT_BUILDTOOL) \
 	$(VSTUDIO_BUILDTOOL)

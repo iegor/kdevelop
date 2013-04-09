@@ -138,8 +138,8 @@ class FunctionCompletion : public CustomCompleter {
 };
 
 
-typedef KDevGenericFactory<VStudioPart> ClassViewFactory;
-static const KDevPluginInfo data("kdevclassview");
+typedef KDevGenericFactory<VStudioPart> VStudioFactory;
+static const KDevPluginInfo data("kdevvstudio");
 K_EXPORT_COMPONENT_FACTORY( libkdevvstudio, VStudioFactory( data ) )
 
 VStudioPart::VStudioPart(QObject *parent, const char *name, const QStringList& )
@@ -147,14 +147,14 @@ VStudioPart::VStudioPart(QObject *parent, const char *name, const QStringList& )
     KDevCodeBrowserFrontend( &data, parent, name ? name : "VStudioPart" ),
     m_activeDocument(0), m_activeView(0), m_activeSelection(0), m_activeEditor(0), m_activeViewCursor(0), m_hierarchyDlg(0)
 {
-    setInstance(ClassViewFactory::instance());
+    setInstance(VStudioFactory::instance());
     setXMLFile("kdevvstudio.rc");
 
     navigator = new Navigator(this);
 
     setupActions();
 
-    m_widget = new ClassViewWidget(this);
+    m_widget = new VSSlnExplorerWidget(this);
     m_widget->setIcon( SmallIcon("view_tree") );
     m_widget->setCaption(i18n("VS Solution Explorer"));
     mainWindow()->embedSelectView( m_widget, i18n("Solution"), i18n("sln explorer") );
@@ -215,7 +215,7 @@ void VStudioPart::setupActions( )
     }
 }
 
-bool ClassViewPart::langHasFeature(KDevLanguageSupport::Features feature)
+bool VStudioPart::langHasFeature(KDevLanguageSupport::Features feature)
 {
     bool result = false;
     if (languageSupport())
@@ -223,7 +223,7 @@ bool ClassViewPart::langHasFeature(KDevLanguageSupport::Features feature)
     return result;
 }
 
-void ClassViewPart::graphicalClassView( )
+void VStudioPart::graphicalClassView( )
 {
     if( !m_hierarchyDlg )
         m_hierarchyDlg = new HierarchyDialog(this);
@@ -231,12 +231,12 @@ void ClassViewPart::graphicalClassView( )
     m_hierarchyDlg->show();
 }
 
-void ClassViewPart::refresh() {
+void VStudioPart::refresh() {
 	if( navigator )
 			navigator->refresh();
 }
 
-void ClassViewPart::activePartChanged( KParts::Part * part)
+void VStudioPart::activePartChanged( KParts::Part * part)
 {
     navigator->stopTimer();
     if (m_activeView)
@@ -270,9 +270,9 @@ void ClassViewPart::activePartChanged( KParts::Part * part)
             navigator, SLOT(slotCursorPositionChanged()) );
     }
 }
-void ClassViewPart::slotFocusNavbar()
+void VStudioPart::slotFocusNavbar()
 {
     m_functionsnav->view()->setFocus();
 }
 
-#include "classviewpart.moc"
+#include "vstudiopart.moc"

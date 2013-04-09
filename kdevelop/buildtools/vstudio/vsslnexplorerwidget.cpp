@@ -19,8 +19,8 @@
  * Partially based on KDE Studio ClassListView http://www.thekompany.com/projects/kdestudio/
  */
 
-#include "classviewpart.h"
-#include "classviewwidget.h"
+#include "vstudiopart.h"
+#include "vsslnexplorerwidget.h"
 
 #include <kiconloader.h>
 #include <kinstance.h>
@@ -48,8 +48,8 @@
 
 // namespace ?!?
 
-ClassViewWidget::ClassViewWidget( ClassViewPart * part )
-    : KListView( 0, "ClassViewWidget" ), QToolTip( viewport() ), m_part( part ), m_projectDirectoryLength( 0 )
+VSSlnExplorerWidget::VSSlnExplorerWidget( VStudioPart * part )
+    : KListView( 0, "VSSlnExplorerWidget" ), QToolTip( viewport() ), m_part( part ), m_projectDirectoryLength( 0 )
 {
     addColumn( "" );
     header()->hide();
@@ -74,10 +74,10 @@ ClassViewWidget::ClassViewWidget( ClassViewPart * part )
     m_actionNewClass = new KAction( i18n("New Class..."), KShortcut(), this, SLOT(slotNewClass()),
 				    m_part->actionCollection(), "classview_new_class" );
     m_actionNewClass->setWhatsThis(i18n("<b>New class</b><p>Calls the <b>New Class</b> wizard."));
-	
+
 	m_actionCreateAccessMethods = new KAction( i18n("Create get/set Methods"), KShortcut(), this, SLOT(slotCreateAccessMethods()), m_part->actionCollection(), "classview_create_access_methods" );
-	
-	
+
+
     m_actionAddMethod = new KAction( i18n("Add Method..."), KShortcut(), this, SLOT(slotAddMethod()),
 				    m_part->actionCollection(), "classview_add_method" );
     m_actionAddMethod->setWhatsThis(i18n("<b>Add method</b><p>Calls the <b>New Method</b> wizard."));
@@ -100,7 +100,7 @@ ClassViewWidget::ClassViewWidget( ClassViewPart * part )
     m_doFollowEditor = config->readBoolEntry( "FollowEditor", false );
 }
 
-ClassViewWidget::~ClassViewWidget( )
+VSSlnExplorerWidget::~VSSlnExplorerWidget( )
 {
     KConfig* config = m_part->instance()->config();
     config->setGroup( "General" );
@@ -113,7 +113,7 @@ template <class ModelType, class ListItemType>
         static bool selectItemG( ItemDom item, const QMap<KSharedPtr<ModelType>, ListItemType*>& map )
 {
     ModelType* c = dynamic_cast<ModelType*>( &(*item) );
-    
+
     if( c ) {
         KSharedPtr<ModelType> d( c );
         typename QMap<KSharedPtr<ModelType>, ListItemType*>::ConstIterator it = map.find(d);
@@ -126,7 +126,7 @@ template <class ModelType, class ListItemType>
 }
 
 
-void ClassViewWidget::slotExecuted( QListViewItem* item )
+void VSSlnExplorerWidget::slotExecuted( QListViewItem* item )
 {
     if( ClassViewItem* cbitem = dynamic_cast<ClassViewItem*>( item ) ){
 	if( cbitem->hasImplementation() )
@@ -136,7 +136,7 @@ void ClassViewWidget::slotExecuted( QListViewItem* item )
     }
 }
 
-void ClassViewWidget::clear( )
+void VSSlnExplorerWidget::clear( )
 {
     KListView::clear();
     removedText.clear();
@@ -154,7 +154,7 @@ void restoreOpenNodes( QStringList & list, QListViewItem * item )
 			restoreOpenNodes( list, item->firstChild() );
 		}
 		else
-		{	
+		{
 			restoreOpenNodes( list, item->nextSibling() );
 		}
 	}
@@ -175,7 +175,7 @@ void storeOpenNodes( QValueList<QStringList> & openNodes, QStringList const & li
 	}
 }
 
-void ClassViewWidget::refresh()
+void VSSlnExplorerWidget::refresh()
 {
     if( !m_part->project() )
 	return;
@@ -207,7 +207,7 @@ void ClassViewWidget::refresh()
     blockSignals( false );
 }
 
-void ClassViewWidget::slotProjectOpened( )
+void VSSlnExplorerWidget::slotProjectOpened( )
 {
     m_projectItem = new FolderBrowserItem( this, this, m_part->project()->projectName() );
     m_projectItem->setOpen( true );
@@ -226,12 +226,11 @@ void ClassViewWidget::slotProjectOpened( )
 	     this, SLOT(insertFile(const QString&)) );
 }
 
-void ClassViewWidget::slotProjectClosed( )
+void VSSlnExplorerWidget::slotProjectClosed( )
 {
 }
 
-
-void ClassViewWidget::insertFile( const QString& fileName )
+void VSSlnExplorerWidget::insertFile( const QString& fileName )
 {
     QString fn = URLUtil::canonicalPath( fileName );
     //kdDebug() << "======================== insertFile(" << fn << ")" << endl;
@@ -272,7 +271,7 @@ void ClassViewWidget::insertFile( const QString& fileName )
     m_projectItem->processFile( dom, path );
 }
 
-void ClassViewWidget::removeFile( const QString& fileName )
+void VSSlnExplorerWidget::removeFile( const QString& fileName )
 {
     QString fn = URLUtil::canonicalPath( fileName );
     //kdDebug() << "======================== removeFile(" << fn << ")" << endl;
@@ -313,7 +312,7 @@ void ClassViewWidget::removeFile( const QString& fileName )
     m_projectItem->processFile( dom, path, true );
 }
 
-void ClassViewWidget::contentsContextMenuEvent( QContextMenuEvent * ev )
+void VSSlnExplorerWidget::contentsContextMenuEvent( QContextMenuEvent * ev )
 {
     KPopupMenu menu( this );
 
@@ -336,15 +335,15 @@ void ClassViewWidget::contentsContextMenuEvent( QContextMenuEvent * ev )
             m_actionAddMethod->plug( &menu );
             sep = true;
         }
-	
+
         if( m_part->langHasFeature(KDevLanguageSupport::AddAttribute) ) {
 	    m_actionAddAttribute->plug( &menu );
             sep = true;
-        }	
+        }
     }
-	
+
 	if (item && item->isVariable()){
-		if( m_part->langHasFeature(KDevLanguageSupport::CreateAccessMethods) ) 
+		if( m_part->langHasFeature(KDevLanguageSupport::CreateAccessMethods) )
 				m_actionCreateAccessMethods->plug( &menu );
 	}
 
@@ -367,11 +366,11 @@ void ClassViewWidget::contentsContextMenuEvent( QContextMenuEvent * ev )
     ev->consume();
 }
 
-void ClassViewWidget::setViewMode( int mode ) {
+void VSSlnExplorerWidget::setViewMode( int mode ) {
     m_actionViewMode->setCurrentItem( mode );
 }
 
-int ClassViewWidget::viewMode( ) const
+int VSSlnExplorerWidget::viewMode( ) const
 {
      return m_actionViewMode->currentItem();
 }
@@ -396,7 +395,7 @@ void ClassViewItem::select( ) {
 }
 
 
-bool ClassViewWidget::selectItem( ItemDom item ) {
+bool VSSlnExplorerWidget::selectItem( ItemDom item ) {
     if(!m_projectItem || !isVisible()) return false;
     if(item->isFunctionDefinition() && dynamic_cast<FunctionDefinitionModel*>(&(*item)) != 0) {
         FunctionList lst;
@@ -406,7 +405,7 @@ bool ClassViewWidget::selectItem( ItemDom item ) {
 
         item = *lst.begin();
     }
-    
+
     return m_projectItem->selectItem( item );
 }
 
@@ -424,24 +423,24 @@ bool FolderBrowserItem::selectItem(ItemDom item)
     if(item->kind() == CodeModelItem::Function) {
         if( selectItemG ( item, m_functions ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::TypeAlias) {
         if( selectItemG ( item, m_typeAliases ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::Variable) {
         if( selectItemG ( item, m_variables ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::Namespace) {
         ///searching for namespaces is currently not supported and not useful
     }
-    
+
     for( QMap<ClassDom, ClassDomBrowserItem*>::Iterator it = m_classes.begin(); it != m_classes.end(); ++it ) {
         if( (*it)->selectItem(item) )
             return true;
     }
-    
+
     for( QMap<QString, NamespaceDomBrowserItem*>::Iterator it = m_namespaces.begin(); it != m_namespaces.end(); ++it ) {
         if( (*it)->selectItem(item) )
             return true;
@@ -642,7 +641,7 @@ void FolderBrowserItem::processVariable( VariableDom var, bool remove )
 }
 
 // ------------------------------------------------------------------------
-bool NamespaceDomBrowserItem::selectItem( ItemDom item) 
+bool NamespaceDomBrowserItem::selectItem( ItemDom item)
 {
     if(item->kind() == CodeModelItem::Class) {
         if( selectItemG ( item, m_classes ) ) return true;
@@ -651,24 +650,24 @@ bool NamespaceDomBrowserItem::selectItem( ItemDom item)
     if(item->kind() == CodeModelItem::Function) {
         if( selectItemG ( item, m_functions ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::TypeAlias) {
         if( selectItemG ( item, m_typeAliases ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::Variable) {
         if( selectItemG ( item, m_variables ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::Namespace) {
         ///currently not neccessary..
     }
-    
+
     for(QMap<ClassDom, ClassDomBrowserItem*>::Iterator it = m_classes.begin(); it != m_classes.end(); ++it) {
         if( (*it)->selectItem(item) )
             return true;
     }
-    
+
     for(QMap<QString, NamespaceDomBrowserItem*>::Iterator it = m_namespaces.begin(); it != m_namespaces.end(); ++it) {
         if( (*it)->selectItem(item) )
             return true;
@@ -816,7 +815,7 @@ void NamespaceDomBrowserItem::processVariable( VariableDom var, bool remove )
 // ------------------------------------------------------------------------
 
 
-bool ClassDomBrowserItem::selectItem(ItemDom item) 
+bool ClassDomBrowserItem::selectItem(ItemDom item)
 {
     if(item->kind() == CodeModelItem::Class) {
         if( selectItemG ( item, m_classes ) ) return true;
@@ -825,15 +824,15 @@ bool ClassDomBrowserItem::selectItem(ItemDom item)
     if(item->kind() == CodeModelItem::Function) {
         if( selectItemG ( item, m_functions ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::TypeAlias) {
         if( selectItemG ( item, m_typeAliases ) ) return true;
     }
-    
+
     if(item->kind() == CodeModelItem::Variable) {
         if( selectItemG ( item, m_variables ) ) return true;
     }
-    
+
     for(QMap<ClassDom, ClassDomBrowserItem*>::Iterator it = m_classes.begin(); it != m_classes.end(); ++it) {
         if( (*it)->selectItem(item) )
             return true;
@@ -984,7 +983,7 @@ void FunctionDomBrowserItem::setup( )
 
 	if ( m_dom->isSignal() )
 		methodType = "signal";
-	else if (m_dom->isSlot() ) 
+	else if (m_dom->isSlot() )
 		methodType = "slot";
 	else
 		methodType = "meth";
@@ -999,7 +998,7 @@ void FunctionDomBrowserItem::setup( )
     setPixmap( 0, UserIcon(iconName, KIcon::DefaultState, listView()->m_part->instance()) );
 
     QString txt = listView()->m_part->languageSupport()->formatModelItem(m_dom.data(), true);
-    
+
     item() = highlightFunctionName(txt, 1, m_styles);
 }
 
@@ -1106,13 +1105,13 @@ QString VariableDomBrowserItem::key( int , bool ) const
     return "5 " + text( 0 );
 }
 
-void ClassViewWidget::slotNewClass( )
+void VSSlnExplorerWidget::slotNewClass( )
 {
     if( m_part->languageSupport()->features() & KDevLanguageSupport::NewClass )
 	m_part->languageSupport()->addClass();
 }
 
-void ClassViewWidget::slotAddMethod( )
+void VSSlnExplorerWidget::slotAddMethod( )
 {
     if ( !selectedItem() ) return;
 
@@ -1120,25 +1119,25 @@ void ClassViewWidget::slotAddMethod( )
         m_part->languageSupport()->addMethod( static_cast<ClassDomBrowserItem*>( selectedItem() )->dom() );
 }
 
-void ClassViewWidget::slotAddAttribute( )
+void VSSlnExplorerWidget::slotAddAttribute( )
 {
     if ( !selectedItem() ) return;
-    
+
     if( m_part->languageSupport()->features() & KDevLanguageSupport::AddAttribute )
         m_part->languageSupport()->addAttribute( static_cast<ClassDomBrowserItem*>( selectedItem() )->dom() );
 }
 
-void ClassViewWidget::slotOpenDeclaration( )
+void VSSlnExplorerWidget::slotOpenDeclaration( )
 {
     if ( !selectedItem() ) return;
-    
+
     static_cast<ClassViewItem*>( selectedItem() )->openDeclaration();
 }
 
-void ClassViewWidget::slotOpenImplementation( )
+void VSSlnExplorerWidget::slotOpenImplementation( )
 {
     if ( !selectedItem() ) return;
-    
+
     static_cast<ClassViewItem*>( selectedItem() )->openImplementation();
 }
 
@@ -1165,13 +1164,13 @@ bool FunctionDomBrowserItem::hasImplementation() const
     return !lst.isEmpty();
 }
 
-void ClassViewWidget::maybeTip( QPoint const & p )
+void VSSlnExplorerWidget::maybeTip( QPoint const & p )
 {
 	ClassViewItem * item = dynamic_cast<ClassViewItem*>( itemAt( p ) );
 	if ( !item ) return;
-	
+
 	QString tooltip;
-	
+
 	if ( item->isNamespace() )
 	{
 		NamespaceDomBrowserItem * nitem = dynamic_cast<NamespaceDomBrowserItem*>( item );
@@ -1185,8 +1184,8 @@ void ClassViewWidget::maybeTip( QPoint const & p )
 		ClassDomBrowserItem * citem = dynamic_cast<ClassDomBrowserItem*>( item );
 		if ( citem )
 		{
-			tooltip = citem->dom()->scope().join("::") + "::" 
-				+ citem->dom()->name() + " : " 
+			tooltip = citem->dom()->scope().join("::") + "::"
+				+ citem->dom()->name() + " : "
 				+ citem->dom()->baseClassList().join(", ");
 		}
 	}
@@ -1211,17 +1210,17 @@ void ClassViewWidget::maybeTip( QPoint const & p )
 				arguments << ((*it)->type() + " " + (*it)->name());
 				++it;
 			}
-			
+
 			QString strstatic = fitem->dom()->isStatic() ? QString( "[static] " ) : QString::null;
 			QString strsignal = fitem->dom()->isSignal() ? QString( "[signal] " ) : QString::null;
 			QString strslot = fitem->dom()->isSlot() ? QString( "[slot] " ) : QString::null;
 			QString strresult = !fitem->dom()->resultType().isEmpty() ? fitem->dom()->resultType() + " " : QString::null;
-			
+
 			QString strconstant = fitem->dom()->isConstant() ? QString( " [const]" ) : QString::null;
 			QString strabstract = fitem->dom()->isAbstract() ? QString( " [abstract]" ) : QString::null;
-			
+
 			tooltip = access + strstatic + strsignal + strslot + strresult
-				+ fitem->dom()->scope().join("::") + "::" + fitem->dom()->name() 
+				+ fitem->dom()->scope().join("::") + "::" + fitem->dom()->name()
 				+ "(" + arguments.join(", ") + ")" + strconstant + strabstract;
 		}
 	}
@@ -1240,7 +1239,7 @@ void ClassViewWidget::maybeTip( QPoint const & p )
 
 			QString strstatic = vitem->dom()->isStatic() ? QString( "[static] " ) : QString::null;
 			tooltip = access + strstatic + vitem->dom()->type() + " " + vitem->dom()->name();
-		}	
+		}
 	}
 	else if ( item->isTypeAlias() )
 	{
@@ -1249,16 +1248,16 @@ void ClassViewWidget::maybeTip( QPoint const & p )
 			tooltip = QString( "[Type] " ) + titem->dom()->type() + " " + titem->dom()->name();
 		}
 	}
-        
+
         const int maxCommentSize = 300;
-	
+
         if( !item->comment().isEmpty() ) {
             tooltip += "\n";
             tooltip += item->comment().length() > maxCommentSize ? item->comment().left( maxCommentSize ) + " [...]" : item->comment();
         }
-        
+
 	kdDebug(0) << tooltip << endl;
-	
+
 	QRect r = itemRect( item );
 
 	if ( item && r.isValid() && !tooltip.isEmpty() )
@@ -1267,7 +1266,7 @@ void ClassViewWidget::maybeTip( QPoint const & p )
 	}
 }
 
-void ClassViewWidget::slotCreateAccessMethods( )
+void VSSlnExplorerWidget::slotCreateAccessMethods( )
 {
 	if ( !selectedItem() ) return;
 
@@ -1276,20 +1275,19 @@ void ClassViewWidget::slotCreateAccessMethods( )
         VariableDomBrowserItem* item = dynamic_cast<VariableDomBrowserItem*>( selectedItem() );
 		if (item == 0)
 			return;
-		
+
 		m_part->languageSupport()->createAccessMethods(static_cast<ClassModel*>(static_cast<ClassDomBrowserItem*>(item->parent())->dom()),static_cast<VariableModel*>(item->dom()));
 	}
 }
 
-void ClassViewWidget::slotFollowEditor()
+void VSSlnExplorerWidget::slotFollowEditor()
 {
 	m_doFollowEditor = m_actionFollowEditor->isChecked();
 }
 
-bool ClassViewWidget::doFollowEditor()
+bool VSSlnExplorerWidget::doFollowEditor()
 {
 	return m_doFollowEditor;
 }
 
-
-#include "classviewwidget.moc"
+#include "vsslnexplorerwidget.moc"

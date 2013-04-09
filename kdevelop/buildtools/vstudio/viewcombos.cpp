@@ -25,14 +25,14 @@
 #include "kcomboview.h"
 
 #include "viewcombos.h"
-#include "classviewpart.h"
+#include "vstudiopart.h"
 
-NamespaceItem::NamespaceItem(ClassViewPart *part, QListView *parent, QString name, NamespaceDom dom)
+NamespaceItem::NamespaceItem(VStudioPart *part, QListView *parent, QString name, NamespaceDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
 
-NamespaceItem::NamespaceItem(ClassViewPart *part, QListViewItem *parent, QString name, NamespaceDom dom)
+NamespaceItem::NamespaceItem(VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
@@ -53,12 +53,12 @@ void NamespaceItem::setup()
 }
 
 
-ClassItem::ClassItem(ClassViewPart *part, QListView *parent, QString name, ClassDom dom)
+ClassItem::ClassItem(VStudioPart *part, QListView *parent, QString name, ClassDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
 
-ClassItem::ClassItem(ClassViewPart *part, QListViewItem *parent, QString name, ClassDom dom)
+ClassItem::ClassItem(VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
@@ -79,12 +79,12 @@ void ClassItem::setup()
 }
 
 
-FunctionItem::FunctionItem(ClassViewPart *part, QListView *parent, QString name, FunctionDom dom)
+FunctionItem::FunctionItem(VStudioPart *part, QListView *parent, QString name, FunctionDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
 
-FunctionItem::FunctionItem(ClassViewPart *part, QListViewItem *parent, QString name, FunctionDom dom)
+FunctionItem::FunctionItem(VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom)
     :QListViewItem(parent, name), m_dom(dom), m_part(part)
 {
 }
@@ -114,7 +114,7 @@ void FunctionItem::setup()
 
 namespace ViewCombosOp{
 
-void refreshNamespaces(ClassViewPart *part, KComboView *view)
+void refreshNamespaces(VStudioPart *part, KComboView *view)
 {
     view->clear();
 
@@ -131,7 +131,7 @@ void refreshNamespaces(ClassViewPart *part, KComboView *view)
     view->setCurrentActiveItem(global_item);
 }
 
-void refreshClasses(ClassViewPart *part, KComboView *view, const QString &dom)
+void refreshClasses(VStudioPart *part, KComboView *view, const QString &dom)
 {
     view->clear();
 
@@ -154,7 +154,7 @@ void refreshClasses(ClassViewPart *part, KComboView *view, const QString &dom)
     }
 }
 
-void refreshFunctions(ClassViewPart *part, KComboView *view, const ClassDom & dom)
+void refreshFunctions(VStudioPart *part, KComboView *view, const ClassDom & dom)
 {
     view->clear();
 
@@ -168,7 +168,7 @@ void refreshFunctions(ClassViewPart *part, KComboView *view, const ClassDom & do
     }
 }
 
-void refreshFunctions(ClassViewPart *part, KComboView *view, const QString & dom)
+void refreshFunctions(VStudioPart *part, KComboView *view, const QString & dom)
 {
     view->clear();
 

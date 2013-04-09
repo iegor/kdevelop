@@ -32,7 +32,7 @@
 #include <navigator.h>
 
 class KDevProject;
-class ClassViewPart;
+class VStudioPart;
 class ClassViewItem;
 class FolderBrowserItem;
 class NamespaceDomBrowserItem;
@@ -43,7 +43,7 @@ class VariableDomBrowserItem;
 class KSelectAction;
 class KToggleAction;
 
-class ClassViewWidget : public KListView, public QToolTip
+class VSSlnExplorerWidget : public KListView, public QToolTip
 {
     Q_OBJECT
 public:
@@ -55,8 +55,8 @@ public:
     };
 
 public:
-    ClassViewWidget( ClassViewPart *part );
-    virtual ~ClassViewWidget();
+    VSSlnExplorerWidget( VStudioPart *part );
+    virtual ~VSSlnExplorerWidget();
 
     int viewMode() const;
     void setViewMode( int mode );
@@ -65,7 +65,7 @@ public:
 
     bool selectItem(ItemDom item);
     bool doFollowEditor();
-    
+
     inline TextPaintStyleStore& paintStyles() {
         return m_paintStyles;
     }
@@ -92,7 +92,7 @@ private slots:
     void slotExecuted( QListViewItem* item );
 
 private:
-    ClassViewPart* m_part;
+    VStudioPart* m_part;
     QStringList removedText;
     QString m_projectDirectory;
     int m_projectDirectoryLength;
@@ -121,10 +121,10 @@ class ClassViewItem: public FancyListViewItem
     private:
 public:
     ClassViewItem( QListView* parent, const QString& text=QString::null )
-        : FancyListViewItem( static_cast<ClassViewWidget*>( parent )->m_paintStyles, parent, text ) {}
+        : FancyListViewItem( static_cast<VSSlnExplorerWidget*>( parent )->m_paintStyles, parent, text ) {}
     ClassViewItem( QListViewItem* parent, const QString& text=QString::null )
-    : FancyListViewItem( static_cast<ClassViewWidget*>( parent->listView() )->m_paintStyles, parent, text ) {}
-    
+    : FancyListViewItem( static_cast<VSSlnExplorerWidget*>( parent->listView() )->m_paintStyles, parent, text ) {}
+
     virtual const CodeModelItem* model() const { return 0; }
 
     virtual bool isFolder() const { return false; }
@@ -142,19 +142,19 @@ public:
     virtual void openImplementation() {}
 
     void select();
-    
+
     virtual QString comment();
-    
-    ClassViewWidget* listView() { return static_cast<ClassViewWidget*>( QListViewItem::listView() ); }
-    const ClassViewWidget* listView() const { return static_cast<ClassViewWidget*>( QListViewItem::listView() ); }
+
+    VSSlnExplorerWidget* listView() { return static_cast<VSSlnExplorerWidget*>( QListViewItem::listView() ); }
+    const VSSlnExplorerWidget* listView() const { return static_cast<VSSlnExplorerWidget*>( QListViewItem::listView() ); }
 };
 
 class FolderBrowserItem: public ClassViewItem
 {
 public:
-    FolderBrowserItem( ClassViewWidget* widget, QListView* parent, const QString& name=QString::null )
+    FolderBrowserItem( VSSlnExplorerWidget* widget, QListView* parent, const QString& name=QString::null )
     	: ClassViewItem( parent, name ), m_widget(widget) {}
-    FolderBrowserItem( ClassViewWidget* widget, QListViewItem* parent, const QString& name=QString::null )
+    FolderBrowserItem( VSSlnExplorerWidget* widget, QListViewItem* parent, const QString& name=QString::null )
     	: ClassViewItem( parent, name ), m_widget(widget) {}
 
     virtual bool isFolder() const { return true; }
@@ -178,7 +178,7 @@ private:
     QMap<FunctionDom, FunctionDomBrowserItem*> m_functions;
     QMap<VariableDom, VariableDomBrowserItem*> m_variables;
 
-    ClassViewWidget* m_widget;
+    VSSlnExplorerWidget* m_widget;
 };
 
 class NamespaceDomBrowserItem: public ClassViewItem
@@ -190,7 +190,7 @@ public:
     	: ClassViewItem( parent, dom->name() ), m_dom( dom ) {}
 
     const CodeModelItem* model() const { return m_dom; }
-    
+
     virtual bool isNamespace() const { return true; }
 
     void setup();
@@ -236,12 +236,12 @@ public:
     void processTypeAlias( TypeAliasDom typeAlias, bool remove=false );
     void processFunction( FunctionDom fun, bool remove=false );
     void processVariable( VariableDom var, bool remove=false );
-    
+
     virtual QString comment() {
         if( !m_dom ) return "";
         return m_dom->comment();
     }
-    
+
     bool selectItem(ItemDom item);
     ClassDom dom() { return m_dom; }
 
@@ -266,7 +266,7 @@ public:
 
     virtual bool hasDeclaration() const { return true; }
     virtual void openDeclaration();
-    
+
     virtual QString comment() {
         if( !m_dom ) return "";
         return m_dom->comment();
@@ -297,7 +297,7 @@ public:
 
     virtual void openDeclaration();
     virtual void openImplementation();
-    
+
     virtual QString comment() {
         if( !m_dom ) return "";
         return m_dom->comment();
@@ -325,7 +325,7 @@ public:
 
     virtual bool hasDeclaration() const { return true; }
     virtual bool hasImplementation() const { return false; }
-    
+
     virtual QString comment() {
         if( !m_dom ) return "";
         return m_dom->comment();

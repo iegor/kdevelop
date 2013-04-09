@@ -27,7 +27,7 @@
 
 class TextPaintStyleStore;
 class QTimer;
-class ClassViewPart;
+class VStudioPart;
 class QListViewItem;
 class KAction;
 
@@ -42,7 +42,7 @@ Q_OBJECT
 public:
     enum NavigationState { GoToDefinitions, GoToDeclarations };
 
-    Navigator(ClassViewPart *parent, const char *name = 0);
+    Navigator(VStudioPart *parent, const char *name = 0);
     ~Navigator();
 
     void stopTimer();
@@ -53,7 +53,7 @@ public:
 
     template <class DomType>
     TextPaintItem fullFunctionItem(DomType fun);
-    
+
 public slots:
     void selectFunctionNav(QListViewItem *item);
     void syncFunctionNav();
@@ -73,7 +73,7 @@ protected:
     QValueList<int> functionStartLines();
 
 private:
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
     QTimer *m_syncTimer;
     NavigationState m_state;
 
@@ -84,7 +84,7 @@ private:
 
     QMap<QString, QListViewItem*> m_functionNavDefs;
     QMap<QString, QListViewItem*> m_functionNavDecls;
-    
+
     TextPaintStyleStore m_styles;
 };
 

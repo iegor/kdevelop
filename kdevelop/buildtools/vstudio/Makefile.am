@@ -7,16 +7,16 @@ kde_module_LTLIBRARIES = libvsslnexplorer.la
 libvsslnexplorer_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
 libvsslnexplorer_la_LIBADD = $(top_builddir)/lib/libkdevelop.la $(top_builddir)/lib/widgets/libkdevwidgets.la $(LIB_KHTML) $(top_builddir)/lib/interfaces/extensions/libkdevextensions.la
 
-libvsslnexplorer_la_SOURCES = classviewpart.cpp classviewwidget.cpp \
+libvsslnexplorer_la_SOURCES = vstudiopart.cpp vsslnexplorerwidget.cpp \
 	digraphview.cpp hierarchydlg.cpp navigator.cpp viewcombos.cpp
 
 METASOURCES = AUTO
 
 servicedir = $(kde_servicesdir)
-service_DATA = libvsslnexplorer.desktop
+service_DATA = vsslnexplorer.kdesktop
 
-rcdir = $(kde_datadir)/kdevclassview
-rc_DATA = kdevclassview.rc
+rcdir = $(kde_datadir)/kdevvstudio
+rc_DATA = kdevvstudio.rc
 
 QTDIR = /home/bernd/kdesrc/qt-copy
 

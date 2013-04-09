@@ -35,8 +35,8 @@
 #include <kdevlanguagesupport.h>
 #include <kdevmainwindow.h>
 #include <codemodel_utils.h>
-#include "classviewpart.h"
-#include "classviewwidget.h"
+#include "vstudiopart.h"
+#include "vsslnexplorerwidget.h"
 
 //using namespace Widgets;
 
@@ -85,9 +85,9 @@ private:
 public:
     enum Type { Declaration, Definition };
 
-    FunctionNavItem(TextPaintStyleStore& styles, ClassViewPart *part, QListView *parent, QString name, Type type)
+    FunctionNavItem(TextPaintStyleStore& styles, VStudioPart *part, QListView *parent, QString name, Type type)
         :FancyListViewItem(styles, parent, name, ""), m_part(part), m_type(type) {}
-    FunctionNavItem(TextPaintStyleStore& styles, ClassViewPart *part, QListViewItem *parent, QString name, Type type)
+    FunctionNavItem(TextPaintStyleStore& styles, VStudioPart *part, QListViewItem *parent, QString name, Type type)
         :FancyListViewItem(styles, parent, name, ""), m_part(part), m_type(type) {}
     ~FunctionNavItem() {}
 
@@ -99,12 +99,12 @@ public:
     Type type() { return m_type; }
 
 private:
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
     Type m_type;
 };
 
 
-Navigator::Navigator(ClassViewPart *parent, const char *name)
+Navigator::Navigator(VStudioPart *parent, const char *name)
  : QObject(parent, name), m_part(parent)
 {
     m_state = GoToDefinitions;

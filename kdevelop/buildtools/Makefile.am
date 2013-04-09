@@ -41,7 +41,7 @@ SCRIPT_BUILDTOOL = script
 endif
 
 #kdevelop: VSTUDIO_BUILDTOOL = vstudio
-if include_vstudioproject
+if include_vstudio
 VSTUDIO_BUILDTOOL = vstudio
 endif
 

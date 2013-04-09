@@ -31,13 +31,13 @@
 #include "kdevlanguagesupport.h"
 #include "kcomboview.h"
 
-#include "classviewpart.h"
+#include "vstudiopart.h"
 //#include "classtoolwidget.h"
 #include "digraphview.h"
 #include "viewcombos.h"
 
 
-HierarchyDialog::HierarchyDialog( ClassViewPart *part )
+HierarchyDialog::HierarchyDialog( VStudioPart *part )
     : QDialog(0, "hierarchy dialog", false)
 {
     class_combo = new KComboView(true, 150, this);
@@ -187,9 +187,9 @@ void HierarchyDialog::slotClassComboChoice( const QString& itemText )
             ClassItem *ci = dynamic_cast<ClassItem*>(item);
             if (!ci)
                 return;
-        
+
             KDevLanguageSupport *ls = m_part->languageSupport();
-        
+
             QString className = ls->formatClassName(uclasses[item->text(0)]);
             digraph->setSelected(className);
             digraph->ensureVisible(className);

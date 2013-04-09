@@ -1,14 +1,14 @@
 /****************************************************************************
-** ClassViewWidget meta object code from reading C++ file 'classviewwidget.h'
+** VSSlnExplorerWidget meta object code from reading C++ file 'vsslnexplorerwidget.h'
 **
-** Created: Tue Feb 26 11:31:34 2013
+** Created: Tue Apr 9 00:30:30 2013
 **      by: The Qt MOC ($Id: qt/moc_yacc.cpp   3.3.8   edited Feb 2 14:59 $)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
 #undef QT_NO_COMPAT
-#include "classviewwidget.h"
+#include "vsslnexplorerwidget.h"
 #include <qmetaobject.h>
 #include <qapplication.h>
 
@@ -19,27 +19,27 @@
 #error "(The moc has changed too much.)"
 #endif
 
-const char *ClassViewWidget::className() const
+const char *VSSlnExplorerWidget::className() const
 {
-    return "ClassViewWidget";
+    return "VSSlnExplorerWidget";
 }
 
-QMetaObject *ClassViewWidget::metaObj = 0;
-static QMetaObjectCleanUp cleanUp_ClassViewWidget( "ClassViewWidget", &ClassViewWidget::staticMetaObject );
+QMetaObject *VSSlnExplorerWidget::metaObj = 0;
+static QMetaObjectCleanUp cleanUp_VSSlnExplorerWidget( "VSSlnExplorerWidget", &VSSlnExplorerWidget::staticMetaObject );
 
 #ifndef QT_NO_TRANSLATION
-QString ClassViewWidget::tr( const char *s, const char *c )
+QString VSSlnExplorerWidget::tr( const char *s, const char *c )
 {
     if ( qApp )
-	return qApp->translate( "ClassViewWidget", s, c, QApplication::DefaultCodec );
+	return qApp->translate( "VSSlnExplorerWidget", s, c, QApplication::DefaultCodec );
     else
 	return QString::fromLatin1( s );
 }
 #ifndef QT_NO_TRANSLATION_UTF8
-QString ClassViewWidget::trUtf8( const char *s, const char *c )
+QString VSSlnExplorerWidget::trUtf8( const char *s, const char *c )
 {
     if ( qApp )
-	return qApp->translate( "ClassViewWidget", s, c, QApplication::UnicodeUTF8 );
+	return qApp->translate( "VSSlnExplorerWidget", s, c, QApplication::UnicodeUTF8 );
     else
 	return QString::fromUtf8( s );
 }
@@ -47,7 +47,7 @@ QString ClassViewWidget::trUtf8( const char *s, const char *c )
 
 #endif // QT_NO_TRANSLATION
 
-QMetaObject* ClassViewWidget::staticMetaObject()
+QMetaObject* VSSlnExplorerWidget::staticMetaObject()
 {
     if ( metaObj )
 	return metaObj;
@@ -90,7 +90,7 @@ QMetaObject* ClassViewWidget::staticMetaObject()
 	{ "slotExecuted(QListViewItem*)", &slot_12, QMetaData::Private }
     };
     metaObj = QMetaObject::new_metaobject(
-	"ClassViewWidget", parentObject,
+	"VSSlnExplorerWidget", parentObject,
 	slot_tbl, 13,
 	0, 0,
 #ifndef QT_NO_PROPERTIES
@@ -98,20 +98,20 @@ QMetaObject* ClassViewWidget::staticMetaObject()
 	0, 0,
 #endif // QT_NO_PROPERTIES
 	0, 0 );
-    cleanUp_ClassViewWidget.setMetaObject( metaObj );
+    cleanUp_VSSlnExplorerWidget.setMetaObject( metaObj );
     return metaObj;
 }
 
-void* ClassViewWidget::qt_cast( const char* clname )
+void* VSSlnExplorerWidget::qt_cast( const char* clname )
 {
-    if ( !qstrcmp( clname, "ClassViewWidget" ) )
+    if ( !qstrcmp( clname, "VSSlnExplorerWidget" ) )
 	return this;
     if ( !qstrcmp( clname, "QToolTip" ) )
 	return (QToolTip*)this;
     return KListView::qt_cast( clname );
 }
 
-bool ClassViewWidget::qt_invoke( int _id, QUObject* _o )
+bool VSSlnExplorerWidget::qt_invoke( int _id, QUObject* _o )
 {
     switch ( _id - staticMetaObject()->slotOffset() ) {
     case 0: slotNewClass(); break;
@@ -133,16 +133,16 @@ bool ClassViewWidget::qt_invoke( int _id, QUObject* _o )
     return TRUE;
 }
 
-bool ClassViewWidget::qt_emit( int _id, QUObject* _o )
+bool VSSlnExplorerWidget::qt_emit( int _id, QUObject* _o )
 {
     return KListView::qt_emit(_id,_o);
 }
 #ifndef QT_NO_PROPERTIES
 
-bool ClassViewWidget::qt_property( int id, int f, QVariant* v)
+bool VSSlnExplorerWidget::qt_property( int id, int f, QVariant* v)
 {
     return KListView::qt_property( id, f, v);
 }
 
-bool ClassViewWidget::qt_static_property( QObject* , int , int , QVariant* ){ return FALSE; }
+bool VSSlnExplorerWidget::qt_static_property( QObject* , int , int , QVariant* ){ return FALSE; }
 #endif // QT_NO_PROPERTIES

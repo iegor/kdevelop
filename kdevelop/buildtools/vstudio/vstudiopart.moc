@@ -1,14 +1,14 @@
 /****************************************************************************
-** ClassViewPart meta object code from reading C++ file 'classviewpart.h'
+** VStudioPart meta object code from reading C++ file 'vstudiopart.h'
 **
-** Created: Tue Feb 26 11:31:32 2013
+** Created: Tue Apr 9 00:26:57 2013
 **      by: The Qt MOC ($Id: qt/moc_yacc.cpp   3.3.8   edited Feb 2 14:59 $)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
 #undef QT_NO_COMPAT
-#include "classviewpart.h"
+#include "vstudiopart.h"
 #include <qmetaobject.h>
 #include <qapplication.h>
 
@@ -70,7 +70,7 @@ QMetaObject* VStudioPart::staticMetaObject()
 	{ "activePartChanged(KParts::Part*)", &slot_5, QMetaData::Private }
     };
     metaObj = QMetaObject::new_metaobject(
-	"ClassViewPart", parentObject,
+	"VStudioPart", parentObject,
 	slot_tbl, 6,
 	0, 0,
 #ifndef QT_NO_PROPERTIES

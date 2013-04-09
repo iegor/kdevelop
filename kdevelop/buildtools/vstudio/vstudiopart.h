@@ -45,7 +45,7 @@ namespace KTextEditor
 }
 
 
-class ClassViewWidget;
+class VSSlnExplorerWidget;
 class KListViewAction;
 class QListViewItem;
 class KToolBarPopupAction;

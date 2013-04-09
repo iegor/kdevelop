@@ -16,7 +16,7 @@
 
 #include "codemodel.h"
 
-class ClassViewPart;
+class VStudioPart;
 class KDevLanguageSupport;
 class DigraphView;
 class ClassToolWidget;
@@ -28,7 +28,7 @@ class HierarchyDialog : public QDialog
     Q_OBJECT
 
 public:
-    HierarchyDialog( ClassViewPart *part );
+    HierarchyDialog( VStudioPart *part );
     ~HierarchyDialog();
 public slots:
     void refresh();
@@ -55,7 +55,7 @@ private:
     KComboView *class_combo;
     DigraphView *digraph;
 //    ClassToolWidget *member_tree;
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
 };
 
 #endif

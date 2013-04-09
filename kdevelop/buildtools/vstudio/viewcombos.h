@@ -26,7 +26,7 @@
 
 #include "codemodel.h"
 
-class ClassViewPart;
+class VStudioPart;
 class KComboView;
 
 const QString EmptyClasses = i18n("(Classes)");
@@ -34,48 +34,48 @@ const QString EmptyFunctions = i18n("(Functions)");
 
 class NamespaceItem: public QListViewItem{
 public:
-    NamespaceItem(ClassViewPart *part, QListView *parent, QString name, NamespaceDom dom);
-    NamespaceItem(ClassViewPart *part, QListViewItem *parent, QString name, NamespaceDom dom);
+    NamespaceItem(VStudioPart *part, QListView *parent, QString name, NamespaceDom dom);
+    NamespaceItem(VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom);
     ~NamespaceItem();
     NamespaceDom dom() const;
     virtual void setup();
 private:
     NamespaceDom m_dom;
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
 };
 
 class ClassItem: public QListViewItem{
 public:
-    ClassItem(ClassViewPart *part, QListView *parent, QString name, ClassDom dom);
-    ClassItem(ClassViewPart *part, QListViewItem *parent, QString name, ClassDom dom);
+    ClassItem(VStudioPart *part, QListView *parent, QString name, ClassDom dom);
+    ClassItem(VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom);
     ~ClassItem();
     ClassDom dom() const;
     virtual void setup();
 private:
     ClassDom m_dom;
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
 };
 
 class FunctionItem: public QListViewItem{
 public:
-    FunctionItem(ClassViewPart *part, QListView *parent, QString name, FunctionDom dom);
-    FunctionItem(ClassViewPart *part, QListViewItem *parent, QString name, FunctionDom dom);
+    FunctionItem(VStudioPart *part, QListView *parent, QString name, FunctionDom dom);
+    FunctionItem(VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom);
     ~FunctionItem();
     FunctionDom dom() const;
     virtual void setup();
 private:
     FunctionDom m_dom;
-    ClassViewPart *m_part;
+    VStudioPart *m_part;
 };
 
 namespace ViewCombosOp{
 
 enum ProcessType {Refresh, Reload};
 
-void refreshNamespaces(ClassViewPart *part, KComboView *view);
-void refreshClasses(ClassViewPart *part, KComboView *view, const QString &dom);
-void refreshFunctions(ClassViewPart *part, KComboView *view, const ClassDom & dom);
-void refreshFunctions(ClassViewPart *part, KComboView *view, const QString & dom);
+void refreshNamespaces(VStudioPart *part, KComboView *view);
+void refreshClasses(VStudioPart *part, KComboView *view, const QString &dom);
+void refreshFunctions(VStudioPart *part, KComboView *view, const ClassDom & dom);
+void refreshFunctions(VStudioPart *part, KComboView *view, const QString & dom);
 
 NamespaceDom namespaceByName(NamespaceDom dom, QString name);
 
