@@ -14,8 +14,8 @@
     <ignoreparts/>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description></description>
-    <defaultencoding></defaultencoding>
+    <description/>
+    <defaultencoding/>
     <versioncontrol/>
   </general>
   <kdevfileview>
@@ -73,11 +73,11 @@
   </kdevdoctreeview>
   <kdevdebugger>
     <general>
-      <dbgshell></dbgshell>
-      <gdbpath></gdbpath>
-      <configGdbScript></configGdbScript>
-      <runShellScript></runShellScript>
-      <runGdbScript></runGdbScript>
+      <dbgshell/>
+      <gdbpath/>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
@@ -132,7 +132,7 @@
       <includePaths>.;</includePaths>
     </codecompletion>
     <creategettersetter>
-      <prefixGet></prefixGet>
+      <prefixGet/>
       <prefixSet>set</prefixSet>
       <prefixVariable>m_,_</prefixVariable>
       <parameterName>theValue</parameterName>
@@ -162,30 +162,31 @@
     <configurations>
       <default>
         <envvars/>
-        <configargs>--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc --disable-vstudioproject</configargs>
-        <builddir></builddir>
-        <topsourcedir></topsourcedir>
-        <cppflags></cppflags>
-        <ldflags></ldflags>
+        <configargs>--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
+        <builddir/>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
         <ccompiler>kdevgccoptions</ccompiler>
         <cxxcompiler>kdevgppoptions</cxxcompiler>
         <f77compiler>kdevpgf77options</f77compiler>
-        <ccompilerbinary></ccompilerbinary>
-        <cxxcompilerbinary></cxxcompilerbinary>
-        <f77compilerbinary></f77compilerbinary>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
         <cflags>-O0 -ggdb3 -Wall</cflags>
         <cxxflags>-O0 -ggdb3 -Wall</cxxflags>
-        <f77flags></f77flags>
+        <f77flags/>
       </default>
     </configurations>
     <general>
       <useconfiguration>default</useconfiguration>
+      <activetarget>buildtools/vstudio/libvsslnexplorer.la</activetarget>
     </general>
     <run>
-      <mainprogram/>
+      <mainprogram>/home/rainman/projects/kdevelop_dev/kdevelop</mainprogram>
       <programargs/>
       <globaldebugarguments/>
-      <globalcwd/>
+      <globalcwd>/home/rainman/projects/kdevelop_dev/kdevelop</globalcwd>
       <useglobalprogram>false</useglobalprogram>
       <terminal>false</terminal>
       <autocompile>false</autocompile>

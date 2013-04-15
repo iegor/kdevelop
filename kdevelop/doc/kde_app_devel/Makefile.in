@@ -561,7 +561,7 @@ uninstall-am:
 .NOEXPORT:
 
 #>+ 2
-KDE_DIST=appwizard.png index.docbook kscribblefiles.png Makefile.in Makefile.am 
+KDE_DIST=appwizard.png index.docbook index.cache.bz2 kscribblefiles.png Makefile.in Makefile.am 
 
 #>+ 24
 index.cache.bz2: $(srcdir)/index.docbook $(KDE_XSL_STYLESHEET) kscribblefiles.png index.docbook appwizard.png 

@@ -111,6 +111,13 @@ dnl  **********
 AC_ARG_ENABLE(vba, AC_HELP_STRING([--enable-vba], [enable visualboy advance support]), [with_vba=${enableval}], [with_vba=no])
 AM_CONDITIONAL(include_vba, test "$with_vba" = "yes")
 
+dnl  **********
+dnl  Check if we have support for visual studio files
+dnl  **********
+if test "$vstudio" = "yes"; then
+  AC_DEFINE(VSTUDIO_SUPPORT, 1, [Defined when we have visual studio compatibility])
+fi
+
 
 AC_PATH_PROG(DOT_FOUND, dot, no)
 AC_CHECK_PROG(gmake_prog, gmake, gmake, make)
