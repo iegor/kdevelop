@@ -2,19 +2,21 @@
 <kpartgui name="KDevVStudio" version="10">
 <MenuBar>
 	<Menu name="project" >
-		<Action name="inheritance_dia" group="project_classes" />
+    <Action name="project_addtranslation" />
+    <Action name="project_configuration" />
 	</Menu>
+  <Menu name="build" >
+    <Action name="build_build_solution" />
+    <Action name="build_build_project" />
+    <Action name="build_build_file" />
+    <Action name="build_clean_solution" />
+    <Action name="build_execute" />
+  </Menu>
 </MenuBar>
-<Menu name="kdevhidden" >
-	<Action name="navigator_jump_to_next_function"/>
-	<Action name="navigator_jump_to_previous_function"/>
-</Menu>
-
-<ToolBar name="browserToolBar">
-  <text>Browser Toolbar</text>
-  <Separator/>
-  <Action name="classview_sync_with_editor" />
-  <Action name="functionsnav_combo" />
+<ToolBar name="VSToolBar" noMerge="1">
+  <Action name="build_build" group="build_operations" />
+  <Action name="build_buildactivetarget" group="build_operations" />
+  <Action name="build_execute" group="build_operations" />
 </ToolBar>
 </kpartgui>
 

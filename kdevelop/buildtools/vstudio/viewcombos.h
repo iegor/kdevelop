@@ -34,38 +34,38 @@ const QString EmptyFunctions = i18n("(Functions)");
 
 class NamespaceItem: public QListViewItem{
 public:
-    NamespaceItem(VStudioPart *part, QListView *parent, QString name, NamespaceDom dom);
-    NamespaceItem(VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom);
-    ~NamespaceItem();
-    NamespaceDom dom() const;
-    virtual void setup();
+  NamespaceItem(VStudioPart *part, QListView *parent, QString name, NamespaceDom dom);
+  NamespaceItem(VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom);
+  ~NamespaceItem();
+  NamespaceDom dom() const;
+  virtual void setup();
 private:
-    NamespaceDom m_dom;
-    VStudioPart *m_part;
+  NamespaceDom m_dom;
+  VStudioPart *m_part;
 };
 
 class ClassItem: public QListViewItem{
 public:
-    ClassItem(VStudioPart *part, QListView *parent, QString name, ClassDom dom);
-    ClassItem(VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom);
-    ~ClassItem();
-    ClassDom dom() const;
-    virtual void setup();
+  ClassItem(VStudioPart *part, QListView *parent, QString name, ClassDom dom);
+  ClassItem(VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom);
+  ~ClassItem();
+  ClassDom dom() const;
+  virtual void setup();
 private:
-    ClassDom m_dom;
-    VStudioPart *m_part;
+  ClassDom m_dom;
+  VStudioPart *m_part;
 };
 
 class FunctionItem: public QListViewItem{
 public:
-    FunctionItem(VStudioPart *part, QListView *parent, QString name, FunctionDom dom);
-    FunctionItem(VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom);
-    ~FunctionItem();
-    FunctionDom dom() const;
-    virtual void setup();
+  FunctionItem(VStudioPart *part, QListView *parent, QString name, FunctionDom dom);
+  FunctionItem(VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom);
+  ~FunctionItem();
+  FunctionDom dom() const;
+  virtual void setup();
 private:
-    FunctionDom m_dom;
-    VStudioPart *m_part;
+  FunctionDom m_dom;
+  VStudioPart *m_part;
 };
 
 namespace ViewCombosOp{

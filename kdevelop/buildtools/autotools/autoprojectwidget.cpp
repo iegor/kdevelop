@@ -132,9 +132,7 @@ void AutoProjectWidget::openProject( const QString &dirName )
 	m_subprojectView->loadMakefileams ( dirName );
 	MakefileHandler mfh;
 	mfh.parse( m_part->projectDirectory(), true );
-
 }
-
 
 void AutoProjectWidget::closeProject()
 {

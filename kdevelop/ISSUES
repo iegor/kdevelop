@@ -8,3 +8,5 @@ like:
 Need to modify autotools sidepanel
 	Let it contain tree of the project, without details view.
 	all sub-projects and targets should be in the "tree".
+
+Need to add ability to install any kind of project with cave

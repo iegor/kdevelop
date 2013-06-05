@@ -475,8 +475,8 @@ void AutoProjectPart::setWantautotools()
     QDomElement el  = DomUtil::elementByPath(dom, "/kdevautoproject/make");
     if ( el.namedItem("envvars").isNull() ) {
         DomUtil::PairList list;
-        list << DomUtil::Pair("WANT_AUTOCONF_2_5", "1");
-        list << DomUtil::Pair("WANT_AUTOMAKE_1_6", "1");
+        list << DomUtil::Pair("WANT_AUTOCONF_2_6", "1");
+        list << DomUtil::Pair("WANT_AUTOMAKE_1_11", "1");
         DomUtil::writePairListEntry(dom, "/kdevautoproject/make/envvars", "envvar", "name", "value", list);
     }
 }

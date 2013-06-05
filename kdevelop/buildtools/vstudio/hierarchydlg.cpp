@@ -36,7 +36,6 @@
 #include "digraphview.h"
 #include "viewcombos.h"
 
-
 HierarchyDialog::HierarchyDialog( VStudioPart *part )
     : QDialog(0, "hierarchy dialog", false)
 {
