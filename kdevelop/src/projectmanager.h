@@ -106,12 +106,12 @@ private:
   QString m_oldProfileName;
 };
 
-#if (VSTUDIO_SUPPORT == 1)
-class VSProjectManager : public ProjectManager {
-  Q_OBJECT
-public:
-
-};
-
+// #if (VSTUDIO_SUPPORT == 1)
+// class VSProjectManager : public ProjectManager {
+//   Q_OBJECT
+// public:
+//
+// };
+// #endif
 
 #endif

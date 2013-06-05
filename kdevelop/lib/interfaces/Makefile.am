@@ -12,9 +12,9 @@ libkdevinterfaces_la_SOURCES = kdevcore.cpp kdevproject.cpp \
 		kdevprojectiface.cpp kdevprojectiface.skel kdevdesignerintegrationiface.cpp \
 		kdevdesignerintegrationiface.skel hashedstring.cpp
 libkdevinterfaces_la_LDFLAGS = -no-undefined $(all_libraries)
-libkdevinterfaces_la_LIBADD = $(top_builddir)/lib/interfaces/external/libkinterfacedesigner.la \
-	$(top_builddir)/lib/util/libkdevutil.la \
-	$(LIB_KDEUI) $(LIB_KHTML) $(LIB_KPARTS) -lktexteditor -lkscript -lDCOP
+libkdevinterfaces_la_LIBADD = \
+	$(top_builddir)/lib/interfaces/external/libkinterfacedesigner.la $(top_builddir)/lib/util/libkdevutil.la $(LIB_KDEUI) $(LIB_KHTML) \
+	$(LIB_KPARTS) -lDCOP -lkscript -lktexteditor
 
 kdevelopincludedir = $(includedir)/kdevelop/interfaces
 kdevelopinclude_HEADERS = kdevlanguagesupport.h kdevmainwindow.h \

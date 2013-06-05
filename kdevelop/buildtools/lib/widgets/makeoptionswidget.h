@@ -32,7 +32,7 @@ Make options widget.
 class MakeOptionsWidget : public MakeOptionsWidgetBase
 {
     Q_OBJECT
-    
+
 public:
     MakeOptionsWidget( QDomDocument &dom, const QString &configGroup,
                        QWidget *parent=0, const char *name=0 );
