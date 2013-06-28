@@ -55,29 +55,29 @@
 #include "urlutil.h"
 #include "makefilehandler.h"
 
-static QString nicePrimary( const QString &primary )
+static QString nicePrimary ( const QString &primary )
 {
 	if ( primary == "PROGRAMS" )
-		return i18n( "Program" );
+		return i18n ( "Program" );
 	else if ( primary == "LIBRARIES" )
-		return i18n( "Library" );
+		return i18n ( "Library" );
 	else if ( primary == "LTLIBRARIES" )
-		return i18n( "Libtool Library" );
+		return i18n ( "Libtool Library" );
 	else if ( primary == "SCRIPTS" )
-		return i18n( "Script" );
+		return i18n ( "Script" );
 	else if ( primary == "HEADERS" )
-		return i18n( "Header" );
+		return i18n ( "Header" );
 	else if ( primary == "DATA" )
-		return i18n( "Data" );
+		return i18n ( "Data" );
 	else if ( primary == "JAVA" )
-		return i18n( "Java" );
+		return i18n ( "Java" );
 	else
 		return QString::null;
 }
 
 
-AutoProjectWidget::AutoProjectWidget( AutoProjectPart *part, bool kde )
-		: QVBox( 0, "auto project widget" )
+AutoProjectWidget::AutoProjectWidget ( AutoProjectPart *part, bool kde )
+		: QVBox ( 0, "auto project widget" )
 {
 	m_part = part;
 	m_kdeMode = kde;
@@ -85,9 +85,9 @@ AutoProjectWidget::AutoProjectWidget( AutoProjectPart *part, bool kde )
 	m_activeTarget = 0;
 	m_shownSubproject = 0;
 	m_choosenTarget = 0;
-        m_makefileHandler = new MakefileHandler();
+	m_makefileHandler = new MakefileHandler();
 
-	QSplitter *splitter = new QSplitter(Vertical, this);
+	QSplitter *splitter = new QSplitter ( Vertical, this );
 
 	initOverview ( splitter );
 	initDetailview ( splitter );
@@ -98,23 +98,23 @@ AutoProjectWidget::AutoProjectWidget( AutoProjectPart *part, bool kde )
 
 AutoProjectWidget::~AutoProjectWidget()
 {
-    delete m_makefileHandler;
+	delete m_makefileHandler;
 }
 
 void AutoProjectWidget::initOverview ( QWidget* parent )
 {
-	m_subprojectView = new AutoSubprojectView( this, m_part, parent, "project overview widget" );
+	m_subprojectView = new AutoSubprojectView ( this, m_part, parent, "project overview widget" );
 }
 
 void AutoProjectWidget::initDetailview ( QWidget* parent )
 {
-	m_detailView = new AutoDetailsView( this, m_part, parent, "project details widget" );
+	m_detailView = new AutoDetailsView ( this, m_part, parent, "project details widget" );
 }
 
 void AutoProjectWidget::initActions()
 {
-	connect( m_subprojectView, SIGNAL( selectionChanged( QListViewItem* ) ),
-	         this, SLOT( slotOverviewSelectionChanged( QListViewItem* ) ) );
+	connect ( m_subprojectView, SIGNAL ( selectionChanged ( QListViewItem* ) ),
+	          this, SLOT ( slotOverviewSelectionChanged ( QListViewItem* ) ) );
 }
 
 AutoSubprojectView* AutoProjectWidget::getSubprojectView ()
@@ -127,11 +127,11 @@ AutoDetailsView* AutoProjectWidget::getDetailsView ()
 	return m_detailView;
 }
 
-void AutoProjectWidget::openProject( const QString &dirName )
+void AutoProjectWidget::openProject ( const QString &dirName )
 {
 	m_subprojectView->loadMakefileams ( dirName );
 	MakefileHandler mfh;
-	mfh.parse( m_part->projectDirectory(), true );
+	mfh.parse ( m_part->projectDirectory(), true );
 }
 
 void AutoProjectWidget::closeProject()
@@ -156,14 +156,14 @@ QStringList AutoProjectWidget::allSubprojects()
 	int prefixlen = m_part->projectDirectory().length() + 1;
 	QStringList res;
 
-	QListViewItemIterator it( m_subprojectView->listView() );
+	QListViewItemIterator it ( m_subprojectView->listView() );
 	for ( ; it.current(); ++it )
 	{
 		// Skip root subproject
 		// if ( it.current() == m_subprojectView->firstChild() )
 		//	continue;
-		QString path = static_cast<SubprojectItem*>( it.current() ) ->path;
-		res.append( path.mid( prefixlen ) );
+		QString path = static_cast<SubprojectItem*> ( it.current() ) ->path;
+		res.append ( path.mid ( prefixlen ) );
 	}
 
 	return res;
@@ -188,49 +188,49 @@ QPtrList <SubprojectItem> AutoProjectWidget::allSubprojectItems()
 	return res;
 }
 
-SubprojectItem* AutoProjectWidget::subprojectItemForPath(const QString & path, bool pathIsAbsolute)
+SubprojectItem* AutoProjectWidget::subprojectItemForPath ( const QString & path, bool pathIsAbsolute )
 {
-	kdDebug(9020) << "Looking for path " << path << endl;
+	kdDebug ( 9020 ) << "Looking for path " << path << endl;
 
 	int prefixLen = m_part->projectDirectory().length() + 1;
-	QListViewItemIterator it( m_subprojectView->listView() );
-	for(; it.current(); ++it)
+	QListViewItemIterator it ( m_subprojectView->listView() );
+	for ( ; it.current(); ++it )
 	{
-		SubprojectItem* spitem = static_cast<SubprojectItem*>(it.current() );
-		QString relpath = (spitem->path).mid(prefixLen);
-		kdDebug(9020) << " ... checking -" << spitem->path << "-" << endl;
-		kdDebug(9020) << " ... (tailored: -" << relpath << "- against -" << (pathIsAbsolute ? path.mid(prefixLen) : path) << "- )" << endl;
-		if ( relpath == (pathIsAbsolute ? path.mid(prefixLen) : path))
+		SubprojectItem* spitem = static_cast<SubprojectItem*> ( it.current() );
+		QString relpath = ( spitem->path ).mid ( prefixLen );
+		kdDebug ( 9020 ) << " ... checking -" << spitem->path << "-" << endl;
+		kdDebug ( 9020 ) << " ... (tailored: -" << relpath << "- against -" << ( pathIsAbsolute ? path.mid ( prefixLen ) : path ) << "- )" << endl;
+		if ( relpath == ( pathIsAbsolute ? path.mid ( prefixLen ) : path ) )
 		{
-			kdDebug(9020) << "Found it!" << endl;
+			kdDebug ( 9020 ) << "Found it!" << endl;
 			return spitem;
 		}
 	}
-	kdDebug(9020) << "Not found" << endl;
+	kdDebug ( 9020 ) << "Not found" << endl;
 	return NULL;
 }
 
-QString AutoProjectWidget::pathForTarget(const TargetItem *titem) const
+QString AutoProjectWidget::pathForTarget ( const TargetItem *titem ) const
 {
 
-	if (!titem)
+	if ( !titem )
 		return QString::null;
 
-	kdDebug(9020) << "Looking for target " << titem->name << endl;
+	kdDebug ( 9020 ) << "Looking for target " << titem->name << endl;
 	int prefixLen = m_part->projectDirectory().length() + 1;
-	QListViewItemIterator it( m_subprojectView->listView() );
-	for(; it.current(); ++it)
+	QListViewItemIterator it ( m_subprojectView->listView() );
+	for ( ; it.current(); ++it )
 	{
-		SubprojectItem* spitem = static_cast<SubprojectItem*>(it.current() );
-		kdDebug(9020) << "Checking: " << spitem->path << endl;
-		if (spitem->targets.containsRef(titem))
+		SubprojectItem* spitem = static_cast<SubprojectItem*> ( it.current() );
+		kdDebug ( 9020 ) << "Checking: " << spitem->path << endl;
+		if ( spitem->targets.containsRef ( titem ) )
 		{
-			kdDebug(9020) << "Found it!" << endl;
-			QString relpath = (spitem->path).mid(prefixLen);
+			kdDebug ( 9020 ) << "Found it!" << endl;
+			QString relpath = ( spitem->path ).mid ( prefixLen );
 			return relpath;
 		}
 	}
-	kdDebug(9020) << "Not found" << endl;
+	kdDebug ( 9020 ) << "Not found" << endl;
 	return QString::null;
 }
 
@@ -239,19 +239,19 @@ QStringList AutoProjectWidget::allLibraries()
 	int prefixlen = m_part->projectDirectory().length() + 1;
 	QStringList res;
 
-	QListViewItemIterator it( m_subprojectView->listView() );
+	QListViewItemIterator it ( m_subprojectView->listView() );
 	for ( ; it.current(); ++it )
 	{
-		SubprojectItem *spitem = static_cast<SubprojectItem*>( it.current() );
+		SubprojectItem *spitem = static_cast<SubprojectItem*> ( it.current() );
 		QString path = spitem->path;
-		QPtrListIterator<TargetItem> tit( spitem->targets );
+		QPtrListIterator<TargetItem> tit ( spitem->targets );
 		for ( ; tit.current(); ++tit )
 		{
 			QString primary = ( *tit ) ->primary;
 			if ( primary == "LIBRARIES" || primary == "LTLIBRARIES" )
 			{
 				QString fullname = path + "/" + ( *tit ) ->name;
-				res.append( fullname.mid( prefixlen ) );
+				res.append ( fullname.mid ( prefixlen ) );
 			}
 		}
 	}
@@ -266,32 +266,32 @@ QStringList AutoProjectWidget::allFiles()
 	QMap<QString, bool> dict;
 
 	for ( QListViewItem * item = m_subprojectView->listView()->firstChild(); item;
-	      item = item->nextSibling() ? item->nextSibling() : s.pop() )
+	        item = item->nextSibling() ? item->nextSibling() : s.pop() )
 	{
 		if ( item->firstChild() )
-			s.push( item->firstChild() );
+			s.push ( item->firstChild() );
 
-		SubprojectItem *spitem = static_cast<SubprojectItem*>( item );
+		SubprojectItem *spitem = static_cast<SubprojectItem*> ( item );
 		// use URLUtil so paths in root project dir are worked out correctly
-		QString relPath = URLUtil::relativePath(m_part->projectDirectory(), spitem->path, URLUtil::SLASH_SUFFIX);
-		QPtrListIterator<TargetItem> tit( spitem->targets );
+		QString relPath = URLUtil::relativePath ( m_part->projectDirectory(), spitem->path, URLUtil::SLASH_SUFFIX );
+		QPtrListIterator<TargetItem> tit ( spitem->targets );
 		for ( ; tit.current(); ++tit )
 		{
-			QPtrListIterator<FileItem> fit( tit.current() ->sources );
+			QPtrListIterator<FileItem> fit ( tit.current() ->sources );
 			for ( ; fit.current(); ++fit )
 			{
 
-				if((*fit)->is_subst)
+				if ( ( *fit )->is_subst )
 					continue;
 
-				QFileInfo fileInfo( (*fit)->name );
-				if( fileInfo.extension() == "ui" )
+				QFileInfo fileInfo ( ( *fit )->name );
+				if ( fileInfo.extension() == "ui" )
 				{
-					dict.insert( relPath + fileInfo.baseName() + ".h", true );
-					dict.insert( relPath + fileInfo.baseName() + ".cpp", true );
+					dict.insert ( relPath + fileInfo.baseName() + ".h", true );
+					dict.insert ( relPath + fileInfo.baseName() + ".cpp", true );
 				}
 
-				dict.insert( relPath + ( *fit ) ->name, true );
+				dict.insert ( relPath + ( *fit ) ->name, true );
 			}
 		}
 	}
@@ -300,7 +300,8 @@ QStringList AutoProjectWidget::allFiles()
 	// duplicates
 	QStringList res;
 	QMap<QString, bool>::Iterator it = dict.begin();
-	while( it != dict.end() ){
+	while ( it != dict.end() )
+	{
 		res << it.key();
 		++it;
 	}
@@ -318,19 +319,19 @@ QString AutoProjectWidget::subprojectDirectory()
 }
 
 
-void AutoProjectWidget::setActiveTarget( const QString &targetPath )
+void AutoProjectWidget::setActiveTarget ( const QString &targetPath )
 {
 	int prefixlen = m_part->projectDirectory().length() + 1;
 	QString olddir = m_part->activeDirectory();
 	m_activeSubproject = 0;
 	m_activeTarget = 0;
 
-	QListViewItemIterator it( m_subprojectView->listView() );
+	QListViewItemIterator it ( m_subprojectView->listView() );
 	for ( ; it.current(); ++it )
 	{
-		SubprojectItem *spitem = static_cast<SubprojectItem*>( it.current() );
+		SubprojectItem *spitem = static_cast<SubprojectItem*> ( it.current() );
 		QString path = spitem->path;
-		QPtrListIterator<TargetItem> tit( spitem->targets );
+		QPtrListIterator<TargetItem> tit ( spitem->targets );
 		for ( ; tit.current(); ++tit )
 		{
 			QString primary = ( *tit ) ->primary;
@@ -338,16 +339,16 @@ void AutoProjectWidget::setActiveTarget( const QString &targetPath )
 			        && primary != "LTLIBRARIES" && primary != "JAVA" )
 				continue;
 
-			QString currentTargetPath = ( path + "/" + ( *tit ) ->name ).mid( prefixlen );
+			QString currentTargetPath = ( path + "/" + ( *tit ) ->name ).mid ( prefixlen );
 
 			bool hasTarget = ( targetPath == currentTargetPath );
-			( *tit )->setBold( hasTarget );
+			( *tit )->setBold ( hasTarget );
 			if ( hasTarget )
 			{
-				spitem->setBold( true );
+				spitem->setBold ( true );
 				m_activeSubproject = spitem;
 				m_activeTarget = ( *tit );
-				m_subprojectView->listView()->setSelected( m_activeSubproject, true );
+				m_subprojectView->listView()->setSelected ( m_activeSubproject, true );
 				m_subprojectView->listView()->ensureItemVisible ( m_activeSubproject );
 				m_subprojectView->listView()->viewport()->update();
 				m_detailView->listView()->setSelected ( m_activeTarget, true );
@@ -362,9 +363,9 @@ void AutoProjectWidget::setActiveTarget( const QString &targetPath )
 			}
 		}
 	}
-	if( olddir != m_part->activeDirectory() )
+	if ( olddir != m_part->activeDirectory() )
 	{
-		emit m_part->activeDirectoryChanged( olddir, m_part->activeDirectory() );
+		emit m_part->activeDirectoryChanged ( olddir, m_part->activeDirectory() );
 	}
 
 	if ( m_activeSubproject == 0 && m_activeTarget == 0 )
@@ -379,23 +380,23 @@ void AutoProjectWidget::setActiveTarget( const QString &targetPath )
 QString AutoProjectWidget::activeDirectory()
 {
 	if ( m_activeSubproject )
-		return m_activeSubproject->path.mid( m_part->projectDirectory().length() + 1 );
+		return m_activeSubproject->path.mid ( m_part->projectDirectory().length() + 1 );
 	else
 	{
-/*		if ( selectedSubproject() )
-			return selectedSubproject()->path;
-		else*/
-			return QString::null;
+		/*		if ( selectedSubproject() )
+					return selectedSubproject()->path;
+				else*/
+		return QString::null;
 	}
 }
 
 
-void AutoProjectWidget::addFiles( const QStringList &list )
+void AutoProjectWidget::addFiles ( const QStringList &list )
 {
 	QDomDocument &dom = *m_part->projectDom();
 	QStringList fileList = list;
 
-	if ( DomUtil::readBoolEntry( dom, "/kdevautoproject/general/useactivetarget" ) )
+	if ( DomUtil::readBoolEntry ( dom, "/kdevautoproject/general/useactivetarget" ) )
 	{
 		QStringList::iterator it;
 
@@ -403,9 +404,9 @@ void AutoProjectWidget::addFiles( const QStringList &list )
 
 		for ( it = fileList.begin(); it != fileList.end(); ++it )
 		{
-			int pos = ( *it ).findRev('/');
-			if (pos != -1)
-				fileName = ( *it ).mid(pos+1);
+			int pos = ( *it ).findRev ( '/' );
+			if ( pos != -1 )
+				fileName = ( *it ).mid ( pos+1 );
 			else
 				fileName = ( *it );
 
@@ -416,23 +417,25 @@ void AutoProjectWidget::addFiles( const QStringList &list )
 			/// @todo Merge with code in addfiledlg.cpp
 			// Check wether a selected subproject+target exists and matches this file
 			// If so use that as target.
-			if( m_detailView->listView()->selectedItem() && m_subprojectView->listView()->selectedItem() )
+			if ( m_detailView->listView()->selectedItem() && m_subprojectView->listView()->selectedItem() )
 			{
 				TargetItem *titem = dynamic_cast <TargetItem*> ( m_detailView->listView()->selectedItem() );
 				SubprojectItem * subitem = dynamic_cast <SubprojectItem*> ( m_subprojectView->listView()->selectedItem() );
-				QString relativeDir = URLUtil::directory(*it);
-				SubprojectItem* spitem = subprojectItemForPath(relativeDir);
+				QString relativeDir = URLUtil::directory ( *it );
+				SubprojectItem* spitem = subprojectItemForPath ( relativeDir );
 
-				if( titem && subitem && subitem == spitem )
+				if ( titem && subitem && subitem == spitem )
 				{
-					addToTarget(fileName, subitem, titem);
-				}else
-				{
-					addToTarget(fileName, m_activeSubproject, m_activeTarget);
+					addToTarget ( fileName, subitem, titem );
 				}
-			}else
+				else
+				{
+					addToTarget ( fileName, m_activeSubproject, m_activeTarget );
+				}
+			}
+			else
 			{
-				addToTarget(fileName, m_activeSubproject, m_activeTarget);
+				addToTarget ( fileName, m_activeSubproject, m_activeTarget );
 			}
 
 //			QString canontargetname = AutoProjectTool::canonicalize( m_activeTarget->name );
@@ -453,23 +456,23 @@ void AutoProjectWidget::addFiles( const QStringList &list )
 		// First check wether the detail view has a selected target and the subproject
 		// view selected subproject matches the path of the new file. Then
 		// we can assume the user used the right-click option on the target
-		for( QStringList::iterator it = fileList.begin(); it != fileList.end(); ++it)
+		for ( QStringList::iterator it = fileList.begin(); it != fileList.end(); ++it )
 		{
 			bool autoAdded = false;
-			if( m_detailView->listView()->selectedItem() && m_subprojectView->listView()->selectedItem() )
+			if ( m_detailView->listView()->selectedItem() && m_subprojectView->listView()->selectedItem() )
 			{
 				TargetItem *titem = dynamic_cast <TargetItem*> ( m_detailView->listView()->selectedItem() );
 				SubprojectItem * subitem = dynamic_cast <SubprojectItem*> ( m_subprojectView->listView()->selectedItem() );
-				QString relativeDir = URLUtil::directory(*it);
-				SubprojectItem* spitem = subprojectItemForPath(relativeDir);
-				if( titem && subitem && subitem == spitem )
+				QString relativeDir = URLUtil::directory ( *it );
+				SubprojectItem* spitem = subprojectItemForPath ( relativeDir );
+				if ( titem && subitem && subitem == spitem )
 				{
-					addToTarget(URLUtil::filename(*it), subitem, titem);
+					addToTarget ( URLUtil::filename ( *it ), subitem, titem );
 					autoAdded = true;
 					doneAutomatically << *it;
 				}
 			}
-			if(!autoAdded) doManually << *it;
+			if ( !autoAdded ) doManually << *it;
 		}
 
 		// See if we can figure out the target for each file without asking the user
@@ -477,77 +480,79 @@ void AutoProjectWidget::addFiles( const QStringList &list )
 		// the file can be added to that target (Julian Rockey linux at jrockey.com)
 		QStringList temp = doManually;
 		doManually.clear();
-		for(QStringList::iterator it = temp.begin();it!=temp.end();++it)
+		for ( QStringList::iterator it = temp.begin();it!=temp.end();++it )
 		{
 			bool autoAdded = false;
-			QString relativeDir = URLUtil::directory(*it);
-			SubprojectItem* spitem = subprojectItemForPath(relativeDir);
-			if (spitem)
+			QString relativeDir = URLUtil::directory ( *it );
+			SubprojectItem* spitem = subprojectItemForPath ( relativeDir );
+			if ( spitem )
 			{
 				QPtrList<TargetItem> titemList = spitem->targets;
-				if (titemList.count()==1) {
-					addToTarget( URLUtil::filename(*it), spitem, titemList.first() );
-					doneAutomatically.append(*it);
+				if ( titemList.count() ==1 )
+				{
+					addToTarget ( URLUtil::filename ( *it ), spitem, titemList.first() );
+					doneAutomatically.append ( *it );
 					autoAdded = true;
 				}
 			}
 
 			// add to manual list if this file wasn't auto-added
-			if (!autoAdded) doManually.append(*it);
+			if ( !autoAdded ) doManually.append ( *it );
 		}
-		if (doneAutomatically.count()>0) emitAddedFiles(doneAutomatically);
+		if ( doneAutomatically.count() >0 ) emitAddedFiles ( doneAutomatically );
 
-                // raise dialog for any files that weren't added automatically
-		if (doManually.count()>0) {
+		// raise dialog for any files that weren't added automatically
+		if ( doManually.count() >0 )
+		{
 			ChooseTargetDialog chooseTargetDlg ( this, m_part, doManually, this, "choose target dialog" );
 
-		        //chooseTargetDlg = new ChooseTargetDialog ( this, this, "choose target dialog" );
+			//chooseTargetDlg = new ChooseTargetDialog ( this, this, "choose target dialog" );
 
 			if ( chooseTargetDlg.exec() && chooseTargetDlg.alwaysUseActiveTarget() )
-				DomUtil::writeBoolEntry( dom, "/kdevautoproject/general/useactivetarget", true );
+				DomUtil::writeBoolEntry ( dom, "/kdevautoproject/general/useactivetarget", true );
 		}
 	}
 }
 
-void AutoProjectWidget::addToTarget(const QString & fileName, SubprojectItem* spitem, TargetItem* titem)
+void AutoProjectWidget::addToTarget ( const QString & fileName, SubprojectItem* spitem, TargetItem* titem )
 {
 	QString varname;
-    /// \FIXME a quick hack to prevent adding header files to _SOURCES and display them in noinst_HEADERS
-	if (AutoProjectPrivate::isHeader(fileName) &&
-	    ( titem->primary == "PROGRAMS" || titem->primary == "LIBRARIES" ||  titem->primary == "LTLIBRARIES" ) )
+	/// \FIXME a quick hack to prevent adding header files to _SOURCES and display them in noinst_HEADERS
+	if ( AutoProjectPrivate::isHeader ( fileName ) &&
+	        ( titem->primary == "PROGRAMS" || titem->primary == "LIBRARIES" ||  titem->primary == "LTLIBRARIES" ) )
 	{
 		kdDebug ( 9020 ) << "Ignoring header file and adding it to noinst_HEADERS: " << fileName << endl;
-		TargetItem* noinst_HEADERS_item = getSubprojectView()->findNoinstHeaders(spitem);
-		FileItem *fitem = createFileItem( fileName, spitem );
-		noinst_HEADERS_item->sources.append( fitem );
-		noinst_HEADERS_item->insertItem( fitem );
+		TargetItem* noinst_HEADERS_item = getSubprojectView()->findNoinstHeaders ( spitem );
+		FileItem *fitem = createFileItem ( fileName, spitem );
+		noinst_HEADERS_item->sources.append ( fitem );
+		noinst_HEADERS_item->insertItem ( fitem );
 		varname = "noinst_HEADERS";
 	}
 	else
 	{
-		FileItem * fitem = createFileItem( fileName, spitem );
-		titem->sources.append( fitem );
-		titem->insertItem( fitem );
+		FileItem * fitem = createFileItem ( fileName, spitem );
+		titem->sources.append ( fitem );
+		titem->insertItem ( fitem );
 
-		QString canontargetname = AutoProjectTool::canonicalize( titem->name );
+		QString canontargetname = AutoProjectTool::canonicalize ( titem->name );
 		varname = canontargetname + "_SOURCES";
 	}
 	spitem->variables[ varname ] += ( " " + fileName );
 
 	QMap<QString, QString> replaceMap;
-	replaceMap.insert( varname, spitem->variables[ varname ] );
+	replaceMap.insert ( varname, spitem->variables[ varname ] );
 
-	AutoProjectTool::addToMakefileam( spitem->path + "/Makefile.am", replaceMap );
+	AutoProjectTool::addToMakefileam ( spitem->path + "/Makefile.am", replaceMap );
 
-	m_detailView->slotSelectionChanged( spitem );
+	m_detailView->slotSelectionChanged ( spitem );
 }
 
-void AutoProjectWidget::removeFiles( const QStringList &list )
+void AutoProjectWidget::removeFiles ( const QStringList &list )
 {
-	Q_UNUSED( list )
+	Q_UNUSED ( list )
 }
 
-void AutoProjectWidget::slotOverviewSelectionChanged( QListViewItem *item )
+void AutoProjectWidget::slotOverviewSelectionChanged ( QListViewItem *item )
 {
 	if ( !item )
 		return;
@@ -559,53 +564,53 @@ void AutoProjectWidget::slotOverviewSelectionChanged( QListViewItem *item )
 		kdDebug ( 9020 ) << "m_shownSubproject (before takeItem()): " << m_shownSubproject->subdir << endl;
 
 		QListViewItem* i = m_detailView->listView()->firstChild();
-		while( i )
+		while ( i )
 		{
 			QListViewItem* o = i;
 			i = i->nextSibling();
-			m_detailView->listView()->takeItem(o);
+			m_detailView->listView()->takeItem ( o );
 		}
 	}
 
 	// We assume here that ALL items in the over list view
 	// are SubprojectItem's
-	m_shownSubproject = dynamic_cast<SubprojectItem*>( item );
-	if ( !m_shownSubproject) return;
+	m_shownSubproject = dynamic_cast<SubprojectItem*> ( item );
+	if ( !m_shownSubproject ) return;
 	kdDebug ( 9020 ) << "m_shownSubproject (after takeItem()):  " << selectedSubproject()->subdir << endl;
 
 	// Insert all TargetItems and all of their children into the view
-	QPtrListIterator<TargetItem> it2( selectedSubproject()->targets );
+	QPtrListIterator<TargetItem> it2 ( selectedSubproject()->targets );
 	for ( ; it2.current(); ++it2 )
 	{
 		kdDebug ( 9020 ) << "insertItem in detail " << ( *it2 )->name << endl;
-		m_detailView->listView()->insertItem( *it2 );
-		QPtrListIterator<FileItem> it3( ( *it2 ) ->sources );
+		m_detailView->listView()->insertItem ( *it2 );
+		QPtrListIterator<FileItem> it3 ( ( *it2 ) ->sources );
 		for ( ; it3.current(); ++it3 )
-			( *it2 )->insertItem( *it3 );
+			( *it2 )->insertItem ( *it3 );
 		QString primary = ( *it2 ) ->primary;
 		if ( primary == "PROGRAMS" || primary == "LIBRARIES" ||
-		     primary == "LTLIBRARIES" || primary == "JAVA" )
-			( *it2 ) ->setOpen( true );
+		        primary == "LTLIBRARIES" || primary == "JAVA" )
+			( *it2 ) ->setOpen ( true );
 	}
 }
 
 TargetItem *AutoProjectWidget::selectedTarget()
 {
-	ProjectItem * pvitem = static_cast<ProjectItem*>( m_detailView->listView()->selectedItem() );
+	ProjectItem * pvitem = static_cast<ProjectItem*> ( m_detailView->listView()->selectedItem() );
 	if ( !pvitem || ( pvitem->type() != ProjectItem::Target ) )
 		return 0;
 
-	return static_cast<TargetItem*>( pvitem );
+	return static_cast<TargetItem*> ( pvitem );
 }
 
 
 FileItem *AutoProjectWidget::selectedFile()
 {
-	ProjectItem * pvitem = static_cast<ProjectItem*>( m_detailView->listView()->selectedItem() );
+	ProjectItem * pvitem = static_cast<ProjectItem*> ( m_detailView->listView()->selectedItem() );
 	if ( !pvitem || ( pvitem->type() != ProjectItem::File ) )
 		return 0;
 
-	return static_cast<FileItem*>( pvitem );
+	return static_cast<FileItem*> ( pvitem );
 }
 
 SubprojectItem* AutoProjectWidget::selectedSubproject()
@@ -618,88 +623,91 @@ SubprojectItem* AutoProjectWidget::selectedSubproject()
 	return static_cast <SubprojectItem*> ( pvitem );
 }
 
-TargetItem *AutoProjectWidget::createTargetItem( const QString &name,
-                                                 const QString &prefix, const QString &primary,
-                                                 bool take )
+TargetItem *AutoProjectWidget::createTargetItem ( const QString &name,
+        const QString &prefix, const QString &primary,
+        bool take )
 {
 	bool docgroup = ( primary == "KDEDOCS" );
 	bool icongroup = ( primary == "KDEICON" );
-	bool group = !(docgroup || icongroup);
+	bool group = ! ( docgroup || icongroup );
 
 	QString text;
 	if ( docgroup )
-		text = i18n( "Documentation data" );
+		text = i18n ( "Documentation data" );
 	else if ( icongroup )
-		text = i18n( "KDE Icon data" ).arg( prefix );
+		text = i18n ( "KDE Icon data" ).arg ( prefix );
 	else
-		text = i18n( "%1 (%2 in %3)" ).arg( name ).arg( nicePrimary( primary ) ).arg( prefix );
+		text = i18n ( "%1 (%2 in %3)" ).arg ( name ).arg ( nicePrimary ( primary ) ).arg ( prefix );
 
 	// Workaround because of QListView not being able to create
 	// items without actually inserting them
-	TargetItem *titem = new TargetItem( m_detailView->listView(), group, text );
+	TargetItem *titem = new TargetItem ( m_detailView->listView(), group, text );
 	titem->name = name;
 	titem->prefix = prefix;
 	titem->primary = primary;
-	if( take )
-		m_detailView->listView()->takeItem( titem );
+	if ( take )
+		m_detailView->listView()->takeItem ( titem );
 
 	return titem;
 }
 
-FileItem *AutoProjectWidget::createFileItem( const QString &name, SubprojectItem *subproject )
+FileItem *AutoProjectWidget::createFileItem ( const QString &name, SubprojectItem *subproject )
 {
 	bool is_subst;
-    QString sFileName_Rel2Proj = QString::null;
-    if(name.find("$(") == 0 || name.find("${") == 0) {
-        is_subst = true;
+	QString sFileName_Rel2Proj = QString::null;
+	if ( name.find ( "$(" ) == 0 || name.find ( "${" ) == 0 )
+	{
+		is_subst = true;
 
-        if (QString("$(top_srcdir)") == name.left(13)) {
-            sFileName_Rel2Proj += m_part->projectDirectory();
-        }
+		if ( QString ( "$(top_srcdir)" ) == name.left ( 13 ) )
+		{
+			sFileName_Rel2Proj += m_part->projectDirectory();
+		}
 
-      sFileName_Rel2Proj += "/" + name.mid(14);
-    }
-    else {
+		sFileName_Rel2Proj += "/" + name.mid ( 14 );
+	}
+	else
+	{
 		is_subst = false;
-    }
+	}
 
-	FileItem * fitem = new FileItem( m_subprojectView->listView(), name, is_subst );
-	fitem->uiFileLink = m_detailView->getUiFileLink(subproject->relativePath()+"/", name );
-	m_subprojectView->listView()->takeItem( fitem );
+	FileItem * fitem = new FileItem ( m_subprojectView->listView(), name, is_subst );
+	fitem->uiFileLink = m_detailView->getUiFileLink ( subproject->relativePath() +"/", name );
+	m_subprojectView->listView()->takeItem ( fitem );
 	fitem->name = name;
-    fitem->m_sRelativeToProjName = sFileName_Rel2Proj;
+	fitem->m_sRelativeToProjName = sFileName_Rel2Proj;
 
 	return fitem;
 }
 
 
-void AutoProjectWidget::emitAddedFiles( const QStringList &fileList )
+void AutoProjectWidget::emitAddedFiles ( const QStringList &fileList )
 {
-	emit m_part->addedFilesToProject( fileList );
+	emit m_part->addedFilesToProject ( fileList );
 }
 
-void AutoProjectWidget::emitAddedFile( const QString &name )
+void AutoProjectWidget::emitAddedFile ( const QString &name )
 {
 	QStringList fileList;
 	fileList.append ( name );
-	emit m_part->addedFilesToProject( fileList );
+	emit m_part->addedFilesToProject ( fileList );
 }
 
-void AutoProjectWidget::emitRemovedFiles( const QStringList &fileList )
+void AutoProjectWidget::emitRemovedFiles ( const QStringList &fileList )
 {
-	emit m_part->removedFilesFromProject( fileList );
+	emit m_part->removedFilesFromProject ( fileList );
 }
 
-void AutoProjectWidget::emitRemovedFile( const QString &name )
+void AutoProjectWidget::emitRemovedFile ( const QString &name )
 {
 	QStringList fileList;
 	fileList.append ( name );
-	emit m_part->removedFilesFromProject( fileList );
+	emit m_part->removedFilesFromProject ( fileList );
 }
 
 void AutoProjectWidget::restoreSession ( const QDomElement* el )
 {
-	Q_UNUSED( el );
+	Q_UNUSED ( el );
 }
 
 void AutoProjectWidget::saveSession ( QDomElement* el )
@@ -711,36 +719,36 @@ void AutoProjectWidget::saveSession ( QDomElement* el )
 		QString activeTargetPath = m_activeSubproject->path.mid ( m_part->project()->projectDirectory().length() + 1 );
 		activeTargetPath = activeTargetPath + "/" + m_activeTarget->name;
 
-		QDomElement generalEl = domDoc.createElement("general");
+		QDomElement generalEl = domDoc.createElement ( "general" );
 
 		kdDebug ( 9020 ) << k_funcinfo << "Saving session data of AutoProjectWidget: " << activeTargetPath << endl;
 
-		generalEl.setAttribute("activetarget", activeTargetPath);
-		el->appendChild(generalEl);
+		generalEl.setAttribute ( "activetarget", activeTargetPath );
+		el->appendChild ( generalEl );
 	}
 }
 
-void AutoProjectWidget::setActiveSubproject( SubprojectItem * spitem )
+void AutoProjectWidget::setActiveSubproject ( SubprojectItem * spitem )
 {
 	QString olddir = m_part->activeDirectory();
 	m_activeSubproject = spitem;
-	emit m_part->activeDirectoryChanged( olddir, m_part->activeDirectory() );
+	emit m_part->activeDirectoryChanged ( olddir, m_part->activeDirectory() );
 }
 
-void AutoProjectWidget::focusInEvent( QFocusEvent */*e*/ )
+void AutoProjectWidget::focusInEvent ( QFocusEvent */*e*/ )
 {
-	switch (m_lastFocusedView)
+	switch ( m_lastFocusedView )
 	{
-	case DetailsView:
-		m_detailView->listView()->setFocus();
-		break;
-	case SubprojectView:
-	default:
-		m_subprojectView->listView()->setFocus();
+		case DetailsView:
+			m_detailView->listView()->setFocus();
+			break;
+		case SubprojectView:
+		default:
+			m_subprojectView->listView()->setFocus();
 	}
 }
 
-void AutoProjectWidget::setLastFocusedView( AutoProjectView view )
+void AutoProjectWidget::setLastFocusedView ( AutoProjectView view )
 {
 	m_lastFocusedView = view;
 }

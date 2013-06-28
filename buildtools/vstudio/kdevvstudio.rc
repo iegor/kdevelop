@@ -9,7 +9,8 @@
     <Action name="build_build_solution" />
     <Action name="build_build_project" />
     <Action name="build_build_file" />
-    <Action name="build_clean_solution" />
+    <Action name="build_clear_solution" />
+    <Action name="build_clear_project" />
     <Action name="build_execute" />
   </Menu>
 </MenuBar>

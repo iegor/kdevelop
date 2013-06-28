@@ -10,10 +10,12 @@ kde_module_LTLIBRARIES = libvstudio.la
 libvstudio_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
 libvstudio_la_LIBADD = \
 	$(top_builddir)/lib/interfaces/extensions/libkdevextensions.la $(top_builddir)/lib/libkdevelop.la \
-	$(top_builddir)/lib/widgets/libkdevwidgets.la $(LIB_KHTML)
+	$(top_builddir)/lib/widgets/libkdevwidgets.la $(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la \
+	$(top_builddir)/buildtools/lib/base/libkdevbuildbase.la $(LIB_KHTML)
 
 libvstudio_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
-	digraphview.cpp hierarchydlg.cpp navigator.cpp viewcombos.cpp
+	digraphview.cpp hierarchydlg.cpp vs_manager_widget.ui
+# navigator.cpp viewcombos.cpp
 
 METASOURCES = AUTO
 

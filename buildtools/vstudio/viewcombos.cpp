@@ -27,13 +27,13 @@
 #include "viewcombos.h"
 #include "vstudiopart.h"
 
-NamespaceItem::NamespaceItem(VStudioPart *part, QListView *parent, QString name, NamespaceDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+NamespaceItem::NamespaceItem ( VStudioPart *part, QListView *parent, QString name, NamespaceDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
-NamespaceItem::NamespaceItem(VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+NamespaceItem::NamespaceItem ( VStudioPart *part, QListViewItem *parent, QString name, NamespaceDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
@@ -43,23 +43,23 @@ NamespaceItem::~ NamespaceItem( )
 
 NamespaceDom NamespaceItem::dom() const
 {
-    return m_dom;
+	return m_dom;
 }
 
 void NamespaceItem::setup()
 {
-    QListViewItem::setup();
-    setPixmap( 0, UserIcon("CVnamespace", KIcon::DefaultState, m_part->instance()) );
+	QListViewItem::setup();
+	setPixmap ( 0, UserIcon ( "CVnamespace", KIcon::DefaultState, m_part->instance() ) );
 }
 
 
-ClassItem::ClassItem(VStudioPart *part, QListView *parent, QString name, ClassDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+ClassItem::ClassItem ( VStudioPart *part, QListView *parent, QString name, ClassDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
-ClassItem::ClassItem(VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+ClassItem::ClassItem ( VStudioPart *part, QListViewItem *parent, QString name, ClassDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
@@ -69,23 +69,23 @@ ClassItem::~ ClassItem( )
 
 ClassDom ClassItem::dom() const
 {
-    return m_dom;
+	return m_dom;
 }
 
 void ClassItem::setup()
 {
-    QListViewItem::setup();
-    setPixmap( 0, UserIcon("CVclass", KIcon::DefaultState, m_part->instance()) );
+	QListViewItem::setup();
+	setPixmap ( 0, UserIcon ( "CVclass", KIcon::DefaultState, m_part->instance() ) );
 }
 
 
-FunctionItem::FunctionItem(VStudioPart *part, QListView *parent, QString name, FunctionDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+FunctionItem::FunctionItem ( VStudioPart *part, QListView *parent, QString name, FunctionDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
-FunctionItem::FunctionItem(VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom)
-    :QListViewItem(parent, name), m_dom(dom), m_part(part)
+FunctionItem::FunctionItem ( VStudioPart *part, QListViewItem *parent, QString name, FunctionDom dom )
+		:QListViewItem ( parent, name ), m_dom ( dom ), m_part ( part )
 {
 }
 
@@ -95,120 +95,120 @@ FunctionItem::~ FunctionItem( )
 
 FunctionDom FunctionItem::dom() const
 {
-    return m_dom;
+	return m_dom;
 }
 
 void FunctionItem::setup()
 {
-    QListViewItem::setup();
-    QString iconName;
-    if( m_dom->access() == CodeModelItem::Private )
-        iconName = "CVprivate_meth";
-    else if( m_dom->access() == CodeModelItem::Protected )
-        iconName = "CVprotected_meth";
-    else
-        iconName = "CVpublic_meth";
-    setPixmap( 0, UserIcon(iconName, KIcon::DefaultState, m_part->instance()) );
+	QListViewItem::setup();
+	QString iconName;
+	if ( m_dom->access() == CodeModelItem::Private )
+		iconName = "CVprivate_meth";
+	else if ( m_dom->access() == CodeModelItem::Protected )
+		iconName = "CVprotected_meth";
+	else
+		iconName = "CVpublic_meth";
+	setPixmap ( 0, UserIcon ( iconName, KIcon::DefaultState, m_part->instance() ) );
 }
 
-
-namespace ViewCombosOp{
-
-void refreshNamespaces(VStudioPart *part, KComboView *view)
+namespace ViewCombosOp
 {
-    view->clear();
 
-    NamespaceItem *global_item = new NamespaceItem( part, view->listView(), i18n("(Global Namespace)"), part->codeModel()->globalNamespace() );
-    view->addItem(global_item);
-    global_item->setPixmap( 0, UserIcon("CVnamespace", KIcon::DefaultState, part->instance()) );
-    NamespaceList namespaces = part->codeModel()->globalNamespace()->namespaceList();
-    for (NamespaceList::const_iterator it = namespaces.begin(); it != namespaces.end(); ++it)
-    {
-        NamespaceItem *item = new NamespaceItem(part, view->listView(), part->languageSupport()->formatModelItem(*it), *it);
-        view->addItem(item);
-        item->setOpen(true);
-    }
-    view->setCurrentActiveItem(global_item);
+	void refreshNamespaces ( VStudioPart *part, KComboView *view )
+	{
+		view->clear();
+
+		NamespaceItem *global_item = new NamespaceItem ( part, view->listView(), i18n ( "(Global Namespace)" ), part->codeModel()->globalNamespace() );
+		view->addItem ( global_item );
+		global_item->setPixmap ( 0, UserIcon ( "CVnamespace", KIcon::DefaultState, part->instance() ) );
+		NamespaceList namespaces = part->codeModel()->globalNamespace()->namespaceList();
+		for ( NamespaceList::const_iterator it = namespaces.begin(); it != namespaces.end(); ++it )
+		{
+			NamespaceItem *item = new NamespaceItem ( part, view->listView(), part->languageSupport()->formatModelItem ( *it ), *it );
+			view->addItem ( item );
+			item->setOpen ( true );
+		}
+		view->setCurrentActiveItem ( global_item );
+	}
+
+	void refreshClasses ( VStudioPart *part, KComboView *view, const QString &dom )
+	{
+		view->clear();
+
+		view->setCurrentText ( EmptyClasses );
+		NamespaceDom nsdom;
+		if ( dom == "::" )
+			nsdom = part->codeModel()->globalNamespace();
+		else
+		{
+			nsdom = namespaceByName ( part->codeModel()->globalNamespace(), dom );
+			if ( !nsdom )
+				return;
+		}
+		ClassList classes = nsdom->classList();
+		for ( ClassList::const_iterator it = classes.begin(); it != classes.end(); ++it )
+		{
+			ClassItem *item = new ClassItem ( part, view->listView(), part->languageSupport()->formatModelItem ( *it ), *it );
+			view->addItem ( item );
+			item->setOpen ( true );
+		}
+	}
+
+	void refreshFunctions ( VStudioPart *part, KComboView *view, const ClassDom & dom )
+	{
+		view->clear();
+
+		view->setCurrentText ( EmptyFunctions );
+		FunctionList functions = dom->functionList();
+		for ( FunctionList::const_iterator it = functions.begin(); it != functions.end(); ++it )
+		{
+			FunctionItem *item = new FunctionItem ( part, view->listView(), part->languageSupport()->formatModelItem ( *it, true ), *it );
+			view->addItem ( item );
+			item->setOpen ( true );
+		}
+	}
+
+	void refreshFunctions ( VStudioPart *part, KComboView *view, const QString & dom )
+	{
+		view->clear();
+
+		view->setCurrentText ( EmptyFunctions );
+		NamespaceDom nsdom;
+		if ( dom == "::" )
+			nsdom = part->codeModel()->globalNamespace();
+		else
+		{
+			nsdom = namespaceByName ( part->codeModel()->globalNamespace(), dom );
+			if ( !nsdom )
+				return;
+		}
+		FunctionList functions = nsdom->functionList();
+		for ( FunctionList::const_iterator it = functions.begin(); it != functions.end(); ++it )
+		{
+			FunctionItem *item = new FunctionItem ( part, view->listView(), part->languageSupport()->formatModelItem ( *it, true ), *it );
+			view->addItem ( item );
+			item->setOpen ( true );
+		}
+	}
+
+
 }
 
-void refreshClasses(VStudioPart *part, KComboView *view, const QString &dom)
+NamespaceDom ViewCombosOp::namespaceByName ( NamespaceDom dom, QString name )
 {
-    view->clear();
+	NamespaceDom result;
 
-    view->setCurrentText(EmptyClasses);
-    NamespaceDom nsdom;
-    if (dom == "::")
-        nsdom = part->codeModel()->globalNamespace();
-    else
-    {
-        nsdom = namespaceByName(part->codeModel()->globalNamespace(), dom);
-        if (!nsdom)
-            return;
-    }
-    ClassList classes = nsdom->classList();
-    for (ClassList::const_iterator it = classes.begin(); it != classes.end(); ++it)
-    {
-        ClassItem *item = new ClassItem(part, view->listView(), part->languageSupport()->formatModelItem(*it), *it);
-        view->addItem(item);
-        item->setOpen(true);
-    }
-}
-
-void refreshFunctions(VStudioPart *part, KComboView *view, const ClassDom & dom)
-{
-    view->clear();
-
-    view->setCurrentText(EmptyFunctions);
-    FunctionList functions = dom->functionList();
-    for (FunctionList::const_iterator it = functions.begin(); it != functions.end(); ++it)
-    {
-        FunctionItem *item = new FunctionItem(part, view->listView(), part->languageSupport()->formatModelItem(*it, true), *it);
-        view->addItem(item);
-        item->setOpen(true);
-    }
-}
-
-void refreshFunctions(VStudioPart *part, KComboView *view, const QString & dom)
-{
-    view->clear();
-
-    view->setCurrentText(EmptyFunctions);
-    NamespaceDom nsdom;
-    if (dom == "::")
-        nsdom = part->codeModel()->globalNamespace();
-    else
-    {
-        nsdom = namespaceByName(part->codeModel()->globalNamespace(), dom);
-        if (!nsdom)
-            return;
-    }
-    FunctionList functions = nsdom->functionList();
-    for (FunctionList::const_iterator it = functions.begin(); it != functions.end(); ++it)
-    {
-        FunctionItem *item = new FunctionItem(part, view->listView(), part->languageSupport()->formatModelItem(*it, true), *it);
-        view->addItem(item);
-        item->setOpen(true);
-    }
-}
-
-
-}
-
-NamespaceDom ViewCombosOp::namespaceByName( NamespaceDom dom, QString name )
-{
-    NamespaceDom result;
-
-    result = dom->namespaceByName(name);
-    if (!result)
-    {
-        NamespaceList nslist = dom->namespaceList();
-        for (NamespaceList::const_iterator it = nslist.begin(); it != nslist.end(); ++it)
-        {
-            result = namespaceByName(*it, name);
-            if (result)
-                break;
-        }
-    }
-    return result;
+	result = dom->namespaceByName ( name );
+	if ( !result )
+	{
+		NamespaceList nslist = dom->namespaceList();
+		for ( NamespaceList::const_iterator it = nslist.begin(); it != nslist.end(); ++it )
+		{
+			result = namespaceByName ( *it, name );
+			if ( result )
+				break;
+		}
+	}
+	return result;
 }
 
