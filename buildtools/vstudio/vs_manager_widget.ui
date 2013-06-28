@@ -1,0 +1,39 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>vs_manager_widget</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>vs_manager_widget</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>253</width>
+            <height>670</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Form2</string>
+    </property>
+    <grid>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="KListView" row="0" column="0">
+            <property name="name">
+                <cstring>m_listView</cstring>
+            </property>
+        </widget>
+    </grid>
+</widget>
+<includes>
+    <include location="local" impldecl="in implementation">vs_manager_widget.ui.h</include>
+</includes>
+<slots>
+    <slot>vs_manager_widget_destroyed( QObject * )</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+<includehints>
+    <includehint>klistview.h</includehint>
+</includehints>
+</UI>

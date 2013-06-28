@@ -6,24 +6,24 @@ INCLUDES = -I$(top_srcdir)/buildtools/lib -I$(top_srcdir)/buildtools/lib/base \
 	-I$(top_srcdir)/lib/interfaces/extras -I$(top_srcdir)/lib/util -I$(top_srcdir)/lib/widgets \
 	-I$(top_builddir)/buildtools/lib/widgets $(all_includes)
 
-kde_module_LTLIBRARIES = libvstudio.la
-libvstudio_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
-libvstudio_la_LIBADD = \
+kde_module_LTLIBRARIES = libkdevvstudioproject.la
+libkdevvstudioproject_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
+libkdevvstudioproject_la_LIBADD = \
 	$(top_builddir)/lib/interfaces/extensions/libkdevextensions.la $(top_builddir)/lib/libkdevelop.la \
 	$(top_builddir)/lib/widgets/libkdevwidgets.la $(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la \
 	$(top_builddir)/buildtools/lib/base/libkdevbuildbase.la $(LIB_KHTML)
 
-libvstudio_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
+libkdevvstudioproject_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
 	digraphview.cpp hierarchydlg.cpp vs_manager_widget.ui
 # navigator.cpp viewcombos.cpp
 
 METASOURCES = AUTO
 
 servicedir = $(kde_servicesdir)
-service_DATA = vstudio.kdesktop
+service_DATA = kdevvstudioproject.desktop
 
-rcdir = $(kde_datadir)/kdevvstudio
-rc_DATA = kdevvstudio.rc
+rcdir = $(kde_datadir)/kdevvstudioproject
+rc_DATA = kdevvstudioproject.rc
 
 QTDIR = /home/bernd/kdesrc/qt-copy
 

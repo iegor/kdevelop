@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Service
+Exec=blubb
+Comment=Visual Studio Project
+Name=KDevVStudioProject
+GenericName=VS Project
+ServiceTypes=KDevelop/Project
+Icon=make
+X-KDE-Library=libkdevvstudioproject
+X-KDevelop-Version=1
+X-KDevelop-Args=

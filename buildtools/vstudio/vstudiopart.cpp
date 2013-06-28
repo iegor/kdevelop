@@ -60,8 +60,8 @@
 #define RUN_OPTIONS 2
 #define MAKE_OPTIONS 3
 
-static const KDevPluginInfo data ( "kdevvstudio" );
-K_EXPORT_COMPONENT_FACTORY ( libkdevvstudio, VStudioFactory ( data ) )
+static const KDevPluginInfo data ( "kdevvstudioproject" );
+K_EXPORT_COMPONENT_FACTORY ( libvstudio, VStudioFactory ( data ) )
 
 VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList &args )
 		: KDevBuildTool ( &data, parent, name ? name : "VStudioPart" )
@@ -69,7 +69,7 @@ VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList 
 {
 	setInstance ( VStudioFactory::instance() );
 
-	setXMLFile ( "kdevvstudio.rc" );
+	setXMLFile ( "kdevvstudioproject.rc" );
 
 //   m_executeAfterBuild = false;
 //    m_isKDE = ( args[0] == "kde" );
