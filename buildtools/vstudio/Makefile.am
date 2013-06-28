@@ -9,9 +9,8 @@ INCLUDES = -I$(top_srcdir)/buildtools/lib -I$(top_srcdir)/buildtools/lib/base \
 kde_module_LTLIBRARIES = libkdevvstudioproject.la
 libkdevvstudioproject_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
 libkdevvstudioproject_la_LIBADD = \
-	$(top_builddir)/lib/interfaces/extensions/libkdevextensions.la $(top_builddir)/lib/libkdevelop.la \
-	$(top_builddir)/lib/widgets/libkdevwidgets.la $(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la \
-	$(top_builddir)/buildtools/lib/base/libkdevbuildbase.la $(LIB_KHTML)
+	$(top_builddir)/buildtools/lib/base/libkdevbuildbase.la $(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la \
+	$(top_builddir)/lib/interfaces/extras/libkdevextras.la $(top_builddir)/lib/libkdevelop.la $(LIB_KHTML)
 
 libkdevvstudioproject_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
 	digraphview.cpp hierarchydlg.cpp vs_manager_widget.ui
@@ -24,11 +23,5 @@ service_DATA = kdevvstudioproject.desktop
 
 rcdir = $(kde_datadir)/kdevvstudioproject
 rc_DATA = kdevvstudioproject.rc
-
-QTDIR = /home/bernd/kdesrc/qt-copy
-
-#foo: digraphview.cpp digraphview.h
-#	$(QTDIR)/bin/moc digraphview.h > digraphview.moc ; \
-#	g++ digraphview.cpp -I$(QTDIR)/include -L$(QTDIR)/lib -L/usr/X11R6/lib -lqt -lX11 -lXext -o foo
 
 noinst_HEADERS = viewcombos.h navigator.h
