@@ -153,10 +153,10 @@
         <envvar value="1" name="WANT_AUTOMAKE_1_11" />
       </envvars>
       <abortonerror>true</abortonerror>
-      <runmultiplejobs>false</runmultiplejobs>
-      <numberofjobs>1</numberofjobs>
+      <runmultiplejobs>true</runmultiplejobs>
+      <numberofjobs>2</numberofjobs>
       <dontact>false</dontact>
-      <makebin/>
+      <makebin>gmake</makebin>
       <prio>0</prio>
     </make>
     <configurations>
@@ -194,16 +194,33 @@
         <cxxflags>-O0 -ggdb3 -Wall</cxxflags>
         <f77flags/>
       </debug_gcc_x86_64>
+      <debug_gcc_i686>
+        <envvars/>
+        <configargs>--build=i686-pc-linux-gnu --host=i686-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
+        <builddir>debug_gcc_i686</builddir>
+        <topsourcedir/>
+        <cppflags/>
+        <ldflags/>
+        <ccompiler>kdevgccoptions</ccompiler>
+        <cxxcompiler>kdevgppoptions</cxxcompiler>
+        <f77compiler>kdevpgf77options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags>-O0 -ggdb3 -Wall</cflags>
+        <cxxflags>-O0 -ggdb3 -Wall</cxxflags>
+        <f77flags/>
+      </debug_gcc_i686>
     </configurations>
     <general>
-      <useconfiguration>debug_gcc_x86_64</useconfiguration>
+      <useconfiguration>debug_gcc_i686</useconfiguration>
       <activetarget>buildtools/vstudio/libvstudio.la</activetarget>
     </general>
     <run>
-      <mainprogram>/home/rainman/projects/kde/kdevelop/debug_gcc_x86_64</mainprogram>
+      <mainprogram/>
       <programargs/>
       <globaldebugarguments/>
-      <globalcwd>/home/rainman/projects/kde/kdevelop/debug_gcc_x86_64</globalcwd>
+      <globalcwd/>
       <useglobalprogram>false</useglobalprogram>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
