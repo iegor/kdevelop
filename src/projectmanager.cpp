@@ -503,9 +503,10 @@ bool ProjectManager::loadProjectPart()
 		return false;
 	}
 
-	KDevProject *projectPart = KParts::ComponentFactory
-	                           ::createInstanceFromService< KDevProject > ( projectService, API::getInstance(), 0,
-	                                   PluginController::argumentsFromService ( projectService ) );
+	KDevProject *projectPart = KParts::ComponentFactory::createInstanceFromService< KDevProject >(projectService,
+                                                  API::getInstance(),
+                                                  0,
+                                                  PluginController::argumentsFromService (projectService));
 	if ( !projectPart )
 	{
 		KMessageBox::sorry ( TopLevel::getInstance()->main(),
