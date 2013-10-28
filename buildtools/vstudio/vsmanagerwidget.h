@@ -1,4 +1,4 @@
-/*
+/*kate: space-indent on; tab-width 4; indent-width 4; indent-mode cstyle; encoding UTF-8;
  *  Copyright (C) 2003 Roberto Raggi (roberto@kdevelop.org)
  *
  *  This program is free software; you can redistribute it and/or

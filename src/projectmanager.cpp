@@ -1,3 +1,4 @@
+//kate: space-indent on; tab-width 4; indent-width 4; indent-mode cstyle; encoding UTF-8;
 #include <qfile.h>
 #include <qfileinfo.h>
 #include <qdir.h>
@@ -36,7 +37,6 @@ class QDomDocument;
 #include "kdevcreatefile.h"
 #include "kdevversioncontrol.h"
 
-
 #include "toplevel.h"
 #include "core.h"
 #include "api.h"
@@ -52,46 +52,42 @@ class QDomDocument;
 
 #include "projectmanager.h"
 
-QString ProjectInfo::sessionFile() const
-{
-	QString sf = m_projectURL.path ( -1 );
-	sf.truncate ( sf.length() - 8 ); // without ".kdevelop"
-	sf += "kdevses"; // suffix for a KDevelop session file
-	return sf;
+QString ProjectInfo::sessionFile() const {
+    QString sf = m_projectURL.path(-1);
+    sf.truncate(sf.length() - 8);    // without ".kdevelop"
+    sf += "kdevses"; // suffix for a KDevelop session file
+    return sf;
 }
 
-QString ProjectManager::projectDirectory ( const QString& path, bool absolute )
+QString ProjectManager::projectDirectory(const QString& path, bool absolute)
 {
-	if ( absolute )
-		return path;
-	KURL url ( ProjectManager::getInstance()->projectFile(), path );
-	url.cleanPath();
-	return url.path ( -1 );
+    if (absolute)
+        return path;
+    KURL url(ProjectManager::getInstance()->projectFile(), path);
+    url.cleanPath();
+    return url.path(-1);
 }
 
 ProjectManager *ProjectManager::s_instance = 0;
 
 ProjectManager::ProjectManager()
-		: m_info ( 0L )
-		,m_pProjectSession ( new ProjectSession )
+    : m_info(0L)
+    ,m_pProjectSession(new ProjectSession)
 {
 }
 
-ProjectManager::~ProjectManager()
-{
-	delete m_pProjectSession;
-	delete m_info;
+ProjectManager::~ProjectManager() {
+    delete m_pProjectSession;
+    delete m_info;
 }
 
-ProjectManager *ProjectManager::getInstance()
-{
-	if ( !s_instance )
-		s_instance = new ProjectManager;
-	return s_instance;
+ProjectManager *ProjectManager::getInstance() {
+    if (!s_instance)
+        s_instance = new ProjectManager;
+    return s_instance;
 }
 
-void ProjectManager::createActions ( KActionCollection* ac )
-{
+void ProjectManager::createActions ( KActionCollection* ac ) {
 	KAction *action;
 
 	action = new KAction ( i18n ( "&Open Project..." ), "project_open", 0,
@@ -485,173 +481,157 @@ void ProjectManager::getGeneralInfo()
 		m_info->m_profileName = el.firstChild().toText().data();
 }
 
-bool ProjectManager::loadProjectPart()
-{
-	KService::Ptr projectService = KService::serviceByDesktopName ( m_info->m_projectPlugin );
+bool ProjectManager::loadProjectPart() {
+    KService::Ptr projectService = KService::serviceByDesktopName(m_info->m_projectPlugin);
 
-	// this is for backwards compatibility with pre-alpha6 projects
-	if ( !projectService )
-	{
-		projectService = KService::serviceByDesktopName ( m_info->m_projectPlugin.lower() );
-	}
+    // this is for backwards compatibility with pre-alpha6 projects
+    if(!projectService) {
+        projectService = KService::serviceByDesktopName(m_info->m_projectPlugin.lower());
+    }
 
-	if ( !projectService )
-	{
-		KMessageBox::sorry ( TopLevel::getInstance()->main(),
-		                     i18n ( "No project management plugin %1 found." )
-		                     .arg ( m_info->m_projectPlugin ) );
-		return false;
-	}
+    if(!projectService) {
+        KMessageBox::sorry(TopLevel::getInstance()->main(),
+            i18n("No project management plugin %1 found.")
+            .arg(m_info->m_projectPlugin));
+        return false;
+    }
 
-	KDevProject *projectPart = KParts::ComponentFactory::createInstanceFromService< KDevProject >(projectService,
-                                                  API::getInstance(),
-                                                  0,
-                                                  PluginController::argumentsFromService (projectService));
-	if ( !projectPart )
-	{
-		KMessageBox::sorry ( TopLevel::getInstance()->main(),
-		                     i18n ( "Could not create project management plugin %1." )
-		                     .arg ( m_info->m_projectPlugin ) );
-		return false;
-	}
+    KDevProject* projectPart = KParts::ComponentFactory::createInstanceFromService
+        <KDevProject>(projectService,
+                        API::getInstance(),
+                        0,
+                        PluginController::argumentsFromService(projectService));
+    if(!projectPart) {
+        KMessageBox::sorry(TopLevel::getInstance()->main(),
+            i18n("Could not create project management plugin %1.").arg(m_info->m_projectPlugin));
+        return false;
+    }
 
-	API::getInstance()->setProject ( projectPart );
+    API::getInstance()->setProject(projectPart);
 
-	QDomDocument& dom = *API::getInstance()->projectDom();
-	QString path = DomUtil::readEntry ( dom,"/general/projectdirectory", "." );
-	bool absolute = DomUtil::readBoolEntry ( dom,"/general/absoluteprojectpath",false );
-	QString projectDir = projectDirectory ( path, absolute );
-	kdDebug ( 9000 ) << "projectDir: " << projectDir << "  projectName: " << m_info->m_projectName << endl;
+    QDomDocument& dom = *API::getInstance()->projectDom();
+    QString path = DomUtil::readEntry(dom, "/general/projectdirectory", ".");
+    bool absolute = DomUtil::readBoolEntry(dom, "/general/absoluteprojectpath", false);
+    QString projectDir = projectDirectory(path, absolute);
+    kdDebug(9000) << "projectDir: " << projectDir << "  projectName: "
+        << m_info->m_projectName << endl;
 
-	projectPart->openProject ( projectDir, m_info->m_projectName );
+    projectPart->openProject(projectDir, m_info->m_projectName);
+    PluginController::getInstance()->integratePart(projectPart);
 
-	PluginController::getInstance()->integratePart ( projectPart );
-
-	return true;
+    return true;
 }
 
-void ProjectManager::unloadProjectPart()
-{
-	KDevProject *projectPart = API::getInstance()->project();
-	if ( !projectPart ) return;
-	PluginController::getInstance()->removePart ( projectPart );
-	projectPart->closeProject();
-	delete projectPart;
-	API::getInstance()->setProject ( 0 );
+void ProjectManager::unloadProjectPart() {
+    KDevProject *projectPart = API::getInstance()->project();
+    if (!projectPart) return;
+    PluginController::getInstance()->removePart(projectPart);
+    projectPart->closeProject();
+    delete projectPart;
+    API::getInstance()->setProject(0);
 }
 
-bool ProjectManager::loadLanguageSupport ( const QString& lang )
-{
-	kdDebug ( 9000 ) << "Looking for language support for " << lang << endl;
+bool ProjectManager::loadLanguageSupport(const QString& lang) {
+    kdDebug(9000) << "Looking for language support for " << lang << endl;
 
-	if ( lang == m_info->m_activeLanguage )
-	{
-		kdDebug ( 9000 ) << "Language support already loaded" << endl;
-		return true;
-	}
+    if (lang == m_info->m_activeLanguage) {
+        kdDebug(9000) << "Language support already loaded" << endl;
+        return true;
+    }
 
-	KTrader::OfferList languageSupportOffers =
-	    KTrader::self()->query ( QString::fromLatin1 ( "KDevelop/LanguageSupport" ),
-	                             QString::fromLatin1 ( "[X-KDevelop-Language] == '%1' and [X-KDevelop-Version] == %2" ).arg ( lang ).arg ( KDEVELOP_PLUGIN_VERSION ) );
+    KTrader::OfferList languageSupportOffers =
+        KTrader::self()->query(QString::fromLatin1("KDevelop/LanguageSupport"),
+            QString::fromLatin1("[X-KDevelop-Language] == '%1' and [X-KDevelop-Version] == %2")
+                .arg(lang)
+                .arg(KDEVELOP_PLUGIN_VERSION));
 
-	if ( languageSupportOffers.isEmpty() )
-	{
-		KMessageBox::sorry ( TopLevel::getInstance()->main(),
-		                     i18n ( "No language plugin for %1 found." )
-		                     .arg ( lang ) );
-		return false;
-	}
+    if (languageSupportOffers.isEmpty()) {
+        KMessageBox::sorry(TopLevel::getInstance()->main(),
+                           i18n("No language plugin for %1 found.")
+                           .arg(lang));
+        return false;
+    }
 
-	KService::Ptr languageSupportService = *languageSupportOffers.begin();
-	KDevLanguageSupport *langSupport = KParts::ComponentFactory
-	                                   ::createInstanceFromService<KDevLanguageSupport> ( languageSupportService,
-	                                           API::getInstance(),
-	                                           0,
-	                                           PluginController::argumentsFromService ( languageSupportService ) );
+    KService::Ptr languageSupportService = *languageSupportOffers.begin();
+    KDevLanguageSupport *langSupport =
+        KParts::ComponentFactory::createInstanceFromService<KDevLanguageSupport>
+            (languageSupportService, API::getInstance(), 0,
+             PluginController::argumentsFromService(languageSupportService));
 
-	if ( !langSupport )
-	{
-		KMessageBox::sorry ( TopLevel::getInstance()->main(),
-		                     i18n ( "Could not create language plugin for %1." )
-		                     .arg ( lang ) );
-		return false;
-	}
+    if (!langSupport) {
+        KMessageBox::sorry(TopLevel::getInstance()->main(),
+                           i18n("Could not create language plugin for %1.")
+                           .arg(lang));
+        return false;
+    }
 
-	API::getInstance()->setLanguageSupport ( langSupport );
-	PluginController::getInstance()->integratePart ( langSupport );
-	m_info->m_activeLanguage = lang;
-	kdDebug ( 9000 ) << "Language support for " << lang << " successfully loaded." << endl;
-	return true;
+    API::getInstance()->setLanguageSupport(langSupport);
+    PluginController::getInstance()->integratePart(langSupport);
+    m_info->m_activeLanguage = lang;
+    kdDebug(9000) << "Language support for " << lang << " successfully loaded." << endl;
+    return true;
 }
 
-void ProjectManager::unloadLanguageSupport()
-{
-	KDevLanguageSupport *langSupport = API::getInstance()->languageSupport();
-	if ( !langSupport ) return;
-	kdDebug ( 9000 ) << "Language support for " << langSupport->name() << " unloading..." << endl;
-	PluginController::getInstance()->removePart ( langSupport );
-	delete langSupport;
-	API::getInstance()->setLanguageSupport ( 0 );
+void ProjectManager::unloadLanguageSupport() {
+    KDevLanguageSupport *langSupport = API::getInstance()->languageSupport();
+    if (!langSupport) return;
+    kdDebug(9000) << "Language support for " << langSupport->name() << " unloading..." << endl;
+    PluginController::getInstance()->removePart(langSupport);
+    delete langSupport;
+    API::getInstance()->setLanguageSupport(0);
 }
 
-void ProjectManager::loadLocalParts()
-{
-	// Make sure to refresh load/ignore lists
-	getGeneralInfo();
+void ProjectManager::loadLocalParts() {
+    // Make sure to refresh load/ignore lists
+    getGeneralInfo();
 
-	PluginController::getInstance()->unloadPlugins ( m_info->m_ignoreParts );
-	PluginController::getInstance()->loadProjectPlugins ( m_info->m_ignoreParts );
-	PluginController::getInstance()->loadGlobalPlugins ( m_info->m_ignoreParts );
+    PluginController::getInstance()->unloadPlugins(m_info->m_ignoreParts);
+    PluginController::getInstance()->loadProjectPlugins(m_info->m_ignoreParts);
+    PluginController::getInstance()->loadGlobalPlugins(m_info->m_ignoreParts);
 }
 
-KURL ProjectManager::projectFile() const
-{
-	if ( !m_info )
-		return KURL();
-	return m_info->m_projectURL;
+KURL ProjectManager::projectFile() const {
+    if (!m_info) return KURL();
+    return m_info->m_projectURL;
 }
 
 QString ProjectManager::projectName() const
 {
-	if ( !m_info ) return QString();
-
-	return m_info->m_projectName;
+    if (!m_info) return QString();
+    return m_info->m_projectName;
 }
 
 bool ProjectManager::projectLoaded() const
 {
-	return m_info != 0;
+    return m_info != 0;
 }
 
 ProjectSession* ProjectManager::projectSession() const
 {
-	return m_pProjectSession;
+    return m_pProjectSession;
 }
 
-bool ProjectManager::loadKDevelop2Project ( const KURL & url )
-{
-	if ( !url.isValid() || !url.isLocalFile() )
-	{
-		KMessageBox::sorry ( 0, i18n ( "Invalid URL." ) );
-		return false;
-	}
+bool ProjectManager::loadKDevelop2Project(const KURL & url) {
+    if (!url.isValid() || !url.isLocalFile()) {
+        KMessageBox::sorry(0, i18n("Invalid URL."));
+        return false;
+    }
 
-	QString cmd = KGlobal::dirs()->findExe ( "kdevprj2kdevelop" );
-	if ( cmd.isEmpty() )
-	{
-		KMessageBox::sorry ( 0, i18n ( "You do not have 'kdevprj2kdevelop' installed." ) );
-		return false;
-	}
+    QString cmd = KGlobal::dirs()->findExe("kdevprj2kdevelop");
+    if (cmd.isEmpty()) {
+        KMessageBox::sorry(0, i18n("You do not have 'kdevprj2kdevelop' installed."));
+        return false;
+    }
 
-	QFileInfo fileInfo ( url.path() );
+    QFileInfo fileInfo(url.path());
 
-	KShellProcess proc ( "/bin/sh" );
-	proc.setWorkingDirectory ( fileInfo.dirPath ( true ) );
-	proc << "perl" << cmd << KShellProcess::quote ( url.path() );
-	proc.start ( KProcess::Block );
+    KShellProcess proc("/bin/sh");
+    proc.setWorkingDirectory(fileInfo.dirPath(true));
+    proc << "perl" << cmd << KShellProcess::quote(url.path());
+    proc.start(KProcess::Block);
 
-	QString projectFile = fileInfo.dirPath ( true ) + "/" + fileInfo.baseName() + ".kdevelop";
-	return loadProject ( KURL ( projectFile ) );
+    QString projectFile = fileInfo.dirPath(true) + "/" + fileInfo.baseName() + ".kdevelop";
+    return loadProject(KURL(projectFile));
 }
 
 // QString ProjectManager::profileByAttributes(const QString &language, const QStringList &keywords)

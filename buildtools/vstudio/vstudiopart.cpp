@@ -1,4 +1,5 @@
 /***************************************************************************
+ *kate: space-indent on; tab-width 4; indent-width 4; indent-mode cstyle; encoding UTF-8;
  *   Copyright (C) 2001-2002 by Bernd Gehrmann                             *
  *   bernd@kdevelop.org                                                    *
  *                                                                         *
@@ -60,126 +61,127 @@
 #define RUN_OPTIONS 2
 #define MAKE_OPTIONS 3
 
-static const KDevPluginInfo data ( "kdevvstudioproject" );
-K_EXPORT_COMPONENT_FACTORY ( libkdevvstudioproject, VStudioFactory ( data ) )
+static const KDevPluginInfo data("kdevvstudioproject");
+K_EXPORT_COMPONENT_FACTORY(libkdevvstudioproject, VStudioFactory(data))
 
-VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList &/*args*/ )
-		: KDevBuildTool ( &data, parent, name ? name : "VStudioPart" )
+VStudioPart::VStudioPart(QObject *parent,
+                         const char *name,
+                         const QStringList &/*args*/)
+: KDevBuildTool(&data, parent, name ? name : "VStudioPart")
 //     , m_lastCompilationFailed(false)
 {
-	setInstance ( VStudioFactory::instance() );
-
-	setXMLFile ( "kdevvstudioproject.rc" );
+    KAction *action;
+    setInstance (VStudioFactory::instance());
+    setXMLFile ("kdevvstudioproject.rc");
 
 //   m_executeAfterBuild = false;
 //    m_isKDE = ( args[0] == "kde" );
 //   m_needMakefileCvs = false;
 
-	m_widget = new vsw ( this ); //, m_isKDE);
-	m_widget->setIcon ( SmallIcon ( info()->icon() ) );
-	m_widget->setCaption ( i18n ( "VS Manager" ) );
-	QWhatsThis::add ( m_widget, i18n ( "<b>VS manager</b><p>"
-	                                   "The tree looks like a standard VS project explorer,"
-	                                   "yet it has some additiona \"power\" features." ) );
+    m_widget = new vsw(this); //, m_isKDE);
+    m_widget->setIcon (SmallIcon(info()->icon()));
+    m_widget->setCaption (i18n("VS Manager"));
+    QWhatsThis::add(m_widget, i18n( "<b>VS manager</b><p>"
+        "The tree looks like a standard VS project explorer,"
+        "yet it has some additiona \"power\" features."));
 
-	mainWindow()->embedSelectViewRight ( m_widget, i18n ( "VS Manager" ),
-	                                     i18n ( "VS Manager, manages vs solution files" ) );
+    mainWindow()->embedSelectViewRight (m_widget, i18n ("VS Manager"),
+        i18n("VS Manager, manages vs solution files"));
 
-	KAction *action;
+    // Build solution action
+    action = new KAction(i18n("&Build Solution"), "make_kdevelop", Key_F8, this,
+        SLOT (slotBuildSolution()), actionCollection(), "build_build_solution");
+    action->setToolTip(i18n("Builds entire solution"));
+    action->setWhatsThis(i18n("<b>Build solution</b>"
+        "<p>Runs <b>build process</b>from the project directory.<br>"
+        "Environment variables and make arguments can be specified"
+        "in the project settings dialog, <b>Make Options</b> tab."));
+    action->setGroup("vstools");
 
-//   action = new KAction( i18n("Add Translation..."), 0,
-//                         this, SLOT(slotAddTranslation()),
-//                         actionCollection(), "project_addtranslation" );
-//   action->setToolTip(i18n("Add translation"));
-//   action->setWhatsThis(i18n("<b>Add translation</b><p>Creates .po file for the selected language."));
-//   action->setGroup("autotools");
-//   if (!m_isKDE) action->setEnabled(false);
+    // Build project action
+    action = new KAction(i18n("&Build Project"), "make_kdevelop", Key_F7, this,
+        SLOT(slotBuildProject()), actionCollection(), "build_build_project");
+    action->setToolTip(i18n("Builds selected(active) project"));
+    action->setWhatsThis(i18n("<b>Build project</b>"
+        "<p>Runs <b>build process</b> from the project directory.<br>"
+        "Environment variables and make arguments can be specified"
+        "in the project settings dialog, <b>Make Options</b> tab."));
+    action->setGroup("vstools");
 
-	// Build solution action
-	action = new KAction ( i18n ( "&Build Solution" ), "make_kdevelop", Key_F8, this,
-	                       SLOT ( slotBuildSolution() ), actionCollection(), "build_build_solution" );
-	action->setToolTip ( i18n ( "Builds entire solution" ) );
-	action->setWhatsThis ( i18n ( "<b>Build solution</b><p>Runs <b>build process</b> from the project directory.<br>"
-	                              "Environment variables and make arguments can be specified"
-	                              "in the project settings dialog, <b>Make Options</b> tab." ) );
-	action->setGroup ( "autotools" );
+    // Clean solution action
+    action = new KAction(i18n("Clean solution"), "make_kdevelop", Key_F7, this,
+        SLOT(slotCleanSolution()), actionCollection(), "build_clean_solution");
+    action->setToolTip(i18n("Cleans whole solution from produced binaries."));
+    action->setWhatsThis(i18n("<b>Clean solution</b>"
+        "<p>Cleans out all output produced previously."));
+    action->setGroup ("vstools");
 
-	// Build project action
-	action = new KAction ( i18n ( "&Build Project" ), "make_kdevelop", Key_F8, this,
-	                       SLOT ( slotBuildProject() ), actionCollection(), "build_build_project" );
-	action->setToolTip ( i18n ( "Builds selected(active) project" ) );
-	action->setWhatsThis ( i18n ( "<b>Build project</b><p>Runs <b>build process</b> from the project directory.<br>"
-	                              "Environment variables and make arguments can be specified"
-	                              "in the project settings dialog, <b>Make Options</b> tab." ) );
-	action->setGroup ( "autotools" );
+    // Build file action
+    action = new KAction(i18n("Compile &File"), "make_kdevelop", this,
+        SLOT(slotCompileFile()), actionCollection(), "build_build_file");
+    action->setToolTip(i18n("Compile file"));
+    action->setWhatsThis(i18n("<b>Compile file</b>"
+        "<p>Runs <b>build process</b>"
+        "command from the directory where 'filename'"
+        "is the name of currently opened file.<br> Environment variables and make"
+        "arguments can be specified in the project settings dialog, "
+        "<b>Make Options</b> tab."));
+    action->setGroup("autotools");
 
-	// Clean solution action
-	action = new KAction ( i18n ( "Clean solution" ), "make_kdevelop", Key_F7, this,
-	                       SLOT ( slotCleanSolution() ), actionCollection(), "build_clean_solution" );
-	action->setToolTip ( i18n ( "Cleans whole solution from produced binaries." ) );
-	action->setWhatsThis ( i18n ( "<b>Clean solution</b><p>Cleans out all output produced previously." ) );
-	action->setGroup ( "autotools" );
+    // Build configuration action
+    buildConfigAction = new KSelectAction(i18n("Build Configuration"), 0,
+        actionCollection(), "project_configuration");
+    buildConfigAction->setToolTip(i18n("Build configuration menu"));
+    buildConfigAction->setWhatsThis(i18n("<b>Build configuration menu</b>"
+        "<p>Allows to switch between project build configurations.<br>"
+        "Build configuration is a set of build and top source directory settings, "
+        "configure flags and arguments, compiler flags, etc.<br>"
+        "Modify build configurations in project settings dialog, "
+        "<b>Configure Options</b> tab."));
+    buildConfigAction->setGroup("autotools");
 
-	// Build file action
-	action = new KAction ( i18n ( "Compile &File" ), "make_kdevelop", this,
-	                       SLOT ( slotCompileFile() ), actionCollection(), "build_build_file" );
-	action->setToolTip ( i18n ( "Compile file" ) );
-	action->setWhatsThis ( i18n ( "<b>Compile file</b><p>Runs <b>build process</b> command from the directory where 'filename'"
-	                              "is the name of currently opened file.<br> Environment variables and make"
-	                              "arguments can be specified in the project settings dialog, <b>Make Options</b> tab." ) );
-	action->setGroup ( "autotools" );
+    QDomDocument &dom = *projectDom();
+    if (!DomUtil::readBoolEntry(dom, "/kdevvstudio/run/disable_default")) {
+        //ok we handle the execute in this kpart
+        action = new KAction(i18n("Execute Program"), "exec", SHIFT+Key_F9,
+            this, SLOT (slotExecute()), actionCollection(), "build_execute");
+        action->setToolTip(i18n("Execute program"));
+        action->setWhatsThis(i18n("<b>Execute program</b>"
+            "<p>Executes the currently"
+            "active target or the main program specified in"
+            "project settings, <b>Run Options</b> tab."));
+        action->setGroup("autotools");
+    }
 
-	// Build configuration action
-	buildConfigAction = new KSelectAction ( i18n ( "Build Configuration" ), 0, actionCollection(), "project_configuration" );
-	buildConfigAction->setToolTip ( i18n ( "Build configuration menu" ) );
-	buildConfigAction->setWhatsThis ( i18n ( "<b>Build configuration menu</b><p>Allows to switch between project build configurations.<br>"
-	                                  "Build configuration is a set of build and top source directory settings, "
-	                                  "configure flags and arguments, compiler flags, etc.<br>"
-	                                  "Modify build configurations in project settings dialog, <b>Configure Options</b> tab." ) );
-	buildConfigAction->setGroup ( "autotools" );
+    connect(buildConfigAction, SIGNAL(activated(const QString&)),
+        this, SLOT(slotBuildConfigChanged(const QString&)));
+    connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()),
+        this, SLOT(slotBuildConfigAboutToShow()));
 
-	QDomDocument &dom = *projectDom();
-	if ( !DomUtil::readBoolEntry ( dom, "/kdevvstudio/run/disable_default" ) )
-	{
-		//ok we handle the execute in this kpart
-		action = new KAction ( i18n ( "Execute Program" ), "exec", SHIFT+Key_F9,
-		                       this, SLOT ( slotExecute() ),
-		                       actionCollection(), "build_execute" );
-		action->setToolTip ( i18n ( "Execute program" ) );
-		action->setWhatsThis ( i18n ( "<b>Execute program</b><p>Executes the currently"
-		                              "active target or the main program specified in"
-		                              "project settings, <b>Run Options</b> tab." ) );
-		action->setGroup ( "autotools" );
-	}
+//     connect(core(), SIGNAL(projectConfigWidget(KDialogBase*)),
+//               this, SLOT(projectConfigWidget(KDialogBase*)));
 
-	connect ( buildConfigAction, SIGNAL ( activated ( const QString& ) ),
-	          this, SLOT ( slotBuildConfigChanged ( const QString& ) ) );
-	connect ( buildConfigAction->popupMenu(), SIGNAL ( aboutToShow() ),
-	          this, SLOT ( slotBuildConfigAboutToShow() ) );
-
-//    connect( core(), SIGNAL(projectConfigWidget(KDialogBase*)), this, SLOT(projectConfigWidget(KDialogBase*)) );
-
-//   _configProxy = new ConfigWidgetProxy( core() );
-//   _configProxy->createProjectConfigPage( i18n("Configure Options"), CONFIGURE_OPTIONS, info()->icon() );
-//   _configProxy->createProjectConfigPage( i18n("Run Options"), RUN_OPTIONS, info()->icon() );
-//   _configProxy->createProjectConfigPage( i18n("Make Options"), MAKE_OPTIONS, info()->icon() );
-//   connect( _configProxy, SIGNAL(insertConfigWidget(const KDialogBase*, QWidget*, unsigned int )),
-//            this, SLOT(insertConfigWidget(const KDialogBase*, QWidget*, unsigned int )) );
+//     _configProxy = new ConfigWidgetProxy(core());
+//     _configProxy->createProjectConfigPage(i18n("Configure Options"),
+//         CONFIGURE_OPTIONS, info()->icon());
+//     _configProxy->createProjectConfigPage(i18n("Run Options"),
+//         RUN_OPTIONS, info()->icon());
+//     _configProxy->createProjectConfigPage(i18n("Make Options"),
+//         MAKE_OPTIONS, info()->icon());
+//     connect(_configProxy,
+//         SIGNAL(insertConfigWidget(const KDialogBase*, QWidget*, unsigned int)),
+//         this,
+//         SLOT(insertConfigWidget(const KDialogBase*, QWidget*, unsigned int)));
 //
-//
-//   connect( makeFrontend(), SIGNAL(commandFinished(const QString&)),
-//            this, SLOT(slotCommandFinished(const QString&)) );
-//   connect( makeFrontend(), SIGNAL(commandFailed(const QString&)),
-//            this, SLOT(slotCommandFailed(const QString&)) );
-
-//   setWantautotools();
+//     connect(makeFrontend(), SIGNAL(commandFinished(const QString&)),
+//         this, SLOT(slotCommandFinished(const QString&)));
+//     connect(makeFrontend(), SIGNAL(commandFailed(const QString&)),
+//         this, SLOT(slotCommandFailed(const QString&)));
 }
 
-VStudioPart::~VStudioPart()
-{
-	if ( m_widget )
-	{
-		mainWindow()->removeView ( m_widget );
+VStudioPart::~VStudioPart() {
+	if (m_widget) {
+		mainWindow()->removeView(m_widget);
 	}
 	delete m_widget;
 //   delete _configProxy;
@@ -216,7 +218,7 @@ VStudioPart::~VStudioPart()
 //   }
 // }
 
-void VStudioPart::openProject ( const QString &dirName, const QString &projectName )
+void VStudioPart::openProject(const QString &dirName, const QString &projectName)
 {
 // 	m_projectName = projectName;
 // 	m_projectPath = dirName;
@@ -239,41 +241,34 @@ void VStudioPart::openProject ( const QString &dirName, const QString &projectNa
 	KDevProject::openProject ( dirName, projectName );
 }
 
-void VStudioPart::loadVsSolution ( const QString &/*sln_path*/ )
-{
+void VStudioPart::loadVsSolution(const QString &/*sln_path*/) {
 }
 
-void VStudioPart::unloadVsSolution ( const QString &/*sln_path*/ )
-{
+void VStudioPart::unloadVsSolution(const QString &/*sln_path*/) {
 }
 
-void VStudioPart::loadVsProject ( const QString &/*prj_path*/ )
-{
+void VStudioPart::loadVsProject(const QString &/*prj_path*/) {
 }
 
-void VStudioPart::unloadVsProject ( const QString &/*prj_path*/ )
-{
+void VStudioPart::unloadVsProject(const QString &/*prj_path*/) {
 }
 
-void VStudioPart::closeProject()
-{
-// 	m_widget->unloadProject ( "" );
+void VStudioPart::closeProject() {
+//     m_widget->unloadProject ( "" );
 }
 
-QString VStudioPart::projectDirectory() const
-{
-	return m_projectPath;
+QString VStudioPart::projectDirectory() const {
+    return m_projectPath;
 }
 
-QString VStudioPart::projectName() const
-{
+QString VStudioPart::projectName() const {
 	return m_projectName;
 }
 
 /** Retuns a PairList with the run environment variables */
-DomUtil::PairList VStudioPart::runEnvironmentVars() const
-{
-	return DomUtil::readPairListEntry ( *projectDom(), "/kdevvstudio/run/envvars", "envvar", "name", "value" );
+DomUtil::PairList VStudioPart::runEnvironmentVars() const {
+    return DomUtil::readPairListEntry(*projectDom(),
+        "/kdevvstudio/run/envvars", "envvar", "name", "value");
 }
 
 /** Retuns the currently selected run directory
@@ -287,8 +282,7 @@ DomUtil::PairList VStudioPart::runEnvironmentVars() const
   *   if /kdevautoproject/run/directoryradio == custom
   *        The custom directory absolute path
   */
-QString VStudioPart::runDirectory() const
-{
+QString VStudioPart::runDirectory() const {
 //
 //   QDomDocument &dom = *projectDom();
 //
@@ -304,7 +298,7 @@ QString VStudioPart::runDirectory() const
 //     cwd = buildDirectory() +"/"+ URLUtil::getRelativePath( topsourceDirectory(), projectDirectory() ) +"/"+m_widget->activeDirectory();
 //
 //   return cwd;
-	return "";
+    return "";
 }
 
 /** Retuns the currently selected main program
@@ -318,8 +312,7 @@ QString VStudioPart::runDirectory() const
  *   if /kdevvstudio/run/directoryradio == custom or relative == false
  *        The absolute path to executable
 */
-QString VStudioPart::mainProgram() const
-{
+QString VStudioPart::mainProgram() const {
 //   QDomDocument * dom = projectDom();
 //
 //   if ( !dom ) return QString();
@@ -368,12 +361,11 @@ QString VStudioPart::mainProgram() const
 //       relprojectpath = "/" + relprojectpath;
 //     return buildDirectory() + relprojectpath + "/" + activeDirectory() + "/" + titem->name;
 //   }
-	return "";
+    return "";
 }
 
 /** Retuns a QString with the debug command line arguments */
-QString VStudioPart::debugArguments() const
-{
+QString VStudioPart::debugArguments() const {
 //   QDomDocument &dom = *projectDom();
 //
 //   if ( DomUtil::readBoolEntry(dom, "/kdevvstudio/run/useglobalprogram", false) || !m_widget->activeTarget() )
@@ -383,12 +375,11 @@ QString VStudioPart::debugArguments() const
 //   {
 //     return DomUtil::readEntry(dom, "/kdevvstudio/run/debugarguments/" + m_widget->activeTarget()->name);
 //   }
-	return "";
+    return "";
 }
 
 /** Retuns a QString with the run command line arguments */
-QString VStudioPart::runArguments() const
-{
+QString VStudioPart::runArguments() const {
 //   QDomDocument &dom = *projectDom();
 //
 //   if ( DomUtil::readBoolEntry(dom, "/kdevvstudio/run/useglobalprogram", false) || !m_widget->activeTarget() )
@@ -398,19 +389,17 @@ QString VStudioPart::runArguments() const
 //   {
 //     return DomUtil::readEntry(dom, "/kdevvstudio/run/runarguments/" + m_widget->activeTarget()->name);
 //   }
-	return "";
+    return "";
 }
 
-QString VStudioPart::activeDirectory() const
-{
+QString VStudioPart::activeDirectory() const {
 //   return m_widget->activeDirectory();
-	return "";
+    return "";
 }
 
-QStringList VStudioPart::allFiles() const
-{
+QStringList VStudioPart::allFiles() const {
 //   return m_widget->allFiles();
-	return "";
+    return "";
 }
 
 // void VStudioPart::setWantautotools() {
@@ -449,16 +438,14 @@ QStringList VStudioPart::allFiles() const
 //   return environstr;
 // }
 
-void VStudioPart::addFile ( const QString &/*fileName*/ )
-{
+void VStudioPart::addFile(const QString &/*fileName*/) {
 //   QStringList fileList;
 //   fileList.append ( fileName );
 //
 //   this->addFiles ( fileList );
 }
 
-void VStudioPart::addFiles ( const QStringList& /*fileList*/ )
-{
+void VStudioPart::addFiles(const QStringList& /*fileList*/) {
 //   QString directory, name;
 //   QStringList::ConstIterator it;
 //   bool messageBoxShown = false;
@@ -488,17 +475,15 @@ void VStudioPart::addFiles ( const QStringList& /*fileList*/ )
 //   m_widget->addFiles(fileList);
 }
 
-void VStudioPart::removeFile ( const QString &/*fileName*/ )
-{
+void VStudioPart::removeFile(const QString &/*fileName*/) {
 //   QStringList fileList;
 //   fileList.append ( fileName );
 //
 //   this->removeFiles ( fileList );
 }
 
-void VStudioPart::removeFiles ( const QStringList& /*fileList*/ )
-{
-	/// \FIXME m_widget->removeFiles does nothing!
+void VStudioPart::removeFiles(const QStringList& /*fileList*/) {
+    // \FIXME m_widget->removeFiles does nothing!
 //   m_widget->removeFiles ( fileList );
 //   emit removedFilesFromProject ( fileList );
 }
@@ -532,8 +517,7 @@ void VStudioPart::removeFiles ( const QStringList& /*fileList*/ )
 //   return config;
 // }
 
-QString VStudioPart::buildDirectory() const
-{
+QString VStudioPart::buildDirectory() const {
 //   QString prefix = "/kdevvstudio/configurations/" + currentBuildConfig() + "/";
 //
 //	QString builddir = DomUtil::readEntry ( *projectDom(), prefix + "builddir" );
@@ -541,7 +525,7 @@ QString VStudioPart::buildDirectory() const
 //   else if (builddir.startsWith("/")) return builddir;
 //   else                               return projectDirectory() + "/" + builddir;
 //	return projectDirectory() + "/" + builddir;
-	return "";
+    return "";
 }
 
 // QString VStudioPart::topsourceDirectory() const
@@ -720,8 +704,7 @@ QString VStudioPart::buildDirectory() const
 //   return true;
 // }
 
-void VStudioPart::slotBuild()
-{
+void VStudioPart::slotBuild() {
 //   m_lastCompilationFailed = false;
 //
 //   if ( m_needMakefileCvs )
@@ -734,8 +717,7 @@ void VStudioPart::slotBuild()
 //   startMakeCommand(buildDirectory(), QString::fromLatin1(""));
 }
 
-void VStudioPart::buildTarget ( QString /*relpath*/, TargetItem* /*titem*/ )
-{
+void VStudioPart::buildTarget(QString /*relpath*/, TargetItem* /*titem*/) {
 //   if ( !titem )
 //     return;
 //
@@ -779,8 +761,7 @@ void VStudioPart::buildTarget ( QString /*relpath*/, TargetItem* /*titem*/ )
 //   }
 }
 
-void VStudioPart::slotBuildActiveTarget()
-{
+void VStudioPart::slotBuildActiveTarget() {
 //   // Get a pointer to the active target
 //   TargetItem* titem = m_widget->activeTarget();
 //
@@ -791,8 +772,7 @@ void VStudioPart::slotBuildActiveTarget()
 //   buildTarget( URLUtil::getRelativePath( topsourceDirectory(), projectDirectory() ) + "/" + activeDirectory(), titem);
 }
 
-void VStudioPart::slotCompileFile()
-{
+void VStudioPart::slotCompileFile() {
 //   KParts::ReadWritePart *part = dynamic_cast<KParts::ReadWritePart*>(partController()->activePart());
 //   if (!part || !part->url().isLocalFile())
 //     return;
@@ -957,8 +937,7 @@ void VStudioPart::slotCompileFile()
 //   startMakeCommand(buildDirectory(), QString::fromLatin1("install"), true);
 // }
 
-void VStudioPart::slotClean()
-{
+void VStudioPart::slotClean() {
 //   startMakeCommand(buildDirectory(), QString::fromLatin1("clean"));
 }
 
@@ -1157,8 +1136,7 @@ void VStudioPart::slotClean()
 //   m_runProg.truncate(0);
 // }
 
-void VStudioPart::slotAddTranslation()
-{
+void VStudioPart::slotAddTranslation() {
 //   AddTranslationDialog dlg(this, m_widget);
 //   dlg.exec();
 }
@@ -1174,13 +1152,11 @@ void VStudioPart::slotAddTranslation()
 //   buildConfigAction->setCurrentItem(l.findIndex(currentBuildConfig()));
 // }
 
-void VStudioPart::restorePartialProjectSession ( const QDomElement* /*el*/ )
-{
+void VStudioPart::restorePartialProjectSession (const QDomElement* /*el*/) {
 //   m_widget->restoreSession ( el );
 }
 
-void VStudioPart::savePartialProjectSession ( QDomElement* /*el*/ )
-{
+void VStudioPart::savePartialProjectSession(QDomElement* /*el*/) {
 //   QDomDocument domDoc = el->ownerDocument();
 //
 //   KMessageBox::information ( 0, "Hallo, Welt!" );
@@ -1233,8 +1209,7 @@ void VStudioPart::savePartialProjectSession ( QDomElement* /*el*/ )
 //   m_executeAfterBuild=false;
 // }
 
-bool VStudioPart::isDirty()
-{
+bool VStudioPart::isDirty() {
 //   if (m_lastCompilationFailed) return true;
 //
 //   QStringList fileList = allFiles();
@@ -1249,7 +1224,7 @@ bool VStudioPart::isDirty()
 //       return true;
 //     }
 //   }
-	return false;
+    return false;
 }
 
 // void VStudioPart::needMakefileCvs() {
@@ -1261,39 +1236,36 @@ bool VStudioPart::isDirty()
 // 	return m_isKDE;
 // }
 
-KDevProject::Options VStudioPart::options() const
-{
-	return UsesAutotoolsBuildSystem;
+KDevProject::Options VStudioPart::options() const {
+    return UsesAutotoolsBuildSystem;
 }
 
-QStringList recursiveATFind ( const QString &currDir, const QString &baseDir )
-{
-	kdDebug ( 9020 ) << "Dir " << currDir << endl;
-	QStringList fileList;
+QStringList recursiveATFind(const QString &currDir, const QString &baseDir) {
+    kdDebug(9020) << "Dir " << currDir << endl;
+    QStringList fileList;
 
-	if ( !currDir.contains ( "/.." ) && !currDir.contains ( "/." ) )
-	{
-		QDir dir ( currDir );
-		QStringList dirList = dir.entryList ( QDir::Dirs );
-		QStringList::Iterator idx = dirList.begin();
-		for ( ; idx != dirList.end(); ++idx )
-		{
-			fileList += recursiveATFind ( currDir + "/" + ( *idx ),baseDir );
-		}
-		QStringList newFiles = dir.entryList ( "*.am *.in" );
-		idx = newFiles.begin();
-		for ( ; idx != newFiles.end(); ++idx )
-		{
-			QString file = currDir + "/" + ( *idx );
-			fileList.append ( file.remove ( baseDir ) );
-		}
-	}
+    if ( !currDir.contains ( "/.." ) && !currDir.contains ( "/." ) )
+    {
+        QDir dir ( currDir );
+        QStringList dirList = dir.entryList ( QDir::Dirs );
+        QStringList::Iterator idx = dirList.begin();
+        for ( ; idx != dirList.end(); ++idx )
+        {
+            fileList += recursiveATFind ( currDir + "/" + ( *idx ),baseDir );
+        }
+        QStringList newFiles = dir.entryList ( "*.am *.in" );
+        idx = newFiles.begin();
+        for ( ; idx != newFiles.end(); ++idx )
+        {
+            QString file = currDir + "/" + ( *idx );
+            fileList.append ( file.remove ( baseDir ) );
+        }
+    }
 
-	return fileList;
+    return fileList;
 }
 
-QStringList VStudioPart::distFiles() const
-{
+QStringList VStudioPart::distFiles() const {
 	QStringList sourceList = allFiles();
 //   // Scan current source directory for any .pro files.
 //   QString projectDir = projectDirectory();
@@ -1313,7 +1285,7 @@ QStringList VStudioPart::distFiles() const
 //     sourceList += recursiveATFind( projectDirectory() + "/" + (*idx), projectDirectory());
 //   }
 //   return sourceList + files;
-	return sourceList;
+    return sourceList;
 }
 
 // void VStudioPart::startSimpleMakeCommand( const QString & dir, const QString & command, bool withKdesu ) {

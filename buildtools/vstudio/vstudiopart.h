@@ -1,4 +1,4 @@
-/*
+/*kate: space-indent on; tab-width 4; indent-width 4; indent-mode cstyle; encoding UTF-8;
  *  Copyright (C) 2013 Iegor Danylchenko (rmtdev@gmail.com)
  *
  *  This program is free software; you can redistribute it and/or
@@ -17,7 +17,6 @@
  *  Boston, MA 02111-1307, USA.
  *
 */
-
 #ifndef __KDEVPART_VSTUDIOPART_H__
 #define __KDEVPART_VSTUDIOPART_H__
 
@@ -31,11 +30,8 @@
 #include <qdir.h>
 #include <kdevgenericfactory.h>
 #include "kdevbuildtool.h"
-
 //#include "vsmanagerwidget.h"
-
 // #include <kdevplugin.h>
-
 // #include <codemodel.h>
 // #include <codebrowserfrontend.h>
 
@@ -209,4 +205,3 @@ class VStudioPart : public KDevBuildTool
 typedef KDevGenericFactory<VStudioPart> VStudioFactory;
 
 #endif
-// kate: indent-mode csands; tab-width 2;
