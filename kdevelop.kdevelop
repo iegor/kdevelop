@@ -144,7 +144,9 @@
       <synchronize>true</synchronize>
       <orientation>Vertical</orientation>
     </splitheadersource>
-    <references/>
+    <references>
+      <pcs>Qt3</pcs>
+    </references>
   </kdevcppsupport>
   <kdevautoproject>
     <make>
@@ -179,7 +181,7 @@
       </default>
       <debug_gcc_x86_64>
         <envvars/>
-        <configargs>--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-haskell --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-x --enable-mitshm --with-xinerama --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
+        <configargs>--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
         <builddir>debug_gcc_x86_64</builddir>
         <topsourcedir/>
         <cppflags/>
@@ -213,15 +215,15 @@
       </debug_gcc_i686>
     </configurations>
     <general>
-      <useconfiguration>debug_gcc_i686</useconfiguration>
+      <useconfiguration>debug_gcc_x86_64</useconfiguration>
       <activetarget>buildtools/vstudio/libvstudio.la</activetarget>
     </general>
     <run>
-      <mainprogram/>
+      <mainprogram>/usr/kde/git/bin/kdevelop</mainprogram>
       <programargs/>
       <globaldebugarguments/>
       <globalcwd/>
-      <useglobalprogram>false</useglobalprogram>
+      <useglobalprogram>true</useglobalprogram>
       <terminal>false</terminal>
       <autocompile>false</autocompile>
       <autoinstall>false</autoinstall>

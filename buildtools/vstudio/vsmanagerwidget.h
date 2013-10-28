@@ -29,7 +29,7 @@
 #include <qtooltip.h>
 #include <codemodel.h>
 #include <fancylistviewitem.h>
-#include <navigator.h>
+// #include <navigator.h>
 
 #include "vs_manager_widget.h"
 

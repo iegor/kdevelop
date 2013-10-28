@@ -13,7 +13,7 @@ libkdevvstudioproject_la_LIBADD = \
 	$(top_builddir)/lib/interfaces/extras/libkdevextras.la $(top_builddir)/lib/libkdevelop.la $(LIB_KHTML)
 
 libkdevvstudioproject_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
-	digraphview.cpp hierarchydlg.cpp vs_manager_widget.ui
+	vs_manager_widget.ui
 # navigator.cpp viewcombos.cpp
 
 METASOURCES = AUTO
@@ -24,4 +24,3 @@ service_DATA = kdevvstudioproject.desktop
 rcdir = $(kde_datadir)/kdevvstudioproject
 rc_DATA = kdevvstudioproject.rc
 
-noinst_HEADERS = viewcombos.h navigator.h

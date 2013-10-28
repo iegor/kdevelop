@@ -109,7 +109,7 @@ VSManagerWidget::~VSManagerWidget( )
 // static bool selectItemG ( ItemDom item, const QMap<KSharedPtr<ModelType>, ListItemType*>& map )
 // {
 // 	ModelType* c = dynamic_cast<ModelType*> ( & ( *item ) );
-// 
+//
 // 	if ( c )
 // 	{
 // 		KSharedPtr<ModelType> d ( c );
@@ -123,7 +123,7 @@ VSManagerWidget::~VSManagerWidget( )
 // 	return false;
 // }
 
-void VSManagerWidget::slotExecuted ( QListViewItem* item )
+void VSManagerWidget::slotExecuted ( QListViewItem* /*item*/ )
 {
 //   if ( ClassViewItem* cbitem = dynamic_cast<ClassViewItem*>( item ) ){
 //     if ( cbitem->hasImplementation() )
@@ -309,7 +309,7 @@ void VSManagerWidget::removeFile ( const QString& fileName )
 //   m_projectItem->processFile( dom, path, true );
 }
 
-void VSManagerWidget::contentsContextMenuEvent ( QContextMenuEvent * ev )
+void VSManagerWidget::contentsContextMenuEvent ( QContextMenuEvent * /*ev*/ )
 {
 	KPopupMenu menu ( this );
 
@@ -1158,7 +1158,7 @@ bool VSManagerWidget::selectItem ( ItemDom item )
 //   return !lst.isEmpty();
 // }
 
-void VSManagerWidget::maybeTip ( QPoint const & p )
+void VSManagerWidget::maybeTip ( QPoint const & /*p*/ )
 {
 //   ClassViewItem * item = dynamic_cast<ClassViewItem*>( itemAt( p ) );
 //   if ( !item ) return;

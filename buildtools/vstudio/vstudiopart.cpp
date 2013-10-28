@@ -63,7 +63,7 @@
 static const KDevPluginInfo data ( "kdevvstudioproject" );
 K_EXPORT_COMPONENT_FACTORY ( libkdevvstudioproject, VStudioFactory ( data ) )
 
-VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList &args )
+VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList &/*args*/ )
 		: KDevBuildTool ( &data, parent, name ? name : "VStudioPart" )
 //     , m_lastCompilationFailed(false)
 {
@@ -220,9 +220,9 @@ void VStudioPart::openProject ( const QString &dirName, const QString &projectNa
 {
 // 	m_projectName = projectName;
 // 	m_projectPath = dirName;
-// 
+//
 // 	m_widget->openProject ( dirName );
-// 
+//
 // 	QDomDocument &dom = *projectDom();
 // 	QString activeTarget = DomUtil::readEntry ( dom, "/kdevvstudio/general/activetarget" );
 // 	kdDebug ( 9020 ) << k_funcinfo << "activeTarget " << activeTarget << endl;
@@ -239,19 +239,19 @@ void VStudioPart::openProject ( const QString &dirName, const QString &projectNa
 	KDevProject::openProject ( dirName, projectName );
 }
 
-void VStudioPart::loadVsSolution ( const QString &sln_path )
+void VStudioPart::loadVsSolution ( const QString &/*sln_path*/ )
 {
 }
 
-void VStudioPart::unloadVsSolution ( const QString &sln_path )
+void VStudioPart::unloadVsSolution ( const QString &/*sln_path*/ )
 {
 }
 
-void VStudioPart::loadVsProject ( const QString &prj_path )
+void VStudioPart::loadVsProject ( const QString &/*prj_path*/ )
 {
 }
 
-void VStudioPart::unloadVsProject ( const QString &prj_path )
+void VStudioPart::unloadVsProject ( const QString &/*prj_path*/ )
 {
 }
 
@@ -449,7 +449,7 @@ QStringList VStudioPart::allFiles() const
 //   return environstr;
 // }
 
-void VStudioPart::addFile ( const QString &fileName )
+void VStudioPart::addFile ( const QString &/*fileName*/ )
 {
 //   QStringList fileList;
 //   fileList.append ( fileName );
@@ -457,7 +457,7 @@ void VStudioPart::addFile ( const QString &fileName )
 //   this->addFiles ( fileList );
 }
 
-void VStudioPart::addFiles ( const QStringList& fileList )
+void VStudioPart::addFiles ( const QStringList& /*fileList*/ )
 {
 //   QString directory, name;
 //   QStringList::ConstIterator it;
@@ -488,7 +488,7 @@ void VStudioPart::addFiles ( const QStringList& fileList )
 //   m_widget->addFiles(fileList);
 }
 
-void VStudioPart::removeFile ( const QString &fileName )
+void VStudioPart::removeFile ( const QString &/*fileName*/ )
 {
 //   QStringList fileList;
 //   fileList.append ( fileName );
@@ -496,7 +496,7 @@ void VStudioPart::removeFile ( const QString &fileName )
 //   this->removeFiles ( fileList );
 }
 
-void VStudioPart::removeFiles ( const QStringList& fileList )
+void VStudioPart::removeFiles ( const QStringList& /*fileList*/ )
 {
 	/// \FIXME m_widget->removeFiles does nothing!
 //   m_widget->removeFiles ( fileList );
@@ -734,7 +734,7 @@ void VStudioPart::slotBuild()
 //   startMakeCommand(buildDirectory(), QString::fromLatin1(""));
 }
 
-void VStudioPart::buildTarget ( QString relpath, TargetItem* titem )
+void VStudioPart::buildTarget ( QString /*relpath*/, TargetItem* /*titem*/ )
 {
 //   if ( !titem )
 //     return;
@@ -1174,12 +1174,12 @@ void VStudioPart::slotAddTranslation()
 //   buildConfigAction->setCurrentItem(l.findIndex(currentBuildConfig()));
 // }
 
-void VStudioPart::restorePartialProjectSession ( const QDomElement* el )
+void VStudioPart::restorePartialProjectSession ( const QDomElement* /*el*/ )
 {
 //   m_widget->restoreSession ( el );
 }
 
-void VStudioPart::savePartialProjectSession ( QDomElement* el )
+void VStudioPart::savePartialProjectSession ( QDomElement* /*el*/ )
 {
 //   QDomDocument domDoc = el->ownerDocument();
 //

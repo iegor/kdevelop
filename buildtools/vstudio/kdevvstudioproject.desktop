@@ -7,5 +7,5 @@ GenericName=VS Project
 ServiceTypes=KDevelop/Project
 Icon=make
 X-KDE-Library=libkdevvstudioproject
-X-KDevelop-Version=1
-X-KDevelop-Args=
+X-KDevelop-Version=5
+X-KDevelop-Args=vstudio
