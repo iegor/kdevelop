@@ -61,7 +61,7 @@
 #define MAKE_OPTIONS 3
 
 static const KDevPluginInfo data ( "kdevvstudioproject" );
-K_EXPORT_COMPONENT_FACTORY ( libvstudio, VStudioFactory ( data ) )
+K_EXPORT_COMPONENT_FACTORY ( libkdevvstudioproject, VStudioFactory ( data ) )
 
 VStudioPart::VStudioPart ( QObject *parent, const char *name, const QStringList &args )
 		: KDevBuildTool ( &data, parent, name ? name : "VStudioPart" )
