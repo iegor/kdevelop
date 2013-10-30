@@ -1,3 +1,4 @@
+.directory
 *.Plo
 *.Po
 *.so
@@ -11,3 +12,6 @@ Makefile
 .libs
 *.o
 autom4te.cache/*
+*~
+*.pcs
+debug_gcc_x86_64/

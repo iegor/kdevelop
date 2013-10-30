@@ -482,42 +482,42 @@ void ProjectManager::getGeneralInfo()
 }
 
 bool ProjectManager::loadProjectPart() {
-    KService::Ptr projectService = KService::serviceByDesktopName(m_info->m_projectPlugin);
+    KService::Ptr prj_s = KService::serviceByDesktopName(m_info->m_projectPlugin);
 
     // this is for backwards compatibility with pre-alpha6 projects
-    if(!projectService) {
-        projectService = KService::serviceByDesktopName(m_info->m_projectPlugin.lower());
+    if(!prj_s) {
+        prj_s = KService::serviceByDesktopName(m_info->m_projectPlugin.lower());
     }
 
-    if(!projectService) {
+    if(!prj_s) {
         KMessageBox::sorry(TopLevel::getInstance()->main(),
             i18n("No project management plugin %1 found.")
             .arg(m_info->m_projectPlugin));
         return false;
     }
 
-    KDevProject* projectPart = KParts::ComponentFactory::createInstanceFromService
-        <KDevProject>(projectService,
-                        API::getInstance(),
-                        0,
-                        PluginController::argumentsFromService(projectService));
-    if(!projectPart) {
+    KDevProject* prj_p = KParts::ComponentFactory::createInstanceFromService
+        <KDevProject>(prj_s, API::getInstance(), 0,
+                        PluginController::argumentsFromService(prj_s));
+    if(!prj_p) {
         KMessageBox::sorry(TopLevel::getInstance()->main(),
-            i18n("Could not create project management plugin %1.").arg(m_info->m_projectPlugin));
+            i18n("Could not create project management plugin %1.")
+            .arg(m_info->m_projectPlugin));
         return false;
     }
 
-    API::getInstance()->setProject(projectPart);
+    API::getInstance()->setProject(prj_p);
 
     QDomDocument& dom = *API::getInstance()->projectDom();
     QString path = DomUtil::readEntry(dom, "/general/projectdirectory", ".");
-    bool absolute = DomUtil::readBoolEntry(dom, "/general/absoluteprojectpath", false);
+    bool absolute = DomUtil::readBoolEntry(dom, "/general/absoluteprojectpath"
+        , false);
     QString projectDir = projectDirectory(path, absolute);
     kdDebug(9000) << "projectDir: " << projectDir << "  projectName: "
         << m_info->m_projectName << endl;
 
-    projectPart->openProject(projectDir, m_info->m_projectName);
-    PluginController::getInstance()->integratePart(projectPart);
+    prj_p->openProject(projectDir, m_info->m_projectName);
+    PluginController::getInstance()->integratePart(prj_p);
 
     return true;
 }

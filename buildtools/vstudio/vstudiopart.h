@@ -53,30 +53,7 @@ class KDialogBase;
 class KSelectAction;
 class TargetItem;
 class ConfigWidgetProxy;
-
 class VSManagerWidget;
-
-class VSSolution
-{
-	public:
-		VSSolution()
-		{
-		}
-		~VSSolution()
-		{
-		}
-};
-
-class VSProject
-{
-	public:
-		VSProject()
-		{
-		}
-		~VSProject()
-		{
-		}
-};
 
 class VStudioPart : public KDevBuildTool
 {

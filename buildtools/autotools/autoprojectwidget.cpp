@@ -318,7 +318,6 @@ QString AutoProjectWidget::subprojectDirectory()
 	return selectedSubproject()->path;
 }
 
-
 void AutoProjectWidget::setActiveTarget ( const QString &targetPath )
 {
 	int prefixlen = m_part->projectDirectory().length() + 1;

@@ -12,8 +12,8 @@ libkdevvstudioproject_la_LIBADD = \
 	$(top_builddir)/buildtools/lib/base/libkdevbuildbase.la $(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la \
 	$(top_builddir)/lib/interfaces/extras/libkdevextras.la $(top_builddir)/lib/libkdevelop.la $(LIB_KHTML)
 
-libkdevvstudioproject_la_SOURCES = vstudiopart.cpp vsmanagerwidget.cpp \
-	vs_manager_widget.ui
+libkdevvstudioproject_la_SOURCES = vs_manager_widget.ui vs_solution.cpp \
+	vsmanagerwidget.cpp vstudiopart.cpp
 # navigator.cpp viewcombos.cpp
 
 METASOURCES = AUTO
@@ -24,3 +24,4 @@ service_DATA = kdevvstudioproject.desktop
 rcdir = $(kde_datadir)/kdevvstudioproject
 rc_DATA = kdevvstudioproject.rc
 
+noinst_HEADERS = vs_solution.h

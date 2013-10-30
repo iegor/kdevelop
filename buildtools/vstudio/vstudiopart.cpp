@@ -15,13 +15,6 @@
 
 #include <config.h>
 
-#include "vstudiopart.h"
-#include "vslistviewitems.h"
-// #include "configureoptionswidget.h"
-// #include "addtranslationdlg.h"
-// #include "addicondlg.h"
-#include "vsmanagerwidget.h"
-
 #include <qdom.h>
 #include <qdir.h>
 #include <qfileinfo.h>
@@ -57,6 +50,11 @@
 #include <kdevplugininfo.h>
 #include <urlutil.h>
 
+#include "vstudiopart.h"
+#include "vslistviewitems.h"
+#include "vsmanagerwidget.h"
+#include "vs_solution.h"
+
 #define CONFIGURE_OPTIONS 1
 #define RUN_OPTIONS 2
 #define MAKE_OPTIONS 3
@@ -67,30 +65,30 @@ K_EXPORT_COMPONENT_FACTORY(libkdevvstudioproject, VStudioFactory(data))
 VStudioPart::VStudioPart(QObject *parent,
                          const char *name,
                          const QStringList &/*args*/)
-: KDevBuildTool(&data, parent, name ? name : "VStudioPart")
+        : KDevBuildTool(&data, parent, name ? name : "VStudioPart")
 //     , m_lastCompilationFailed(false)
 {
     KAction *action;
-    setInstance (VStudioFactory::instance());
-    setXMLFile ("kdevvstudioproject.rc");
+    setInstance(VStudioFactory::instance());
+    setXMLFile("kdevvstudioproject.rc");
 
 //   m_executeAfterBuild = false;
 //    m_isKDE = ( args[0] == "kde" );
 //   m_needMakefileCvs = false;
 
     m_widget = new vsw(this); //, m_isKDE);
-    m_widget->setIcon (SmallIcon(info()->icon()));
-    m_widget->setCaption (i18n("VS Manager"));
-    QWhatsThis::add(m_widget, i18n( "<b>VS manager</b><p>"
+    m_widget->setIcon(SmallIcon(info()->icon()));
+    m_widget->setCaption(i18n("VS Manager"));
+    QWhatsThis::add(m_widget, i18n("<b>VS manager</b><p>"
         "The tree looks like a standard VS project explorer,"
         "yet it has some additiona \"power\" features."));
 
-    mainWindow()->embedSelectViewRight (m_widget, i18n ("VS Manager"),
+    mainWindow()->embedSelectView(m_widget, i18n("VS Manager"),
         i18n("VS Manager, manages vs solution files"));
 
     // Build solution action
     action = new KAction(i18n("&Build Solution"), "make_kdevelop", Key_F8, this,
-        SLOT (slotBuildSolution()), actionCollection(), "build_build_solution");
+        SLOT(slotBuildSolution()), actionCollection(), "build_build_solution");
     action->setToolTip(i18n("Builds entire solution"));
     action->setWhatsThis(i18n("<b>Build solution</b>"
         "<p>Runs <b>build process</b>from the project directory.<br>"
@@ -114,7 +112,7 @@ VStudioPart::VStudioPart(QObject *parent,
     action->setToolTip(i18n("Cleans whole solution from produced binaries."));
     action->setWhatsThis(i18n("<b>Clean solution</b>"
         "<p>Cleans out all output produced previously."));
-    action->setGroup ("vstools");
+    action->setGroup("vstools");
 
     // Build file action
     action = new KAction(i18n("Compile &File"), "make_kdevelop", this,
@@ -144,7 +142,7 @@ VStudioPart::VStudioPart(QObject *parent,
     if (!DomUtil::readBoolEntry(dom, "/kdevvstudio/run/disable_default")) {
         //ok we handle the execute in this kpart
         action = new KAction(i18n("Execute Program"), "exec", SHIFT+Key_F9,
-            this, SLOT (slotExecute()), actionCollection(), "build_execute");
+                             this, SLOT(slotExecute()), actionCollection(), "build_execute");
         action->setToolTip(i18n("Execute program"));
         action->setWhatsThis(i18n("<b>Execute program</b>"
             "<p>Executes the currently"
@@ -180,10 +178,10 @@ VStudioPart::VStudioPart(QObject *parent,
 }
 
 VStudioPart::~VStudioPart() {
-	if (m_widget) {
-		mainWindow()->removeView(m_widget);
-	}
-	delete m_widget;
+    if (m_widget) {
+        mainWindow()->removeView(m_widget);
+    }
+    delete m_widget;
 //   delete _configProxy;
 }
 
@@ -220,14 +218,14 @@ VStudioPart::~VStudioPart() {
 
 void VStudioPart::openProject(const QString &dirName, const QString &projectName)
 {
-// 	m_projectName = projectName;
-// 	m_projectPath = dirName;
+//  m_projectName = projectName;
+//  m_projectPath = dirName;
 //
-// 	m_widget->openProject ( dirName );
+//  m_widget->openProject ( dirName );
 //
-// 	QDomDocument &dom = *projectDom();
-// 	QString activeTarget = DomUtil::readEntry ( dom, "/kdevvstudio/general/activetarget" );
-// 	kdDebug ( 9020 ) << k_funcinfo << "activeTarget " << activeTarget << endl;
+//  QDomDocument &dom = *projectDom();
+//  QString activeTarget = DomUtil::readEntry ( dom, "/kdevvstudio/general/activetarget" );
+//  kdDebug ( 9020 ) << k_funcinfo << "activeTarget " << activeTarget << endl;
 //   if (!activeTarget.isEmpty())
 //     m_widget->setActiveTarget(activeTarget);
 //   else
@@ -238,7 +236,26 @@ void VStudioPart::openProject(const QString &dirName, const QString &projectName
 //                               "Project -> Project Options -> Run Options"), i18n("No active target specified"),  "kdevelop_open_project_no_active_target");
 //   }
 
-	KDevProject::openProject ( dirName, projectName );
+    QDomDocument &dom = *projectDom();
+//     QStringList vsitms;
+//     vsitms = DomUtil::readEntry(dom, "kdevvstudioproject/general");
+
+    // Read all solutions and projects parse and setup them
+    DomUtil::PairList vsitems = DomUtil::readPairListEntry(dom,
+                                "kdevvstudioproject/general", "vsitem", "name", "path");
+    DomUtil::PairList::ConstIterator it;
+    for (it = vsitems.begin(); it != vsitems.end(); ++it) {
+//         ( *it ).first;
+//         ( *it ).second;
+        kdDebug() << "[VS item]: " << (*it).first << " in " << (*it).second << endl;
+
+        VSSolution sln((*it).first, (*it).second);
+        if(!sln.Parse()) {
+            kdDebug(9037) << "Can't parse solution file" << endl;
+        }
+    }
+
+    KDevProject::openProject(dirName, projectName);
 }
 
 void VStudioPart::loadVsSolution(const QString &/*sln_path*/) {
@@ -262,13 +279,13 @@ QString VStudioPart::projectDirectory() const {
 }
 
 QString VStudioPart::projectName() const {
-	return m_projectName;
+    return m_projectName;
 }
 
 /** Retuns a PairList with the run environment variables */
 DomUtil::PairList VStudioPart::runEnvironmentVars() const {
     return DomUtil::readPairListEntry(*projectDom(),
-        "/kdevvstudio/run/envvars", "envvar", "name", "value");
+                                      "/kdevvstudio/run/envvars", "envvar", "name", "value");
 }
 
 /** Retuns the currently selected run directory
@@ -520,11 +537,11 @@ void VStudioPart::removeFiles(const QStringList& /*fileList*/) {
 QString VStudioPart::buildDirectory() const {
 //   QString prefix = "/kdevvstudio/configurations/" + currentBuildConfig() + "/";
 //
-//	QString builddir = DomUtil::readEntry ( *projectDom(), prefix + "builddir" );
+//  QString builddir = DomUtil::readEntry ( *projectDom(), prefix + "builddir" );
 //   if (builddir.isEmpty())            return topsourceDirectory();
 //   else if (builddir.startsWith("/")) return builddir;
 //   else                               return projectDirectory() + "/" + builddir;
-//	return projectDirectory() + "/" + builddir;
+//  return projectDirectory() + "/" + builddir;
     return "";
 }
 
@@ -1152,7 +1169,7 @@ void VStudioPart::slotAddTranslation() {
 //   buildConfigAction->setCurrentItem(l.findIndex(currentBuildConfig()));
 // }
 
-void VStudioPart::restorePartialProjectSession (const QDomElement* /*el*/) {
+void VStudioPart::restorePartialProjectSession(const QDomElement* /*el*/) {
 //   m_widget->restoreSession ( el );
 }
 
@@ -1233,40 +1250,15 @@ bool VStudioPart::isDirty() {
 
 // bool VStudioPart::isKDE() const
 // {
-// 	return m_isKDE;
+//  return m_isKDE;
 // }
 
 KDevProject::Options VStudioPart::options() const {
     return UsesAutotoolsBuildSystem;
 }
 
-QStringList recursiveATFind(const QString &currDir, const QString &baseDir) {
-    kdDebug(9020) << "Dir " << currDir << endl;
-    QStringList fileList;
-
-    if ( !currDir.contains ( "/.." ) && !currDir.contains ( "/." ) )
-    {
-        QDir dir ( currDir );
-        QStringList dirList = dir.entryList ( QDir::Dirs );
-        QStringList::Iterator idx = dirList.begin();
-        for ( ; idx != dirList.end(); ++idx )
-        {
-            fileList += recursiveATFind ( currDir + "/" + ( *idx ),baseDir );
-        }
-        QStringList newFiles = dir.entryList ( "*.am *.in" );
-        idx = newFiles.begin();
-        for ( ; idx != newFiles.end(); ++idx )
-        {
-            QString file = currDir + "/" + ( *idx );
-            fileList.append ( file.remove ( baseDir ) );
-        }
-    }
-
-    return fileList;
-}
-
 QStringList VStudioPart::distFiles() const {
-	QStringList sourceList = allFiles();
+    QStringList sourceList = allFiles();
 //   // Scan current source directory for any .pro files.
 //   QString projectDir = projectDirectory();
 //   QDir dir(projectDir);
