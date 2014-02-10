@@ -611,7 +611,7 @@ class PopupFiller {
   public:
     PopupFiller( HelpStruct str , QString dAdd, int maxCount = 100 ) : struk( str ), depthAdd( dAdd ), s( maxCount ) {}
 
-	    
+
 		void  fillIncludes( const DeclarationInfo& decl, QPopupMenu* parent, bool& needSeparator ) {
 			if( !struk.receiver->getIncludeFiles()[ HashedString( decl.file ) ] ) {
 				QString file = decl.file;
@@ -652,12 +652,12 @@ class PopupFiller {
 				struk.m_popupActions.insert( id, fakeDec );
 			}
 		}
-	
+
     void fill( QPopupMenu * parent, LocateResult d, QString prefix = "", const DeclarationInfo & sourceVariable = DeclarationInfo() ) {
       Debug dbg( "#fl# ", 10 )
       ;
 
-	    
+
       if ( !s || !dbg ) {
         //dbgMajor() << "safety-counter triggered while filling \"" << d.fullNameChain() << "\"" << endl;
         return ;
@@ -930,7 +930,7 @@ m_codeCompleteCh2Rx( "(->)|(\\:\\:)" ) {
 	connect( cppSupport->codeRepository(), SIGNAL(catalogRegistered( Catalog* )), this, SLOT( emptyCache() ) );
 	connect( cppSupport->codeRepository(), SIGNAL(catalogUnregistered( Catalog* )), this, SLOT( emptyCache() ) );
 	connect( cppSupport->codeRepository(), SIGNAL(catalogChanged( Catalog* )), this, SLOT( emptyCache() ) );
-  
+
 	setupCodeInformationRepository();
 
   if ( part->partController() ->parts() ) {
@@ -958,7 +958,7 @@ m_codeCompleteCh2Rx( "(->)|(\\:\\:)" ) {
     this, SLOT(slotJumpToDeclCursorContext()), part->actionCollection(), "jump_to_declaration_cursor_context" );
   action->plug( &m_DummyActionWidget );
 
-  action = new KAction( i18n("Jump to definition under cursor"), 0, CTRL + Key_Period, 
+  action = new KAction( i18n("Jump to definition under cursor"), 0, CTRL + Key_Period,
     this, SLOT(slotJumpToDefCursorContext()), part->actionCollection(), "jump_to_defintion_cursor_context" );
   action->plug( &m_DummyActionWidget );
 }
@@ -1152,7 +1152,7 @@ void CppCodeCompletion::slotTextChanged() {
       time = m_pSupport->codeCompletionConfig() ->codeCompletionDelay();
     m_ccTimer->start( time, true );
   }
-	
+
 	fitContextItem( nLine, nCol );
 }
 
@@ -3888,20 +3888,20 @@ void CppCodeCompletion::computeCompletionEntryList( SimpleType type, QValueList<
 
     if ( !l.isEmpty() ) {
       bool matched = false;
-      for ( FunctionList::iterator it = fl.begin(); it != fl.end(); ++it ) {
-        ArgumentList fArgs = ( *it ) ->argumentList();
+      for ( FunctionList::iterator fl_it = fl_it.begin(); fl_it != fl.end(); ++fl_it ) {
+        ArgumentList fArgs = ( *fl_it ) ->argumentList();
         if ( fArgs.count() != args.count() )
           continue;
-        ArgumentList::iterator it = args.begin();
-        ArgumentList::iterator it2 = fArgs.begin();
+        ArgumentList::iterator al_it = args.begin();
+        ArgumentList::iterator al_it2 = fArgs.begin();
         bool hit = true;
-        while ( it != args.end() ) {
-          if ( ( *it ) ->type() != ( *it2 ) ->type() ) {
+        while ( al_it != args.end() ) {
+          if ( ( *al_it ) ->type() != ( *al_it2 ) ->type() ) {
             hit = false;
             break;
           }
-          ++it;
-          ++it2;
+          ++al_it;
+          ++al_it2;
         }
         if ( hit ) {
           matched = true;
@@ -4276,7 +4276,7 @@ void CppCodeCompletion::computeFileEntryList( ) {
 
     CodeCompletionEntry entry;
     entry.text = QFileInfo( *it ).fileName();
-	  
+
     m_fileEntryList.push_back( entry );
   }
 
@@ -4316,21 +4316,21 @@ void CppCodeCompletion::slotJumpToDefCursorContext()
 void CppCodeCompletion::jumpCursorContext( FunctionType f )
 {
 	if ( !m_activeCursor ) return;
-	
+
 	SimpleTypeConfiguration conf( m_activeFileName );
-	
+
 	unsigned int line;
 	unsigned int column;
 	m_activeCursor->cursorPositionReal( &line, &column );
-	
+
 	EvaluationResult result = evaluateExpressionAt( line, column, conf );
-	
+
 	// Determine the declaration info based on the type of item we are dealing with.
 	DeclarationInfo d;
-	
+
 	QString includeFileName, includeFilePath;
 	bool unused;
-	
+
 	if ( result.isMacro ) {
 		d.name = result.macro.name();
 		d.file = result.macro.fileName();
@@ -4402,20 +4402,20 @@ void CppCodeCompletion::jumpCursorContext( FunctionType f )
 	}
 }
 
-QString CppCodeCompletion::createTypeInfoString( int line, int column ) 
+QString CppCodeCompletion::createTypeInfoString( int line, int column )
 {
 	QString typeInfoString;
-	
+
 	SimpleTypeConfiguration conf( m_activeFileName );
 	EvaluationResult type = evaluateExpressionAt( line, column, conf );
-	
+
 	if ( type.expr.expr().stripWhiteSpace().isEmpty() )
 		return typeInfoString;
-	
+
 	typeInfoString += type.expr.expr() + QString(" : " );
-	
-	if ( type->resolved() ) 
-	{ 
+
+	if ( type->resolved() )
+	{
 		QString scope = type->resolved()->scope().join("::");
 		int pos = scope.findRev("::");
 		if ( scope.isEmpty() || pos == -1 )
@@ -4426,18 +4426,18 @@ QString CppCodeCompletion::createTypeInfoString( int line, int column )
 		{
 			scope.truncate( pos + 2 );
 		}
-		
+
 		typeInfoString += scope + type->fullNameChain()  + QString( i18n(" (resolved) ") );
 	}
 	else
 	{
-		if ( type ) 
+		if ( type )
 		{
-			if( !BuiltinTypes::isBuiltin( type.resultType ) ) 
+			if( !BuiltinTypes::isBuiltin( type.resultType ) )
 			{
 				typeInfoString += type->fullNameChain() + QString( i18n(" (unresolved) ") );
-			} 
-			else 
+			}
+			else
 			{
 				typeInfoString += type->fullNameChain() + ", " + BuiltinTypes::comment( type.resultType ) + QString( i18n(" (builtin type) ") );
 			}
@@ -4454,7 +4454,7 @@ QString CppCodeCompletion::createTypeInfoString( int line, int column )
 			    typeInfoString += " [header not included] ";
 		    }
 	}
-	
+
 	return typeInfoString;
 }
 
