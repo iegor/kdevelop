@@ -3888,7 +3888,7 @@ void CppCodeCompletion::computeCompletionEntryList( SimpleType type, QValueList<
 
     if ( !l.isEmpty() ) {
       bool matched = false;
-      for ( FunctionList::iterator fl_it = fl_it.begin(); fl_it != fl.end(); ++fl_it ) {
+      for ( FunctionList::iterator fl_it = fl.begin(); fl_it != fl.end(); ++fl_it ) {
         ArgumentList fArgs = ( *fl_it ) ->argumentList();
         if ( fArgs.count() != args.count() )
           continue;
