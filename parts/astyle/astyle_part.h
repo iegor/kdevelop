@@ -20,6 +20,39 @@ class QPopupMenu;
 class Context;
 class ConfigWidgetProxy;
 
+#define ASOPTS_FSTYLE           "FStyle"
+#define ASOPTS_USEGLOBAL        "UseGlobal"
+#define ASOPTS_FILLCOUNT        "FillCount"
+#define ASOPTS_FILLFORCE        "FillForce"
+#define ASOPTS_FILLEMPTYLINES   "FillEmptyLines"
+#define ASOPTS_FILL             "Fill"
+#define ASOPTS_MAXSTATEMENT     "MaxStatement"
+#define ASOPTS_MINCONDITIONAL   "MinConditional"
+// Indentation:
+#define ASOPTS_INDENTSWITCHES   "IndentSwitches"
+#define ASOPTS_INDENTCASES      "IndentCases"
+#define ASOPTS_INDENTCLASSES    "IndentClasses"
+#define ASOPTS_INDENTBRACKETS   "IndentBrackets"
+#define ASOPTS_INDENTNAMESPACES "IndentNamespaces"
+#define ASOPTS_INDENTLABELS     "IndentLabels"
+#define ASOPTS_INDENTBLOCKS     "IndentBlocks"
+#define ASOPTS_INDENTPREPROCS   "IndentPreprocessors"
+// Brackets style:
+#define ASOPTS_BRACKETS         "Brackets"
+#define ASOPTS_BRACKETS_CH      "BracketsCloseHeaders"
+// Block brake:
+#define ASOPTS_BLOCK_BREAK      "BlockBreak"
+#define ASOPTS_BLOCK_BREAKALL   "BlockBreakAll"
+#define ASOPTS_BLOCK_BREAKIFELSE "BlockIfElse"
+// Oneliners:
+#define ASOPTS_KEEPSTATEMENTS   "KeepStatements"
+#define ASOPTS_KEEPBLOCKS       "KeepBlocks"
+// Padding:
+#define ASOPTS_PADPARENTH_IN    "PadParenthesesIn"
+#define ASOPTS_PADPARENTH_OUT   "PadParenthesesOut"
+#define ASOPTS_PADPARENTH_UN    "PadParenthesesUn"
+#define ASOPTS_PADOPERATORS     "PadOperators"
+
 class AStylePart : public KDevSourceFormatter
 {
   Q_OBJECT

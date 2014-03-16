@@ -248,13 +248,13 @@ void AStylePart::insertConfigWidget(const KDialogBase *dlg, QWidget *page, unsig
 	{
 		case GLOBALDOC_OPTIONS:
 		{
-			AStyleWidget *w = new AStyleWidget(this, true, page, "astyle config widget");
+			AStyleWidget *w = new AStyleWidget(this, AStyleWidget::GLOBAL, page, "astyle config widget");
 			connect(dlg, SIGNAL(okClicked()), w, SLOT(accept()));
 			break;
 		}
 		case PROJECTDOC_OPTIONS:
 		{
-			AStyleWidget *w = new AStyleWidget(this, false, page, "astyle config widget");
+			AStyleWidget *w = new AStyleWidget(this, AStyleWidget::PROJECT, page, "astyle config widget");
 			connect(dlg, SIGNAL(okClicked()), w, SLOT(accept()));
 			break;
 		}
