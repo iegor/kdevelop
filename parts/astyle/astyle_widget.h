@@ -2,11 +2,11 @@
 #ifndef __ASTYLE_WIDGET_H__
 #define __ASTYLE_WIDGET_H__
 
+#include "astyle.h"
 #include "astyleconfig.h"
 
 class AStylePart;
 class KDevPart;
-
 
 class AStyleWidget : public AStyleConfig
 {
@@ -14,8 +14,10 @@ class AStyleWidget : public AStyleConfig
 public:
   enum context{ GLOBAL, PROJECT };
 
-  AStyleWidget( AStylePart * part, bool global, QWidget *parent=0, const char *name=0 );
+  AStyleWidget(AStylePart * part, AStyleWidget::context widget_context, QWidget *parent=0, const char *name=0);
   ~AStyleWidget();
+
+  int get_selected_style();
 
 public slots:
   void accept();
@@ -33,6 +35,7 @@ private slots:
 private:
   void set_example();
   void fillcontrols(QMap<QString, QVariant> &options);
+  void readcontrols(QMap<QString, QVariant> &options);
   void enable_controls();
   void disable_controls();
 

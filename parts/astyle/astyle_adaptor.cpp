@@ -1,6 +1,6 @@
 //kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
-#include "astyle_adaptor.h"
 
+#include "astyle_adaptor.h"
 #include "astyle_widget.h"
 
 #include <string>
@@ -12,7 +12,47 @@
 #include <kapplication.h>
 #include <kconfig.h>
 
+/**
+  Converts style string from kdevelop config to astyle enum value
+ */
+enum astyle::FormatStyle string2fmtstyle(QString &s) {
+  if(s == "ALLMAN") return astyle::STYLE_ALLMAN;
+  else if(s == "JAVA") return astyle::STYLE_JAVA;
+  else if(s == "KR") return astyle::STYLE_KR;
+  else if(s == "STROUSTRUP") return astyle::STYLE_STROUSTRUP;
+  else if(s == "WHITESMITH") return astyle::STYLE_WHITESMITH;
+  else if(s == "BANNER") return astyle::STYLE_BANNER;
+  else if(s == "GNU") return astyle::STYLE_GNU;
+  else if(s == "Linux") return astyle::STYLE_LINUX;
+  else if(s == "HORSTMANN") return astyle::STYLE_HORSTMANN;
+  else if(s == "1TBS") return astyle::STYLE_1TBS;
+  else if(s == "GOOGLE") return astyle::STYLE_GOOGLE;
+  else if(s == "PICO") return astyle::STYLE_PICO;
+  else if(s == "LISP") return astyle::STYLE_LISP;
+  else return astyle::STYLE_NONE;
+}
 
+/**
+  Converts astyle enum value to string usable in internal configuration
+ */
+QString fmtstyle2string(enum astyle::FormatStyle style) {
+  switch(style) {
+    case astyle::STYLE_ALLMAN: return "ALLMAN";
+    case astyle::STYLE_JAVA: return "JAVA";
+    case astyle::STYLE_KR: return "KR";
+    case astyle::STYLE_STROUSTRUP: return "STROUSTRUP";
+    case astyle::STYLE_WHITESMITH: return "WHITESMITH";
+    case astyle::STYLE_BANNER: return "BANNER";
+    case astyle::STYLE_GNU: return "GNU";
+    case astyle::STYLE_LINUX: return "Linux";
+    case astyle::STYLE_HORSTMANN: return "HORSTMANN";
+    case astyle::STYLE_1TBS: return "1TBS";
+    case astyle::STYLE_GOOGLE: return "GOOGLE";
+    case astyle::STYLE_PICO: return "PICO";
+    case astyle::STYLE_LISP: return "LISP";
+    default: return "NONE";
+  }
+}
 
 ASStringIterator::ASStringIterator(const QString &text)
   : ASSourceIterator(), _content(text)
@@ -32,34 +72,40 @@ bool ASStringIterator::hasMoreLines() const
   return !_is->eof();
 }
 
-
-string ASStringIterator::nextLine()
-{
+std::string ASStringIterator::nextLine(bool /*emptyLineWasDeleted*/) {
   return _is->readLine().utf8().data();
 }
 
+std::string ASStringIterator::peekNextLine() {
+  return _is->readLine().utf8().data();
+}
+
+void ASStringIterator::peekReset() {
+}
 
 KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
 {
-// 	for ( QMap<QString, QVariant>::ConstIterator iter = options.begin();iter != options.end();iter++ )
-// 	{
-// 		kdDebug ( 9009 ) << "format: " << iter.key() << "=" << iter.data()  << endl;
-// 	}
+#ifdef DEBUG
+	for(QMap<QString, QVariant>::ConstIterator iter = options.begin(); iter != options.end(); iter++) {
+		kdDebug(9009) << "format: " << iter.key() << "=" << iter.data()  << endl;
+	}
+#endif
 
 	setCStyle();
 
-	// style
-	QString s = options["FStyle"].toString();
-	if ( predefinedStyle( s ) )
-	{
-		return;
+	// Style:
+  QString s = options[ASOPTS_FSTYLE].toString();
+	if(s != ASOPTS_FSTYLE_USERDEFINED) {
+    int style = string2fmtstyle(s);
+    setFormattingStyle((enum astyle::FormatStyle)style);
+    return;
 	}
 
   // fill
-	int wsCount = options["FillCount"].toInt();
-  if (options["Fill"].toString() == "Tabs")
+	int wsCount = options[ASOPTS_FILLCOUNT].toInt();
+  if (options[ASOPTS_FILL].toString() == "Tabs")
   {
-	  setTabIndentation(wsCount, options["FillForce"].toBool() );
+	  setTabIndentation(wsCount, options[ASOPTS_FILLFORCE].toBool() );
 	  m_indentString = "\t";
   } else
   {
@@ -68,82 +114,61 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
 	  m_indentString.fill(' ', wsCount);
   }
 
-  setTabSpaceConversionMode(options["FillForce"].toBool());
-  setEmptyLineFill(options["Fill_EmptyLines"].toBool());
+  setTabSpaceConversionMode(options[ASOPTS_FILLFORCE].toBool());
+  setEmptyLineFill(options[ASOPTS_FILLEMPTYLINES].toBool());
 
   // indent
-  setSwitchIndent(options["IndentSwitches"].toBool());
-  setClassIndent(options["IndentClasses"].toBool());
-  setCaseIndent(options["IndentCases"].toBool());
-  setBracketIndent(options["IndentBrackets"].toBool());
-  setNamespaceIndent(options["IndentNamespaces"].toBool());
-  setLabelIndent(options["IndentLabels"].toBool());
-  setBlockIndent(options["IndentBlocks"].toBool());
-  setPreprocessorIndent(options["IndentPreprocessors"].toBool());
+  setSwitchIndent(options[ASOPTS_INDENTSWITCHES].toBool());
+  setClassIndent(options[ASOPTS_INDENTCLASSES].toBool());
+  setCaseIndent(options[ASOPTS_INDENTCASES].toBool());
+  setBracketIndent(options[ASOPTS_INDENTBRACKETS].toBool());
+  setNamespaceIndent(options[ASOPTS_INDENTNAMESPACES].toBool());
+  setLabelIndent(options[ASOPTS_INDENTLABELS].toBool());
+  setBlockIndent(options[ASOPTS_INDENTBLOCKS].toBool());
+  setPreprocDefineIndent(options[ASOPTS_INDENTPREPROCS].toBool());
+    setPreprocConditionalIndent(false);
 
   // continuation
-  setMaxInStatementIndentLength(options["MaxStatement"].toInt());
-  if (options["MinConditional"].toInt() != -1)
-    setMinConditionalIndentLength(options["MinConditional"].toInt());
+  setMaxInStatementIndentLength(options[ASOPTS_MAXSTATEMENT].toInt());
+  if (options[ASOPTS_MINCONDITIONAL].toInt() != -1) {
+    setMinConditionalIndentOption(options[ASOPTS_MINCONDITIONAL].toInt());
+    setMinConditionalIndentLength();
+    }
 
   // brackets
-  s = options["Brackets"].toString();
-  if (s == "Break")
-	  setBracketFormatMode(astyle::BREAK_MODE);
-  else if (s == "Attach")
-	  setBracketFormatMode(astyle::ATTACH_MODE);
-  else if (s == "Linux")
-	  setBracketFormatMode(astyle::BDAC_MODE);
-  else
-	  setBracketFormatMode(astyle::NONE_MODE);
+  s = options[ASOPTS_BRACKETS].toString();
+  if(s == "Break") setBracketFormatMode(astyle::BREAK_MODE);
+  else if(s == "Attach") setBracketFormatMode(astyle::ATTACH_MODE);
+  else if(s == "Linux") setBracketFormatMode(astyle::LINUX_MODE);
+  else setBracketFormatMode(astyle::NONE_MODE);
 
-  setBreakClosingHeaderBracketsMode(options["BracketsCloseHeaders"].toBool());
+  setBreakClosingHeaderBracketsMode(options[ASOPTS_BRACKETS_CH].toBool());
   // blocks
-  setBreakBlocksMode(options["BlockBreak"].toBool());
-  if (options["BlockBreakAll"].toBool()){
+  setBreakBlocksMode(options[ASOPTS_BLOCK_BREAK].toBool());
+  if (options[ASOPTS_BLOCK_BREAKALL].toBool()){
 	  setBreakBlocksMode(true);
 	  setBreakClosingHeaderBlocksMode(true);
   }
-  setBreakElseIfsMode(options["BlockIfElse"].toBool());
+  setBreakElseIfsMode(options[ASOPTS_BLOCK_BREAKIFELSE].toBool());
 
   // padding
-  setOperatorPaddingMode(options["PadOperators"].toBool());
-  setParensInsidePaddingMode(options["PadParenthesesIn"].toBool());
-  setParensOutsidePaddingMode(options["PadParenthesesOut"].toBool());
-  setParensUnPaddingMode(options["PadParenthesesUn"].toBool());
+  setOperatorPaddingMode(options[ASOPTS_PADOPERATORS].toBool());
+  setParensInsidePaddingMode(options[ASOPTS_PADPARENTH_IN].toBool());
+  setParensOutsidePaddingMode(options[ASOPTS_PADPARENTH_OUT].toBool());
+  setParensUnPaddingMode(options[ASOPTS_PADPARENTH_UN].toBool());
 
   // oneliner
-  setBreakOneLineBlocksMode(!options["KeepBlocks"].toBool());
-  setSingleStatementsMode(!options["KeepStatements"].toBool());
+  setBreakOneLineBlocksMode(!options[ASOPTS_KEEPBLOCKS].toBool());
+  setSingleStatementsMode(!options[ASOPTS_KEEPSTATEMENTS].toBool());
 }
 
 KDevFormatter::KDevFormatter( AStyleWidget * widget )
 {
 	setCStyle();
 
-	if ( widget->Style_ANSI->isChecked() )
-	{
-		predefinedStyle( "ANSI" );
-		return;
-	}
-	if ( widget->Style_GNU->isChecked() )
-	{
-		predefinedStyle( "GNU" );
-		return;
-	}
-	if ( widget->Style_JAVA->isChecked() )
-	{
-		predefinedStyle( "JAVA" );
-		return;
-	}
-	if ( widget->Style_KR->isChecked() )
-	{
-		predefinedStyle( "KR" );
-		return;
-	}
-	if ( widget->Style_Linux->isChecked() )
-	{
-		predefinedStyle( "Linux" );
+  int style = widget->get_selected_style();
+  if(style != ASOPTS_FSTYLE_USERDEFINED_ID) {
+    setFormattingStyle((enum astyle::FormatStyle)style);
 		return;
 	}
 
@@ -171,11 +196,13 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
 	setNamespaceIndent( widget->Indent_Namespaces->isChecked() );
 	setLabelIndent( widget->Indent_Labels->isChecked() );
 	setBlockIndent( widget->Indent_Blocks->isChecked());
-	setPreprocessorIndent(widget->Indent_Preprocessors->isChecked());
+	setPreprocDefineIndent(widget->Indent_Preprocessors->isChecked());
+    setPreprocConditionalIndent(false);
 
 	// continuation
 	setMaxInStatementIndentLength( widget->Continue_MaxStatement->value() );
-	setMinConditionalIndentLength( widget->Continue_MinConditional->value() );
+	setMinConditionalIndentOption( widget->Continue_MinConditional->value() );
+    setMinConditionalIndentLength();
 
 	// brackets
 	if ( widget->Brackets_Break->isChecked() )
@@ -188,7 +215,7 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
 	}
 	else if ( widget->Brackets_Linux->isChecked())
 	{
-		setBracketFormatMode( astyle::BDAC_MODE );
+		setBracketFormatMode( astyle::LINUX_MODE );
 	}
 	else{
 		setBracketFormatMode( astyle::NONE_MODE );
@@ -218,8 +245,7 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
 
 bool KDevFormatter::predefinedStyle( const QString & style )
 {
-	if (style == "ANSI")
-	{
+	/*if (style == "ANSI") {
 		setBracketIndent(false);
 		setSpaceIndentation(4);
 		setBracketFormatMode(astyle::BREAK_MODE);
@@ -227,9 +253,7 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	}
-	if (style == "KR")
-	{
+	} else */if (style == "KR") {
 		setBracketIndent(false);
 		setSpaceIndentation(4);
 		setBracketFormatMode(astyle::ATTACH_MODE);
@@ -237,19 +261,15 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	}
-	if (style == "Linux")
-	{
+	} else if (style == "Linux") {
 		setBracketIndent(false);
 		setSpaceIndentation(8);
-		setBracketFormatMode(astyle::BDAC_MODE);
+		setBracketFormatMode(astyle::LINUX_MODE);
 		setClassIndent(false);
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	}
-	if (style == "GNU")
-	{
+	} else if (style == "GNU") {
 		setBlockIndent(true);
 		setSpaceIndentation(2);
 		setBracketFormatMode(astyle::BREAK_MODE);
@@ -257,9 +277,7 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	}
-	if (style == "JAVA")
-	{
+	} else if (style == "JAVA") {
 		setJavaStyle();
 		setBracketIndent(false);
 		setSpaceIndentation(4);
@@ -267,5 +285,6 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		return true;
 	}
+
 	return false;
 }
