@@ -414,53 +414,43 @@ void AStylePart::contextMenu(QPopupMenu *popup, const Context *context)
 	}
 }
 
-void AStylePart::restorePartialProjectSession(const QDomElement * el)
-{
-	kdDebug(9009) << "Load project" << endl;
-	QDomElement style = el->namedItem("AStyle").toElement();
+void AStylePart::restorePartialProjectSession(const QDomElement * el) {
+  kdDebug(9009) << "Load project" << endl;
+  QDomElement style = el->namedItem(ASOPTS_PRJCONFIGELEMENT_ROOT).toElement();
 
-	if (style.attribute("FStyle", "GLOBAL") == "GLOBAL")
-	{
-		m_project = m_global;
-		m_project["FStyle"] = "GLOBAL";
-		m_projectExtensions=m_globalExtensions;
-	}
-	else
-	{
-		for (QMap<QString, QVariant>::iterator iter = m_global.begin();iter != m_global.end();iter++)
-        {
-              m_project[iter.key()] = style.attribute(iter.key(),iter.data().toString());
-		}
+  if(style.attribute(ASOPTS_USEGLOBAL, "1") == "1") {
+    m_project = m_global;
+    m_project[ASOPTS_USEGLOBAL] = true;
+    m_projectExtensions = m_globalExtensions;
+  } else {
+    for(QMap<QString, QVariant>::iterator iter = m_global.begin(); iter != m_global.end(); iter++) {
+      m_project[iter.key()] = style.attribute(iter.key(),iter.data().toString());
+    }
 
-		QDomElement exten = el->namedItem("Extensions").toElement();
-		QString ext = exten.attribute("ext").simplifyWhiteSpace();
-		if ( ext.isEmpty()){
-            ext=defaultFormatExtensions;
-		}
-		setExtensions(ext.replace(QChar(','), QChar('\n')),false);
-	}
+    QDomElement exten = el->namedItem(ASOPTS_PRJCONFIGELEMENT_EXT).toElement();
+    QString ext = exten.attribute(ASOPTS_PRJCONFIGATTR_EXT).simplifyWhiteSpace();
+    if(ext.isEmpty()) {
+      ext=defaultFormatExtensions;
+    }
+    setExtensions(ext.replace(QChar(','), QChar('\n')),false);
+  }
 }
 
+void AStylePart::savePartialProjectSession(QDomElement * el) {
+  QDomDocument domDoc = el->ownerDocument();
+  if(domDoc.isNull()) return;
 
-void AStylePart::savePartialProjectSession(QDomElement * el)
-{
-	QDomDocument domDoc = el->ownerDocument();
-	if (domDoc.isNull())
-		return;
-
-	QDomElement style = domDoc.createElement("AStyle");
-	style.setAttribute("FStyle", m_project["FStyle"].toString());
-	if (m_project["FStyle"] != "GLOBAL")
-	{
-		 for (QMap<QString, QVariant>::iterator iter = m_project.begin();iter != m_project.end();iter++)
-        {
-              style.setAttribute(iter.key(),iter.data().toString());
-		}
-		QDomElement exten = domDoc.createElement ( "Extensions" );
-		exten.setAttribute ( "ext", m_projectExtensions.join(",").simplifyWhiteSpace() );
-		el->appendChild(exten);
-	}
-	el->appendChild(style);
+  QDomElement style = domDoc.createElement(ASOPTS_PRJCONFIGELEMENT_ROOT);
+  style.setAttribute(ASOPTS_USEGLOBAL, (uint)(m_project[ASOPTS_USEGLOBAL].toBool()?1:0));
+  if(!m_project[ASOPTS_USEGLOBAL].toBool()) {
+    for(QMap<QString, QVariant>::iterator iter = m_project.begin(); iter != m_project.end(); iter++) {
+      style.setAttribute(iter.key(), iter.data().toString());
+    }
+    QDomElement exten = domDoc.createElement(ASOPTS_PRJCONFIGELEMENT_EXT);
+    exten.setAttribute(ASOPTS_PRJCONFIGATTR_EXT, m_projectExtensions.join(",").simplifyWhiteSpace());
+    el->appendChild(exten);
+  }
+  el->appendChild(style);
 }
 
 void AStylePart::formatFilesSelect(){
