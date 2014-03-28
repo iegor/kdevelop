@@ -37,7 +37,7 @@
 static const KDevPluginInfo data("kdevastyle");
 
 namespace {
-    const char* defaultFormatExtensions = "*.cpp *.h *.hpp,*.c *.h,*.cxx *.hxx,*.c++ *.h++,*.cc *.hh,*.C *.H,*.diff ,*.inl,*.java,*.moc,*.patch,*.tlh,*.xpm";
+  const char* defaultFormatExtensions = "*.cpp *.h *.hpp,*.c *.h,*.cxx *.hxx,*.c++ *.h++,*.cc *.hh,*.C *.H,*.diff ,*.inl,*.java,*.moc,*.patch,*.tlh,*.xpm";
 }
 
 
@@ -45,8 +45,7 @@ typedef KDevGenericFactory<AStylePart> AStyleFactory;
 K_EXPORT_COMPONENT_FACTORY( libkdevastyle, AStyleFactory( data ) )
 
 AStylePart::AStylePart(QObject *parent, const char *name, const QStringList &)
-  : KDevSourceFormatter(&data, parent, name ? name : "AStylePart")
-{
+  : KDevSourceFormatter(&data, parent, name ? name : "AStylePart") {
   setInstance(AStyleFactory::instance());
 
   setXMLFile("kdevpart_astyle.rc");
@@ -55,14 +54,14 @@ AStylePart::AStylePart(QObject *parent, const char *name, const QStringList &)
   formatTextAction->setEnabled(false);
   formatTextAction->setToolTip(i18n("Reformat source"));
   formatTextAction->setWhatsThis(i18n("<b>Reformat source</b><p>Source reformatting functionality using <b>astyle</b> library. "
-                             "Also available in <b>New Class</b> and <b>Subclassing</b> wizards."));
+                                      "Also available in <b>New Class</b> and <b>Subclassing</b> wizards."));
 
   formatFileAction = new KAction(i18n("Format files"), 0, this, SLOT(formatFilesSelect()), actionCollection(), "tools_astyle");
   formatFileAction->setEnabled(false);
   formatFileAction->setToolTip(i18n("Format files"));
   formatFileAction->setWhatsThis(i18n("<b>Fomat files</b><p>Formatting functionality using <b>astyle</b> library. "
-                             "Also available in <b>New Class</b> and <b>Subclassing</b> wizards."));
-  formatFileAction->setEnabled ( true );
+                                      "Also available in <b>New Class</b> and <b>Subclassing</b> wizards."));
+  formatFileAction->setEnabled(true);
 
   m_configProxy = new ConfigWidgetProxy(core());
   m_configProxy->createGlobalConfigPage(i18n("Formatting"), GLOBALDOC_OPTIONS, info()->icon());
@@ -73,7 +72,7 @@ AStylePart::AStylePart(QObject *parent, const char *name, const QStringList &)
 
   connect(partController(), SIGNAL(activePartChanged(KParts::Part*)), this, SLOT(activePartChanged(KParts::Part*)));
 
-  connect( core(), SIGNAL(contextMenu(QPopupMenu *, const Context *)), this, SLOT(contextMenu(QPopupMenu *, const Context *)) );
+  connect(core(), SIGNAL(contextMenu(QPopupMenu *, const Context *)), this, SLOT(contextMenu(QPopupMenu *, const Context *)));
 
   loadGlobal();
   //use the globals first, project level will override later..
@@ -82,30 +81,32 @@ AStylePart::AStylePart(QObject *parent, const char *name, const QStringList &)
   setExtensions(m_globalExtensions.join("\n"),false);
 
   // maybe there is a file open already
-  activePartChanged( partController()->activePart() );
+  activePartChanged(partController()->activePart());
 
 }
 
-void AStylePart::loadGlobal()
-{
-//   kdDebug(9009) << "Load global"<<endl;
+void AStylePart::loadGlobal() {
+  //   kdDebug(9009) << "Load global"<<endl;
   KConfig *config = kapp->config();
   config->setGroup("AStyle");
-  QString options = config->readEntry("Options","BlockBreak=0,BlockBreakAll=0,BlockIfElse=0,Brackets=Break,BracketsCloseHeaders=0,FStyle=UserDefined,Fill=Tabs,FillCount=4,FillEmptyLines=0,FillForce=0,IndentBlocks=0,IndentBrackets=0,IndentCases=0,IndentClasses=1,IndentLabels=1,IndentNamespaces=1,IndentPreprocessors=0,IndentSwitches=1,KeepBlocks=1,KeepStatements=1,MaxStatement=40,MinConditional=-1,PadOperators=0,PadParenthesesIn=1,PadParenthesesOut=1,PadParenthesesUn=1,");
+  QString options = config->readEntry("Options","BlockBreak=0,BlockBreakAll=0,BlockIfElse=0,Brackets=Break,"
+    "BracketsCloseHeaders=0,FStyle=UserDefined,Fill=Tabs,FillCount=4,FillEmptyLines=0,FillForce=0,"
+    "IndentBlocks=0,IndentBrackets=0,IndentCases=0,IndentClasses=1,IndentLabels=1,IndentNamespaces=1,"
+    "IndentPreprocessors=0,IndentSwitches=1,KeepBlocks=1,KeepStatements=1,MaxStatement=40,MinConditional=-1,"
+    "PadOperators=0,PadParenthesesIn=1,PadParenthesesOut=1,PadParenthesesUn=1,");
   m_globalExtensions=QStringList::split(",",config->readEntry("Extensions",defaultFormatExtensions));
 
- QStringList pairs = QStringList::split( ",", options);
- QStringList::Iterator it;
- for ( it = pairs.begin(); it != pairs.end(); ++it ) {
-	QStringList bits = QStringList::split( "=", (*it) );
-	m_global[bits[0]] = bits[1];
- }
+  QStringList pairs = QStringList::split(",", options);
+  QStringList::Iterator it;
+  for(it = pairs.begin(); it != pairs.end(); ++it) {
+    QStringList bits = QStringList::split("=", (*it));
+    m_global[bits[0]] = bits[1];
+  }
 
-
-//   for (QMap<QString, QVariant>::iterator iter = m_global.begin();iter != m_global.end();iter++)
-//         {
-//               kdDebug(9009) << "load: " <<iter.key() << "="<< iter.data()  << endl;
-// 		}
+  //   for (QMap<QString, QVariant>::iterator iter = m_global.begin();iter != m_global.end();iter++)
+  //         {
+  //               kdDebug(9009) << "load: " <<iter.key() << "="<< iter.data()  << endl;
+  //    }
 }
 
 void AStylePart::saveGlobal()
@@ -395,23 +396,19 @@ QString AStylePart::indentString( ) const
   return formatter.indentString();
 }
 
-void AStylePart::contextMenu(QPopupMenu *popup, const Context *context)
-{
-	if (context->hasType( Context::EditorContext ))
-	{
-		popup->insertSeparator();
-		int id = popup->insertItem( i18n("Format selection"), this, SLOT(beautifySource()) );
-		popup->setWhatsThis(id, i18n("<b>Format</b><p>Formats the current selection, if possible"));
-	}
-	else if ( context->hasType( Context::FileContext )){
-		const FileContext *ctx = static_cast<const FileContext*>(context);
-		m_urls = ctx->urls();
+void AStylePart::contextMenu(QPopupMenu *popup, const Context *context) {
+  if(context->hasType(Context::EditorContext)) {
+    popup->insertSeparator();
+    int id = popup->insertItem(i18n("Format selection"), this, SLOT(beautifySource()));
+    popup->setWhatsThis(id, i18n("<b>Format</b><p>Formats the current selection, if possible"));
+  } else if(context->hasType(Context::FileContext)) {
+    const FileContext *ctx = static_cast<const FileContext*>(context);
+    m_urls = ctx->urls();
 
-		popup->insertSeparator();
-		int id = popup->insertItem( i18n("Format files"), this, SLOT(formatFiles()) );
-		popup->setWhatsThis(id, i18n("<b>Format files</b><p>Formats selected files if possible"));
-
-	}
+    popup->insertSeparator();
+    int id = popup->insertItem(i18n("Format files"), this, SLOT(formatFiles()));
+    popup->setWhatsThis(id, i18n("<b>Format files</b><p>Formats selected files if possible"));
+  }
 }
 
 void AStylePart::restorePartialProjectSession(const QDomElement * el) {
