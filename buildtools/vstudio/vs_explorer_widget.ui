@@ -1,8 +1,8 @@
 <!DOCTYPE UI><UI version="3.3" stdsetdef="1">
-<class>vs_explorer</class>
+<class>vs_explorer_widget</class>
 <widget class="QWidget">
     <property name="name">
-        <cstring>vs_explorer</cstring>
+        <cstring>vs_explorer_widget</cstring>
     </property>
     <property name="geometry">
         <rect>
