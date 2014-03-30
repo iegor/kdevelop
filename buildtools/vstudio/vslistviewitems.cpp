@@ -1,17 +1,15 @@
-/***************************************************************************
-*   Copyright (C) 2001-2002 by Bernd Gehrmann                             *
-*   bernd@kdevelop.org                                                    *
-*                                                                         *
-*   Copyright (C) 2002 by Victor Rder                                    *
-*   victor_roeder@gmx.de                                                  *
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-***************************************************************************/
-
+/*
+*kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
+*
+*  C/C++ Implementation: vs
+*
+* Description:
+*  ! Parts were inherited from autoprojectpart src
+*
+* Author: iegor <rmtdev@gmail.com>, (C) 2013
+*
+* Copyright: See COPYING file that comes with this distribution
+*/
 #include <qpainter.h>
 #include <qinputdialog.h>
 #include <qregexp.h>
