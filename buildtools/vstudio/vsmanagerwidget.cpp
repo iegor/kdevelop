@@ -39,28 +39,27 @@
 
 // namespace ?!?
 
-VSManagerWidget::VSManagerWidget ( VStudioPart * part )
-		: KListView ( 0, "VSManagerWidget" ), QToolTip ( viewport() ), m_part ( part ), m_projectDirectoryLength ( 0 )
-{
-	addColumn ( "" );
-	header()->hide();
-	setSorting ( 0 );
-	setRootIsDecorated ( true );
-	setAllColumnsShowFocus ( true );
+VSManagerWidget::VSManagerWidget(VStudioPart * part)
+  : KListView(0, "VSManagerWidget"), QToolTip(viewport()), m_part(part), m_projectDirectoryLength(0) {
+  addColumn("");
+  header()->hide();
+  setSorting(0);
+  setRootIsDecorated(true);
+  setAllColumnsShowFocus(true);
 
 //   m_projectItem = 0;
 
-	connect ( this, SIGNAL ( returnPressed ( QListViewItem* ) ), this, SLOT ( slotExecuted ( QListViewItem* ) ) );
-	connect ( this, SIGNAL ( executed ( QListViewItem* ) ), this, SLOT ( slotExecuted ( QListViewItem* ) ) );
-	connect ( m_part->core(), SIGNAL ( projectOpened() ), this, SLOT ( slotProjectOpened() ) );
-	connect ( m_part->core(), SIGNAL ( projectClosed() ), this, SLOT ( slotProjectClosed() ) );
-	connect ( m_part->core(), SIGNAL ( languageChanged() ), this, SLOT ( slotProjectOpened() ) );
+  connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
+  connect(this, SIGNAL(executed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
+  connect(m_part->core(), SIGNAL(projectOpened()), this, SLOT(slotProjectOpened()));
+  connect(m_part->core(), SIGNAL(projectClosed()), this, SLOT(slotProjectClosed()));
+  connect(m_part->core(), SIGNAL(languageChanged()), this, SLOT(slotProjectOpened()));
 
-	QStringList lst;
-	lst << i18n ( "Group by Directories" ) << i18n ( "Plain List" ) << i18n ( "Java Like Mode" );
-	m_actionViewMode = new KSelectAction ( i18n ( "View Mode" ), KShortcut(), m_part->actionCollection(), "classview_mode" );
-	m_actionViewMode->setItems ( lst );
-	m_actionViewMode->setWhatsThis ( i18n ( "<b>View mode</b><p>Class browser items can be grouped by directories, listed in a plain or java like view." ) );
+  QStringList lst;
+  lst << i18n("Group by Directories") << i18n("Plain List") << i18n("Java Like Mode");
+  m_actionViewMode = new KSelectAction(i18n("View Mode"), KShortcut(), m_part->actionCollection(), "classview_mode");
+  m_actionViewMode->setItems(lst);
+  m_actionViewMode->setWhatsThis(i18n("<b>View mode</b><p>Class browser items can be grouped by directories, listed in a plain or java like view."));
 
 //   m_actionNewClass = new KAction( i18n("New Class..."), KShortcut(), this, SLOT(slotNewClass()), m_part->actionCollection(), "classview_new_class" );
 //   m_actionNewClass->setWhatsThis(i18n("<b>New class</b><p>Calls the <b>New Class</b> wizard."));
@@ -79,43 +78,41 @@ VSManagerWidget::VSManagerWidget ( VStudioPart * part )
 //   m_actionOpenImplementation = new KAction( i18n("Open Implementation"), KShortcut(), this, SLOT(slotOpenImplementation()), m_part->actionCollection(), "classview_open_implementation" );
 //   m_actionOpenImplementation->setWhatsThis(i18n("<b>Open implementation</b><p>Opens a file where the selected item is defined (implemented) and jumps to the definition line."));
 
-	m_actionFollowEditor = new KToggleAction ( i18n ( "Follow Editor" ), KShortcut(), this, SLOT ( slotFollowEditor() ), m_part->actionCollection(), "classview_follow_editor" );
+  m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
 
-	KConfig* config = m_part->instance()->config();
-	config->setGroup ( "General" );
+  KConfig* config = m_part->instance()->config();
+  config->setGroup("General");
 //   setViewMode( config->readNumEntry( "ViewMode", KDevelop3ViewMode ) );
-	m_doFollowEditor = config->readBoolEntry ( "FollowEditor", false );
+  m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
 }
 
-VSManagerWidget::~VSManagerWidget( )
-{
-	KConfig* config = m_part->instance()->config();
-	config->setGroup ( "General" );
+VSManagerWidget::~VSManagerWidget() {
+  KConfig* config = m_part->instance()->config();
+  config->setGroup("General");
 //   config->writeEntry( "ViewMode", viewMode() );
-	config->writeEntry ( "FollowEditor", m_doFollowEditor );
-	config->sync();
+  config->writeEntry("FollowEditor", m_doFollowEditor);
+  config->sync();
 }
 
 // template <class ModelType, class ListItemType>
 // static bool selectItemG ( ItemDom item, const QMap<KSharedPtr<ModelType>, ListItemType*>& map )
 // {
-// 	ModelType* c = dynamic_cast<ModelType*> ( & ( *item ) );
+//  ModelType* c = dynamic_cast<ModelType*> ( & ( *item ) );
 //
-// 	if ( c )
-// 	{
-// 		KSharedPtr<ModelType> d ( c );
-// 		typename QMap<KSharedPtr<ModelType>, ListItemType*>::ConstIterator it = map.find ( d );
-// 		if ( it != map.end() )
-// 		{
-// 			( *it )->select();
-// 			return true;
-// 		}
-// 	}
-// 	return false;
+//  if ( c )
+//  {
+//    KSharedPtr<ModelType> d ( c );
+//    typename QMap<KSharedPtr<ModelType>, ListItemType*>::ConstIterator it = map.find ( d );
+//    if ( it != map.end() )
+//    {
+//      ( *it )->select();
+//      return true;
+//    }
+//  }
+//  return false;
 // }
 
-void VSManagerWidget::slotExecuted ( QListViewItem* /*item*/ )
-{
+void VSManagerWidget::slotExecuted(QListViewItem* /*item*/) {
 //   if ( ClassViewItem* cbitem = dynamic_cast<ClassViewItem*>( item ) ){
 //     if ( cbitem->hasImplementation() )
 //       cbitem->openImplementation();
@@ -124,49 +121,39 @@ void VSManagerWidget::slotExecuted ( QListViewItem* /*item*/ )
 //   }
 }
 
-void VSManagerWidget::clear( )
-{
-	KListView::clear();
-	removedText.clear();
+void VSManagerWidget::clear() {
+  KListView::clear();
+  removedText.clear();
 //   m_projectItem = 0;
 }
 
-void restoreOpenNodes ( QStringList & list, QListViewItem * item )
-{
-	if ( item && !list.isEmpty() )
-	{
-		if ( item->text ( 0 ) == list.first() )
-		{
-			item->setOpen ( true );
-			list.pop_front();
-			restoreOpenNodes ( list, item->firstChild() );
-		}
-		else
-		{
-			restoreOpenNodes ( list, item->nextSibling() );
-		}
-	}
+void restoreOpenNodes(QStringList & list, QListViewItem * item) {
+  if(item && !list.isEmpty()) {
+    if(item->text(0) == list.first()) {
+      item->setOpen(true);
+      list.pop_front();
+      restoreOpenNodes(list, item->firstChild());
+    } else {
+      restoreOpenNodes(list, item->nextSibling());
+    }
+  }
 }
 
-void storeOpenNodes ( QValueList<QStringList> & openNodes, QStringList const & list, QListViewItem * item )
-{
-	if ( item )
-	{
-		if ( item->isOpen() )
-		{
-			QStringList mylist ( list );
-			mylist << item->text ( 0 );
-			openNodes << mylist;
-			storeOpenNodes ( openNodes, mylist, item->firstChild() );
-		}
-		storeOpenNodes ( openNodes, list, item->nextSibling() );
-	}
+void storeOpenNodes(QValueList<QStringList> & openNodes, QStringList const & list, QListViewItem * item) {
+  if(item) {
+    if(item->isOpen()) {
+      QStringList mylist(list);
+      mylist << item->text(0);
+      openNodes << mylist;
+      storeOpenNodes(openNodes, mylist, item->firstChild());
+    }
+    storeOpenNodes(openNodes, list, item->nextSibling());
+  }
 }
 
-void VSManagerWidget::refresh()
-{
-	if ( !m_part->project() )
-		return;
+void VSManagerWidget::refresh() {
+  if(!m_part->project())
+    return;
 
 //   QValueList<QStringList> openNodes;
 //   storeOpenNodes( openNodes, QStringList(), firstChild() );
@@ -195,8 +182,7 @@ void VSManagerWidget::refresh()
 //   blockSignals( false );
 }
 
-void VSManagerWidget::slotProjectOpened( )
-{
+void VSManagerWidget::slotProjectOpened() {
 //   m_projectItem = new FolderBrowserItem( this, this, m_part->project()->projectName() );
 //   m_projectItem->setOpen( true );
 
@@ -214,21 +200,19 @@ void VSManagerWidget::slotProjectOpened( )
 //            this, SLOT(insertFile(const QString&)) );
 }
 
-void VSManagerWidget::slotProjectClosed( )
-{
+void VSManagerWidget::slotProjectClosed() {
 }
 
-void VSManagerWidget::insertFile ( const QString& fileName )
-{
-	QString fn = URLUtil::canonicalPath ( fileName );
-	//kdDebug() << "======================== insertFile(" << fn << ")" << endl;
+void VSManagerWidget::insertFile(const QString& fileName) {
+  QString fn = URLUtil::canonicalPath(fileName);
+  //kdDebug() << "======================== insertFile(" << fn << ")" << endl;
 
-	FileDom dom = m_part->codeModel()->fileByName ( fn );
-	if ( !dom )
-		return;
+  FileDom dom = m_part->codeModel()->fileByName(fn);
+  if(!dom)
+    return;
 
-	fn = URLUtil::relativePathToFile ( m_part->project()->projectDirectory(), fn );
-	QStringList path;
+  fn = URLUtil::relativePathToFile(m_part->project()->projectDirectory(), fn);
+  QStringList path;
 
 //   switch ( viewMode() )
 //   {
@@ -259,17 +243,16 @@ void VSManagerWidget::insertFile ( const QString& fileName )
 //   m_projectItem->processFile( dom, path );
 }
 
-void VSManagerWidget::removeFile ( const QString& fileName )
-{
-	QString fn = URLUtil::canonicalPath ( fileName );
-	//kdDebug() << "======================== removeFile(" << fn << ")" << endl;
+void VSManagerWidget::removeFile(const QString& fileName) {
+  QString fn = URLUtil::canonicalPath(fileName);
+  //kdDebug() << "======================== removeFile(" << fn << ")" << endl;
 
-	FileDom dom = m_part->codeModel()->fileByName ( fn );
-	if ( !dom )
-		return;
+  FileDom dom = m_part->codeModel()->fileByName(fn);
+  if(!dom)
+    return;
 
-	fn = URLUtil::relativePathToFile ( m_part->project()->projectDirectory(), fn );
-	QStringList path;
+  fn = URLUtil::relativePathToFile(m_part->project()->projectDirectory(), fn);
+  QStringList path;
 
 //   switch ( viewMode() )
 //   {
@@ -300,9 +283,8 @@ void VSManagerWidget::removeFile ( const QString& fileName )
 //   m_projectItem->processFile( dom, path, true );
 }
 
-void VSManagerWidget::contentsContextMenuEvent ( QContextMenuEvent * /*ev*/ )
-{
-	KPopupMenu menu ( this );
+void VSManagerWidget::contentsContextMenuEvent(QContextMenuEvent * /*ev*/) {
+  KPopupMenu menu(this);
 
 //   ClassViewItem* item = dynamic_cast<ClassViewItem*>( selectedItem() );
 //
@@ -382,8 +364,7 @@ void VSManagerWidget::contentsContextMenuEvent ( QContextMenuEvent * /*ev*/ )
 //   listView()->ensureItemVisible(this);
 // }
 
-bool VSManagerWidget::selectItem ( ItemDom item )
-{
+bool VSManagerWidget::selectItem(ItemDom item) {
 //   if (!m_projectItem || !isVisible()) return false;
 //   if (item->isFunctionDefinition() && dynamic_cast<FunctionDefinitionModel*>(&(*item)) != 0) {
 //     FunctionList lst;
@@ -395,7 +376,7 @@ bool VSManagerWidget::selectItem ( ItemDom item )
 //   }
 //
 //   return m_projectItem->selectItem( item );
-	return false;
+  return false;
 }
 
 
@@ -1149,8 +1130,7 @@ bool VSManagerWidget::selectItem ( ItemDom item )
 //   return !lst.isEmpty();
 // }
 
-void VSManagerWidget::maybeTip ( QPoint const & /*p*/ )
-{
+void VSManagerWidget::maybeTip(QPoint const & /*p*/) {
 //   ClassViewItem * item = dynamic_cast<ClassViewItem*>( itemAt( p ) );
 //   if ( !item ) return;
 //
@@ -1265,14 +1245,12 @@ void VSManagerWidget::maybeTip ( QPoint const & /*p*/ )
 //   }
 // }
 
-void VSManagerWidget::slotFollowEditor()
-{
-	m_doFollowEditor = m_actionFollowEditor->isChecked();
+void VSManagerWidget::slotFollowEditor() {
+  m_doFollowEditor = m_actionFollowEditor->isChecked();
 }
 
-bool VSManagerWidget::doFollowEditor()
-{
-	return m_doFollowEditor;
+bool VSManagerWidget::doFollowEditor() {
+  return m_doFollowEditor;
 }
 
 #include "vsmanagerwidget.moc"

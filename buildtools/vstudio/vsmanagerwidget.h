@@ -37,10 +37,9 @@ class VStudioPart;
 class KSelectAction;
 class KToggleAction;
 
-class VSManagerWidget : public KListView, public QToolTip
-{
-		Q_OBJECT
-	public:
+class VSManagerWidget : public KListView, public QToolTip {
+  Q_OBJECT
+public:
 //   enum ViewMode
 //   {
 //     KDevelop3ViewMode = 0,
@@ -48,22 +47,21 @@ class VSManagerWidget : public KListView, public QToolTip
 //     JavaLikeViewMode
 //   };
 
-	public:
-		VSManagerWidget ( VStudioPart *part );
-		virtual ~VSManagerWidget();
+public:
+  VSManagerWidget(VStudioPart *part);
+  virtual ~VSManagerWidget();
 
 //   int viewMode() const;
 //   void setViewMode( int mode );
 
-		void clear();
+  void clear();
 
-		bool selectItem ( ItemDom item );
-		bool doFollowEditor();
+  bool selectItem(ItemDom item);
+  bool doFollowEditor();
 
-		inline TextPaintStyleStore& paintStyles()
-		{
-			return m_paintStyles;
-		}
+  inline TextPaintStyleStore& paintStyles() {
+    return m_paintStyles;
+  }
 
 // private slots:
 //   void slotNewClass();
@@ -72,35 +70,35 @@ class VSManagerWidget : public KListView, public QToolTip
 //   void slotOpenDeclaration();
 //   void slotOpenImplementation();
 //   void slotCreateAccessMethods();
-		void slotFollowEditor();
+  void slotFollowEditor();
 
-	protected:
-		void contentsContextMenuEvent ( QContextMenuEvent* );
-		void maybeTip ( QPoint const & );
+protected:
+  void contentsContextMenuEvent(QContextMenuEvent*);
+  void maybeTip(QPoint const &);
 
-	private slots:
-		void slotProjectOpened();
-		void slotProjectClosed();
-		void refresh();
-		void insertFile ( const QString& fileName );
-		void removeFile ( const QString& fileName );
-		void slotExecuted ( QListViewItem* item );
+private slots:
+  void slotProjectOpened();
+  void slotProjectClosed();
+  void refresh();
+  void insertFile(const QString& fileName);
+  void removeFile(const QString& fileName);
+  void slotExecuted(QListViewItem* item);
 
-	private:
-		VStudioPart* m_part;
-		QStringList removedText;
-		QString m_projectDirectory;
-		int m_projectDirectoryLength;
+private:
+  VStudioPart* m_part;
+  QStringList removedText;
+  QString m_projectDirectory;
+  int m_projectDirectoryLength;
 //   FolderBrowserItem* m_projectItem;
-		KSelectAction* m_actionViewMode;
+  KSelectAction* m_actionViewMode;
 //   KAction* m_actionNewClass;
 //   KAction* m_actionAddMethod;
 //   KAction* m_actionAddAttribute;
 //   KAction* m_actionOpenDeclaration;
 //   KAction* m_actionOpenImplementation;
 //   KAction* m_actionCreateAccessMethods;
-		KToggleAction * m_actionFollowEditor;
-		bool m_doFollowEditor;
+  KToggleAction * m_actionFollowEditor;
+  bool m_doFollowEditor;
 
 //   friend class ClassViewItem;
 //   friend class FolderBrowserItem;
@@ -110,24 +108,21 @@ class VSManagerWidget : public KListView, public QToolTip
 //   friend class FunctionDomBrowserItem;
 //   friend class VariableDomBrowserItem;
 
-		TextPaintStyleStore m_paintStyles;
+  TextPaintStyleStore m_paintStyles;
 };
 
 typedef VSManagerWidget vsw;
 
-class VSManagerItem: public FancyListViewItem
-{
-	private:
-	public:
-		VSManagerItem ( QListView* parent, const QString& text=QString::null )
-				: FancyListViewItem ( static_cast<vsw*> ( parent )->paintStyles(), parent, text )
-		{
-		}
+class VSManagerItem: public FancyListViewItem {
+private:
+public:
+  VSManagerItem(QListView* parent, const QString& text=QString::null)
+    : FancyListViewItem(static_cast<vsw*>(parent)->paintStyles(), parent, text) {
+  }
 
-		VSManagerItem ( QListViewItem* parent, const QString& text=QString::null )
-				: FancyListViewItem ( static_cast<vsw*> ( parent->listView() )->paintStyles(), parent, text )
-		{
-		}
+  VSManagerItem(QListViewItem* parent, const QString& text=QString::null)
+    : FancyListViewItem(static_cast<vsw*>(parent->listView())->paintStyles(), parent, text) {
+  }
 
 //   virtual const CodeModelItem* model() const                       {return 0;}
 
@@ -149,15 +144,13 @@ class VSManagerItem: public FancyListViewItem
 
 //   virtual QString comment();
 
-		vsw* listView()
-		{
-			return static_cast<vsw*> ( QListViewItem::listView() );
-		}
+  vsw* listView() {
+    return static_cast<vsw*>(QListViewItem::listView());
+  }
 
-		const vsw* listView() const
-		{
-			return static_cast<vsw*> ( QListViewItem::listView() );
-		}
+  const vsw* listView() const {
+    return static_cast<vsw*>(QListViewItem::listView());
+  }
 };
 
 // class SolutionItem : public FancyListViewItem {
@@ -364,74 +357,12 @@ class VSManagerItem: public FancyListViewItem
 //   VariableDom m_dom;
 // };
 
-struct FindOp2 ///a template would look nicer
-{
-	FindOp2 ( const FunctionDefinitionDom& dom ) : m_dom ( dom ) {}
-
-	bool operator() ( const FunctionDom& def ) const
-	{
-		if ( m_dom->name() != def->name() )
-			return false;
-
-		if ( m_dom->isConstant() != m_dom->isConstant() )
-			return false;
-
-		QString scope1 = QString ( "::" ) + m_dom->scope().join ( "::" );
-		QString scope2 = QString ( "::" ) + def->scope().join ( "::" );
-		if ( !scope1.endsWith ( scope2 ) )
-			return false;
-
-		const ArgumentList args = m_dom->argumentList();
-		const ArgumentList args2 = def->argumentList();
-		if ( args.size() != args2.size() )
-			return false;
-
-		for ( uint i=0; i<args.size(); ++i )
-		{
-			if ( args[i]->type() != args[i]->type() )
-				return false;
-		}
-
-		return true;
-	}
-
-private:
-	const FunctionDefinitionDom& m_dom;
+struct FindOp2 { ///a template would look nicer
+  const FunctionDefinitionDom& m_dom;
 };
 
-struct FindOp
-{
-	FindOp ( const FunctionDom& dom ) : m_dom ( dom ) {}
-
-	bool operator() ( const FunctionDefinitionDom& def ) const
-	{
-		if ( m_dom->name() != def->name() )
-			return false;
-
-		if ( m_dom->isConstant() != m_dom->isConstant() )
-			return false;
-
-		QString scope1 = QString ( "::" ) + m_dom->scope().join ( "::" );
-		QString scope2 = QString ( "::" ) + def->scope().join ( "::" );
-		if ( !scope1.endsWith ( scope2 ) )
-			return false;
-
-		const ArgumentList args = m_dom->argumentList();
-		const ArgumentList args2 = def->argumentList();
-		if ( args.size() != args2.size() )
-			return false;
-
-		for ( uint i=0; i<args.size(); ++i )
-		{
-			if ( args[i]->type() != args2[i]->type() )
-				return false;
-		}
-
-		return true;
-	}
-
-private:
-	const FunctionDom& m_dom;
+struct FindOp {
+  const FunctionDom& m_dom;
 };
 
 #endif /* __VSMANAGER_WIDGET_H__ */
