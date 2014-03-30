@@ -222,7 +222,7 @@ void AStyleWidget::accept() {
       options = &(m_part->getProjectOptions());
       m_bUseGlobalOpts = (*options)[ASOPTS_USEGLOBAL].toBool();
       if(m_bUseGlobalOpts) {
-        (*options) = global;
+        (*options) = m_part->getGlobalOptions();
         (*options)[ASOPTS_USEGLOBAL] = m_bUseGlobalOpts;
       }
       break;
