@@ -10,45 +10,44 @@
 *
 * Copyright: See COPYING file that comes with this distribution
 */
-#include "vstudiopart.h"
-#include "vsmanagerwidget.h"
+#include <qheader.h>
+#include <qdir.h>
+#include <qstylesheet.h>
 
 #include <kiconloader.h>
 #include <kinstance.h>
 #include <kurl.h>
 #include <kaction.h>
 #include <kactionclasses.h>
-#include <kpopupmenu.h>
+// #include <kpopupmenu.h>
 #include <kconfig.h>
 
-#include <urlutil.h>
-#include <kdevcore.h>
-#include <kdevlanguagesupport.h>
-#include <kdevproject.h>
-#include <kdevpartcontroller.h>
-#include <codemodel.h>
-#include <codemodel_utils.h>
+// #include <urlutil.h>
+// #include <kdevcore.h>
+// #include <kdevlanguagesupport.h>
+// #include <kdevproject.h>
+// #include <kdevpartcontroller.h>
+// #include <codemodel.h>
+// #include <codemodel_utils.h>
 
 #include <klocale.h>
 #include <kdebug.h>
 
-#include <qheader.h>
-#include <qdir.h>
-#include <qstylesheet.h>
-#include <qstringlist.h>
+#include "vs_explorer.h"
+#include <vs_part.h>
 
-VSExplorer::VSExplorer(VStudioPart * part, QWidget *parent, const char *name)
-  : VSExplorerWidget(parent, name) , m_part(part) {
-  addColumn("");
-  header()->hide();
-  setSorting(0);
-  setRootIsDecorated(true);
-  setAllColumnsShowFocus(true);
+VSExplorer::VSExplorer(VSPart * part, QWidget *parent, const char *name)
+  : VsExplorerWidget(parent, name), m_part(part) {
+//   addColumn("");
+//   header()->hide();
+//   setSorting(0);
+//   setRootIsDecorated(true);
+//   setAllColumnsShowFocus(true);
 
 //   connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
 
   //NOTE: kind of "track active item in solution explorer"
-  m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
+//   m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
 
   // Configure explorer from config file
 //   KConfig* config = m_part->instance()->config();
@@ -56,7 +55,7 @@ VSExplorer::VSExplorer(VStudioPart * part, QWidget *parent, const char *name)
 //   m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
 }
 
-VSManagerWidget::~VSManagerWidget() {
+VSExplorer::~VSExplorer() {
 //   KConfig* config = m_part->instance()->config();
 //   config->setGroup("General");
 //   config->writeEntry( "ViewMode", viewMode() );
@@ -64,10 +63,10 @@ VSManagerWidget::~VSManagerWidget() {
 //   config->sync();
 }
 
-void VSManagerWidget::slotProjectOpened() {
+void VSExplorer::slotProjectOpened() {
 }
 
-void VSManagerWidget::slotProjectClosed() {
+void VSExplorer::slotProjectClosed() {
 }
 
 ProjectItem::ProjectItem(Type type, ProjectItem *parent, const QString &text)
@@ -84,4 +83,4 @@ void ProjectItem::paintCell(QPainter *p, const QColorGroup &cg, int column, int 
 //   QListViewItem::paintCell(p, cg, column, width, alignment);
 }
 
-#include "vsmanagerwidget.moc"
+#include "vs_explorer.moc.cpp"

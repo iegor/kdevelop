@@ -1,3 +1,4 @@
+#include "qlistview.h" /* defines QListViewItem */
 /*
 *kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
 *
@@ -17,13 +18,14 @@
 #include <qtooltip.h>
 #include <qstring.h>
 #include <qstringlist.h>
+#include <qlistview.h>
 
-#include <codemodel.h>
-#include <fancylistviewitem.h>
+// #include <codemodel.h>
+// #include <fancylistviewitem.h>
 
 #include "vs_explorer_widget.h"
 
-class VStudioPart;
+class VSPart;
 class KSelectAction;
 class KToggleAction;
 class TargetItem;
@@ -31,16 +33,16 @@ class FileItem;
 class AutoProjectPart;
 
 //TODO: A template would look nicer
-struct FindOp { const FunctionDom& m_dom; };
-struct FindOp2 { const FunctionDefinitionDom& m_dom; };
+// struct FindOp { const FunctionDom& m_dom; };
+// struct FindOp2 { const FunctionDefinitionDom& m_dom; };
 
 class VSExplorer : public VsExplorerWidget {
   Q_OBJECT
 public:
-  VSExplorer(VStudioPart *part, QWidget *parent=0, const char *name=0);
+  VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
   virtual ~VSExplorer();
 
-  bool selectItem(ItemDom item);
+//   bool selectItem(ItemDom item);
 
 protected:
   void contentsContextMenuEvent(QContextMenuEvent*);
@@ -51,10 +53,10 @@ private slots:
   void slotProjectClosed();
 
 private:
-  VStudioPart* m_part;
+  VSPart* m_part;
   QString m_projectDirectory;
   int m_projectDirectoryLength;
-  TextPaintStyleStore m_paintStyles;
+//   TextPaintStyleStore m_paintStyles;
 };
 
 /**
