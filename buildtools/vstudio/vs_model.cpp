@@ -14,7 +14,7 @@
 #include <qtextstream.h>
 #include <kdebug.h>
 
-#include "vs_solution.h"
+#include "vs_model.h"
 
 UUID::UUID() {
   memset(&m1, 0, 32);

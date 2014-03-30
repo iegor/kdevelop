@@ -44,14 +44,14 @@ private:
  */
 class VSSolution {
 public:
-    VSSolution(QString name, QString path);
-    ~VSSolution();
+  VSSolution(QString name, QString path);
+  ~VSSolution();
 
-    bool Parse();
+  bool Parse();
 private: // Data
-    QFile fl;
+  QFile fl;
 private: // Utils
-    bool _write_file();
+  bool _write_file();
 }; /* VSSolution */
 
 #endif /*__KDEVPART_VSTUDIOPART_SOLUTION_H__ */
