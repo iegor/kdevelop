@@ -217,6 +217,14 @@ void AStyleWidget::accept() {
         (*options)[ASOPTS_FSTYLE] = fmtstyle2string((enum astyle::FormatStyle)qcmb_style->currentItem());
       }
       m_part->setExtensions(qtxe_generalext->text(), true);
+
+      // Check and update project settings accordingly
+      options = &(m_part->getProjectOptions());
+      m_bUseGlobalOpts = (*options)[ASOPTS_USEGLOBAL].toBool();
+      if(m_bUseGlobalOpts) {
+        (*options) = global;
+        (*options)[ASOPTS_USEGLOBAL] = m_bUseGlobalOpts;
+      }
       break;
     case PROJECT:
       options = &(m_part->getProjectOptions());
