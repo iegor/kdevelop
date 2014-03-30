@@ -1,8 +1,8 @@
 <!DOCTYPE UI><UI version="3.3" stdsetdef="1">
-<class>vs_manager_widget</class>
+<class>vs_explorer</class>
 <widget class="QWidget">
     <property name="name">
-        <cstring>vs_manager_widget</cstring>
+        <cstring>vs_explorer</cstring>
     </property>
     <property name="geometry">
         <rect>
@@ -26,9 +26,8 @@
         </widget>
     </grid>
 </widget>
-<includes>
-    <include location="local" impldecl="in implementation">vs_manager_widget.ui.h</include>
-</includes>
+<customwidgets>
+</customwidgets>
 <slots>
     <slot>vs_manager_widget_destroyed( QObject * )</slot>
 </slots>
