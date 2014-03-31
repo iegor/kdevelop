@@ -10,6 +10,7 @@
 *
 * Copyright: See COPYING file that comes with this distribution
 */
+#include <qpainter.h>
 #include <qheader.h>
 #include <qdir.h>
 #include <qstylesheet.h>
@@ -21,6 +22,7 @@
 #include <kactionclasses.h>
 // #include <kpopupmenu.h>
 #include <kconfig.h>
+#include <klistview.h>
 
 // #include <urlutil.h>
 // #include <kdevcore.h>
@@ -34,53 +36,86 @@
 #include <kdebug.h>
 
 #include "vs_explorer.h"
-#include <vs_part.h>
+#include "vs_part.h"
 
-VSExplorer::VSExplorer(VSPart * part, QWidget *parent, const char *name)
-  : VsExplorerWidget(parent, name), m_part(part) {
-//   addColumn("");
-//   header()->hide();
-//   setSorting(0);
-//   setRootIsDecorated(true);
-//   setAllColumnsShowFocus(true);
+namespace VStudio {
+  //===========================================================================
+  // Visual studio explorer widget methods
+  //===========================================================================
+  VSExplorer::VSExplorer(VSPart * part, QWidget *parent, const char *name)
+    : VsExplorerWidget(parent, name), m_part(part) {
+    m_listView->addColumn("");
+    m_listView->header()->hide();
+    m_listView->setSorting(0);
+    m_listView->setRootIsDecorated(true);
+    m_listView->setAllColumnsShowFocus(true);
 
-//   connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
+  //   connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
 
-  //NOTE: kind of "track active item in solution explorer"
-//   m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
+    //NOTE: kind of "track active item in solution explorer"
+  //   m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
 
-  // Configure explorer from config file
-//   KConfig* config = m_part->instance()->config();
-//   config->setGroup("General");
-//   m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
-}
+    // Configure explorer from config file
+  //   KConfig* config = m_part->instance()->config();
+  //   config->setGroup("General");
+  //   m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
+  }
 
-VSExplorer::~VSExplorer() {
-//   KConfig* config = m_part->instance()->config();
-//   config->setGroup("General");
-//   config->writeEntry( "ViewMode", viewMode() );
-//   config->writeEntry("FollowEditor", m_doFollowEditor);
-//   config->sync();
-}
+  VSExplorer::~VSExplorer() {
+  //   KConfig* config = m_part->instance()->config();
+  //   config->setGroup("General");
+  //   config->writeEntry( "ViewMode", viewMode() );
+  //   config->writeEntry("FollowEditor", m_doFollowEditor);
+  //   config->sync();
+  }
 
-void VSExplorer::slotProjectOpened() {
-}
+  void VSExplorer::slotProjectOpened() {
+  }
 
-void VSExplorer::slotProjectClosed() {
-}
+  void VSExplorer::slotProjectClosed() {
+  }
 
-ProjectItem::ProjectItem(Type type, ProjectItem *parent, const QString &text)
-  : QListViewItem(parent, text), typ(type) {
-  bld = false;
-}
+  bool VSExplorer::addSolutionNode(const QString &name) {
+    VSSlnNode *item = new VSSlnNode(m_listView, name);
+    item->setPixmap(1, SmallIcon("document"));
+//     item->setText(1, name);
+//     m_listView->insertItem(item);
+    return true;
+  }
 
-void ProjectItem::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
-//   if(isBold()) {
-//     QFont font(p->font());
-//     font.setBold(true);
-//     p->setFont(font);
-//   }
-//   QListViewItem::paintCell(p, cg, column, width, alignment);
-}
+  bool VSExplorer::addProjectNode(const QString &name) {
+    VSSlnNode *sln = new VSSlnNode(m_listView, name);
+    return true;
+  }
 
-#include "vs_explorer.moc.cpp"
+  //===========================================================================
+  // Visual studio explorer widget entity base class methods
+  //===========================================================================
+  VSExplorerEntity::VSExplorerEntity(Type type, QListView *parent, const QString &text)
+  : QListViewItem(parent, text)
+  , typ(type) {
+    bld = false;
+  }
+
+  VSExplorerEntity::VSExplorerEntity(Type type, VSExplorerEntity *parent, const QString &text)
+    : QListViewItem(parent, text), typ(type) {
+    bld = false;
+  }
+
+  void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
+    if(isBold()) {
+      QFont font(p->font());
+      font.setBold(true);
+      p->setFont(font);
+    }
+    QListViewItem::paintCell(p, cg, column, width, alignment);
+  }
+
+  //===========================================================================
+  // Visual studio explorer widget entity solution class methods
+  //===========================================================================
+  VSSlnNode::VSSlnNode(QListView *lv, const QString &text)
+  : VSExplorerEntity(VSExplorerEntity::Solution, lv, text) {
+  }
+};
+#include "vs_explorer.moc"

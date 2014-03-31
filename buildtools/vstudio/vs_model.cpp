@@ -16,117 +16,52 @@
 
 #include "vs_model.h"
 
-UUID::UUID() {
-  memset(&m1, 0, 32);
-}
-
-VSSolution::VSSolution(QString name, QString path)
-  : fl(path) {
-}
-
-VSSolution::~VSSolution() {
-  _write_file();
-}
-
-bool VSSolution::Parse() {
-  int sln_ver = 0;
-  if(!fl.open(IO_ReadWrite|IO_Raw)) {
-    kdDebug() << "can't open file for solution" << endl;
-    return false;
+namespace VStudio {
+  //===========================================================================
+  // Visual Studio entity methods
+  //===========================================================================
+  VSEntity::VSEntity(_vs_ent_type typ, const QString &nm)
+  : name(nm), type(typ) {
+    uuid = QUuid::createUuid();
   }
 
-  if(!fl.isReadable()) {
-    kdDebug() << "Solution file exist, but is not readable" << endl;
-    return false;
+  VSEntity::VSEntity(_vs_ent_type typ, const QString &nm, const QUuid &uid)
+  : name(nm) , type(typ) {
+    uuid = uid;
   }
 
-  kdDebug() << "<<<<< Parsing solution file >>>>>" << endl;
-
-  QString ln;
-  QTextStream str(&fl);
-
-  //BEGIN // Read the MS guards and version info
-  QString ms_guard, ms_sharp_guard, ms_ver;
-  int sln_ver_expected = 0;
-
-  ms_guard = str.readLine();
-  if(ms_guard.isEmpty()) {
-    kdDebug() << "empty line at begin of file detected" << endl;
-    ms_guard = str.readLine();
+  VSEntity::~VSEntity() {
   }
 
-  ms_sharp_guard = str.readLine();
-
-  if(ms_sharp_guard.compare(QString("# Visual Studio 2008")) == 0) {
-    sln_ver_expected = 10;
-  } else if(ms_sharp_guard.compare(QString("# Visual Studio 2005")) == 0) {
-    sln_ver_expected = 9;
-  } else {
-    sln_ver_expected = 8;
+  //===========================================================================
+  // Visual studio solution methods
+  //===========================================================================
+  VSSolution::VSSolution(const QString &nm, const QString &path)
+  : VSEntity(VSEntity::vs_solution, nm)
+  , path_rlt(path) {
   }
 
-  printf("MS_GUARD: %s\n", ms_guard.ascii());
-  printf("MS_#GUARD: %s\n", ms_sharp_guard.ascii());
-
-  ms_ver = ms_guard.right(5);
-  ms_ver.remove(ms_ver.find('.'), 3);
-  printf("ms_ver: \"%s\"\n", ms_ver.ascii());
-  bool b_ok = false;
-  sln_ver = ms_ver.toInt(&b_ok, 10);
-
-  if(!b_ok) {
-    kdDebug() << "can't convert version string to int" << endl;
-    //return false;
+  VSSolution::VSSolution(const QString &nm, const QUuid &uid, const QString &path)
+  : VSEntity(VSEntity::vs_solution, nm, uid)
+  , path_rlt(path) {
   }
 
-  printf("Solution ver: %i\n", sln_ver);
-  //END // Read the MS guards and version info
-
-  while(!str.atEnd()) {
-    ln = str.readLine();
-    //BEGIN // Read project info
-    if(0 == ln.left(7).compare(QString("Project"))) {
-      while(0 != ln.left(10).compare(QString("EndProject"))) {
-
-        //BEGIN // Read project section info, dependencies
-        if(0 == ln.left(15).compare(QString("ProjectSection"))) {
-          while(0 != ln.left(17).compare(QString("EndProjectSection"))) {
-            printf("Project section data: %s\n", ln.ascii());
-            ln = str.readLine();
-          }
-        }
-        //END // Read project section info, dependencies
-
-        // Read project data
-
-        /**
-         * E.G. project info inside sln looks like this.
-         * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
-         * So we need to split it into these pieces:
-         *
-         * - "Project" string
-         *
-         * - ("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}")
-         *   solution internal UUID of project
-         *
-         * - "project name" internal for solution
-         *
-         */
-        printf("Project data: %s\n", ln.ascii());
-
-        ln = str.readLine();
-      }
-    }
-    //END // Read project info
-    else if(0 == ln.compare("Global")) {
-    }
+  VSSolution::~VSSolution() {
   }
 
-  kdDebug() << "<<<<< Parsing solution file : FINISHED >>>>>" << endl;
-  return true;
-}
+  //===========================================================================
+  // Visual studio project methods
+  //===========================================================================
+  VSProject::VSProject(const QString &nm, const QString &path)
+  : VSEntity(VSEntity::vs_project, nm)
+  , path_rlt(path) {
+  }
 
-bool VSSolution::_write_file() {
-  QTextStream out(&fl);
-  return true;
-}
+  VSProject::VSProject(const QString &nm, const QUuid &uid, const QString &path)
+  : VSEntity(VSEntity::vs_project, nm, uid)
+  , path_rlt(path) {
+  }
+
+  VSProject::~VSProject() {
+  }
+};

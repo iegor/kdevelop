@@ -4,7 +4,7 @@
 *  C/C++ Implementation: vs_model
 *
 * Description:
-*
+* <_rlt> prefix means relative path
 *
 * Author: iegor <rmtdev@gmail.com>, (C) 2013
 *
@@ -14,44 +14,47 @@
 #define __KDEVPART_VSTUDIOPART_SOLUTION_H__
 
 #include <qfile.h>
+#include <qguardedptr.h>
 
-#define VSSOLUTION_VERSION 10
+#include "vs_common.h"
 
-class UUID {
-public:
-    UUID();
-private:
-    union {
-        unsigned char m1[32];
-        struct {
-            unsigned int f1;
-            unsigned short s1;
-            unsigned short s2;
-            unsigned short s3;
-            union {
-                unsigned char m2[12];
-                struct {
-                    unsigned int f2;
-                    unsigned short s4;
-                };
-            };
-        };
+//BEGIN //VStudio namespace
+namespace VStudio {
+  class VSEntity {
+  public:
+    enum _vs_ent_type {
+      vs_solution = 0,
+      vs_project,
+      vs_filter,
+      vs_file,
     };
+  public:
+    VSEntity(_vs_ent_type typ, const QString &name);
+    VSEntity(_vs_ent_type typ, const QString &name, const QUuid &uid);
+    virtual ~VSEntity();
+
+    QString name;
+    QUuid uuid;
+    _vs_ent_type type;
+  };
+
+  class VSSolution : public VSEntity {
+  public:
+    VSSolution(const QString &name, const QString &path_rlt);
+    VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
+    virtual ~VSSolution();
+  private:
+    QString path_rlt;
+  };
+
+  class VSProject : public VSEntity {
+  public:
+    VSProject(const QString &name, const QString &path_rlt);
+    VSProject(const QString &name, const QUuid &uid, const QString &path_rlt);
+    virtual ~VSProject();
+  private:
+    QString path_rlt;
+  };
 };
-
-/**
- * Visual Studio solution.
- */
-class VSSolution {
-public:
-  VSSolution(QString name, QString path);
-  ~VSSolution();
-
-  bool Parse();
-private: // Data
-  QFile fl;
-private: // Utils
-  bool _write_file();
-}; /* VSSolution */
-
+//END // VStudio namespace
 #endif /*__KDEVPART_VSTUDIOPART_SOLUTION_H__ */

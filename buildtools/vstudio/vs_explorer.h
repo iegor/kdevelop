@@ -25,78 +25,70 @@
 
 #include "vs_explorer_widget.h"
 
-class VSPart;
 class KSelectAction;
 class KToggleAction;
 class TargetItem;
 class FileItem;
 class AutoProjectPart;
 
-//TODO: A template would look nicer
-// struct FindOp { const FunctionDom& m_dom; };
-// struct FindOp2 { const FunctionDefinitionDom& m_dom; };
+//BEGIN //VStudio namespace
+namespace VStudio {
+  class VSPart;
+  //TODO: A template would look nicer
+  // struct FindOp { const FunctionDom& m_dom; };
+  // struct FindOp2 { const FunctionDefinitionDom& m_dom; };
 
-class VSExplorer : public VsExplorerWidget {
-  Q_OBJECT
-public:
-  VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
-  virtual ~VSExplorer();
+  class VSExplorer : public VsExplorerWidget {
+    Q_OBJECT
+  public:
+    VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
+    virtual ~VSExplorer();
+  //   bool selectItem(ItemDom item);
+    bool addSolutionNode(const QString &name);
+    bool addProjectNode(const QString &name);
+  protected:
+    void contentsContextMenuEvent(QContextMenuEvent*);
+    void maybeTip(QPoint const &);
 
-//   bool selectItem(ItemDom item);
+  private slots:
+    void slotProjectOpened();
+    void slotProjectClosed();
 
-protected:
-  void contentsContextMenuEvent(QContextMenuEvent*);
-  void maybeTip(QPoint const &);
+  private:
+    VSPart* m_part;
+    QString m_projectDirectory;
+    int m_projectDirectoryLength;
+  //   TextPaintStyleStore m_paintStyles;
+  };
 
-private slots:
-  void slotProjectOpened();
-  void slotProjectClosed();
+  /**
+  * Base class for all items
+  */
+  class VSExplorerEntity : public QListViewItem {
+  public:
+    enum Type { Solution, Project, File };
+  public:
+    VSExplorerEntity(Type type, QListView *parent, const QString &text);
+    VSExplorerEntity(Type type, VSExplorerEntity *parent, const QString &text);
+    void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
+    void setBold(bool b) { bld = b; }
+    bool isBold() const { return bld; }
+    Type type() { return typ; }
+  private:
+    Type typ;
+    bool bld;
+  };
 
-private:
-  VSPart* m_part;
-  QString m_projectDirectory;
-  int m_projectDirectoryLength;
-//   TextPaintStyleStore m_paintStyles;
+  /**
+  * Solution node for vs widget
+  */
+  class VSSlnNode : public VSExplorerEntity {
+  public:
+    VSSlnNode(QListView *lv, const QString &text);
+  private:
+    QString name;
+    QString uiFileLink;
+  };
 };
-
-/**
-* Base class for all items
-*/
-class ProjectItem : public QListViewItem {
-public:
-  enum Type { Subproject, Target, File };
-
-  ProjectItem(Type type, QListView *parent, const QString &text);
-  ProjectItem(Type type, ProjectItem *parent, const QString &text);
-
-  void paintCell(QPainter *p, const QColorGroup &cg,
-                 int column, int width, int alignment);
-  void setBold(bool b) {
-    bld = b;
-  }
-  bool isBold() const {
-    return bld;
-  }
-  Type type() {
-    return typ;
-  }
-
-private:
-  Type typ;
-  bool bld;
-
-};
-
-/**
-* File of vs project
-*/
-class FileItem : public ProjectItem {
-public:
-  FileItem(QListView *lv, const QString &text);
-
-  QString name;
-  QString uiFileLink;
-  QString m_sRelativeToProjName;
-};
-
+//END // VStudio namespace
 #endif /* __VSMANAGER_WIDGET_H__ */
