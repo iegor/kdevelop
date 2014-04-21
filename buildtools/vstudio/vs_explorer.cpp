@@ -20,7 +20,7 @@
 #include <kurl.h>
 #include <kaction.h>
 #include <kactionclasses.h>
-// #include <kpopupmenu.h>
+#include <kpopupmenu.h>
 #include <kconfig.h>
 #include <klistview.h>
 
@@ -38,17 +38,22 @@
 #include "vs_explorer.h"
 #include "vs_part.h"
 
+class KPopupMenu;
+
 namespace VStudio {
   //===========================================================================
   // Visual studio explorer widget methods
   //===========================================================================
   VSExplorer::VSExplorer(VSPart * part, QWidget *parent, const char *name)
-    : VsExplorerWidget(parent, name), m_part(part) {
+    : VsExplorerWidget(parent, name)
+    , m_part(part)
+    , actions(0) {
     m_listView->addColumn("");
     m_listView->header()->hide();
     m_listView->setSorting(0);
     m_listView->setRootIsDecorated(true);
     m_listView->setAllColumnsShowFocus(true);
+    m_listView->setItemsRenameable(true);
 
   //   connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
 
@@ -59,6 +64,36 @@ namespace VStudio {
   //   KConfig* config = m_part->instance()->config();
   //   config->setGroup("General");
   //   m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
+
+    actions = new KActionCollection(this);
+
+    //TODO: Remove that later, that will be part of test only ###########
+    actSetEntityRltPath = new KAction(i18n("Set relative path:"), 0, this, SLOT(slotSetEntityRltPath()),
+                                      actions, "setrelpath");
+    actSetEntityRltPath->setToolTip(i18n("Set relative path for entity"));
+    actSetEntityRltPath->setWhatsThis(i18n("<qt><b>Set relative path</b>"
+        "<p>Change the relative path for selected entity.</p></qt>"));
+    actSetEntityRltPath->setGroup("vs");
+    //###################################################################
+
+    actConfigureEntity = new KAction(i18n("Configure"), 0, this, SLOT(slotConfigureEntity()),
+                                     actions, "confentity");
+    actConfigureEntity->setToolTip(i18n("Entity configuration"));
+    actConfigureEntity->setWhatsThis(i18n("<qt><b>Configure entity</b>"
+        "<p>Change configuration values for selected entity.</p></qt>"));
+    actConfigureEntity->setGroup("vs");
+
+    actRenameEntity = new KAction(i18n("Rename"), 0, this, SLOT(slotRenameEntity()),
+                                     actions, "renfentity");
+    actRenameEntity->setToolTip(i18n("Entity renaming"));
+    actRenameEntity->setWhatsThis(i18n("<qt><b>Rename entity</b>"
+        "<p>Change internal name of selected entity.</p></qt>"));
+    actRenameEntity->setGroup("vs");
+
+    connect(m_listView, SIGNAL(contextMenu(KListView*, QListViewItem*, const QPoint&)),
+        this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&)));
+    connect(m_listView, SIGNAL(itemRenamed(QListViewItem*, const QString&, int)),
+        this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int)));
   }
 
   VSExplorer::~VSExplorer() {
@@ -67,6 +102,47 @@ namespace VStudio {
   //   config->writeEntry( "ViewMode", viewMode() );
   //   config->writeEntry("FollowEditor", m_doFollowEditor);
   //   config->sync();
+    delete actions;
+    actions = 0;
+  }
+
+  void VSExplorer::slotContextMenu(KListView */*lv*/, QListViewItem *item, const QPoint &p) {
+    if(!item) {
+      kddbg << "Error! no item" << endl;
+      return;
+    }
+
+    VSExplorerEntity *i = (VSExplorerEntity*)item;
+
+    QString caption_mask = i18n("Solution \"%1\"").arg(i->getModelRepresentation()->getName());
+    QPixmap pixmap;
+
+    switch(i->type()) {
+      case vs_solution: {
+        pixmap = SmallIcon("tar");
+        break; }
+      case vs_project: {
+        pixmap = SmallIcon("file");
+        break; }
+      default:
+        break;
+    }
+
+    KPopupMenu menu(this);
+    menu.insertTitle(pixmap, caption_mask);
+    actSetEntityRltPath->plug(&menu);
+    actConfigureEntity->plug(&menu);
+    actRenameEntity->plug(&menu);
+    menu.exec(p);
+  }
+
+  void VSExplorer::slotEntityRenamed(QListViewItem *item, const QString &name, int /*col*/) {
+    if(!item) {
+      kddbg << "Error! no item" << endl;
+      return;
+    }
+    kddbg << "Entity is renamed to: " << name << endl;
+    ((VSExplorerEntity*)(item))->getModelRepresentation()->setName(name);
   }
 
   void VSExplorer::slotProjectOpened() {
@@ -75,13 +151,41 @@ namespace VStudio {
   void VSExplorer::slotProjectClosed() {
   }
 
+  void VSExplorer::slotSetEntityRltPath() {
+    kddbg << "slotSetEntityRltPath" << endl;
+// //     if(!item) {
+// //       kddbg << "Error! no item" << endl;
+// //       return;
+// //     }
+
+//     kddbg << "Change path for " << ((VSExplorerEntity*)item)->getModelRepresentation()->getName() << endl;
+  }
+
+  void VSExplorer::slotConfigureEntity() {
+    kddbg << "slotConfigureEntity" << endl;
+  }
+
+  void VSExplorer::slotRenameEntity() {
+    if(!m_listView->itemsRenameable()) {
+      kddbg << "Items are not renamable" << endl;
+      return;
+    }
+    kddbg << "slotRenameEntity" << endl;
+
+    QPtrList<QListViewItem> items = m_listView->selectedItems();
+    for(items_ci it=items.begin(); it!=items.end(); ++it) {
+      VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
+      kddbg << "remaning item: " << ent->getModelRepresentation()->getName() << endl;
+      m_listView->rename((*it), 0);
+    }
+  }
+
   VSSlnNode* VSExplorer::addSolutionNode(VSSolution *sln) {
     VSSlnNode *item = new VSSlnNode(m_listView, sln);
     if(item == 0) {
       kddbg << "Error! Out of memory" << endl;
     } else {
       item->setPixmap(0, SmallIcon("tar"));
-      //setPixmap( 0, SmallIcon( "tar" ) : SmallIcon( "binary" ) );
 //     item->setText(1, name);
 //     m_listView->insertItem(item);
     }

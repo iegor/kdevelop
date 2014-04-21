@@ -45,6 +45,8 @@ namespace VStudio {
       return name;
     }
 
+    virtual void setName(const QString &name);
+
     e_VSEntityType getType() const {
       return type;
     }

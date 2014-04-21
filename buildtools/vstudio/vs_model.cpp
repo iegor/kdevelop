@@ -33,6 +33,10 @@ namespace VStudio {
   VSEntity::~VSEntity() {
   }
 
+  void VSEntity::setName(const QString &nm) {
+    name = nm;
+  }
+
   //===========================================================================
   // Visual studio solution methods
   //===========================================================================
