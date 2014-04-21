@@ -47,8 +47,6 @@
 #include <kdevplugininfo.h>
 #include <urlutil.h>
 
-//#include <boost/container/vector.hpp>
-
 #include "vs_part.h"
 #include "vs_model.h"
 
@@ -203,8 +201,11 @@ namespace VStudio {
     QString abspath = m_prjpath+"/"+path;
     QFile sln_f;
     QString ln;
+    bool slnguid_found = false;
+    QUuid sguid;  // Solution GUID
 
-    kddbg << "[VS SOLUTION]: |" << name << "| in " << path << endl;
+    kddbg << "Solution NAME: " << name << endl;
+    kddbg << "Solution PATH: " << path << endl;
 
     if(!sln_f.exists(abspath)) { kddbg << "is not there" << endl; return false; }
     sln_f.setName(abspath);
@@ -224,8 +225,9 @@ namespace VStudio {
 
     ms_guard = str.readLine();
     if(ms_guard.isEmpty()) {
-      kddbg << "empty line at begin of file detected" << endl;
-      ms_guard = str.readLine(); }
+      kddbg << "Error! Empty line at begin of file detected" << endl;
+      ms_guard = str.readLine();
+    }
 
     ms_sharp_guard = str.readLine();
 
@@ -237,21 +239,21 @@ namespace VStudio {
       sln_ver_expected = 8;
     }
 
-    printf("MS_GUARD: %s\n", ms_guard.ascii());
-    printf("MS_#GUARD: %s\n", ms_sharp_guard.ascii());
+    kddbg << "MS_GUARD: " << ms_guard.ascii() << endl;
+    kddbg << "MS_#GUARD: " << ms_sharp_guard.ascii() << endl;
 
     ms_ver = ms_guard.right(5);
     ms_ver.remove(ms_ver.find('.'), 3);
-    printf("ms_ver: \"%s\"\n", ms_ver.ascii());
+    kddbg << "MS_VER: \"" << ms_ver.ascii() << "\"\n";
     bool b_ok = false;
     sln_ver = ms_ver.toInt(&b_ok, 10);
 
     if(!b_ok) {
-      kddbg << "can't convert version string to int" << endl;
+      kddbg << "Error! Can't convert version string to int" << endl;
       return false;
     }
 
-    printf("Solution ver: %i\n", sln_ver);
+    kddbg << "Solution ver: " << sln_ver << endl;
     //END // Read the MS guards and version info
 
     // Create model::solution item
@@ -260,16 +262,19 @@ namespace VStudio {
     m_entities.append((VSEntity**)&sln);
 
     // Create and add widget solution item
-    if(!m_explorer_widget->addSolutionNode(name)) { kddbg << "failed to add solution node" << endl; return false;}
+    VSSlnNode *sln_n = m_explorer_widget->addSolutionNode(sln);
+    if(!sln_n) { kddbg << "failed to add solution node" << endl; return false;}
 
     while(!str.atEnd()) {
       ln = str.readLine();
       //BEGIN // Read project info
       if(0 == ln.left(7).compare(QString("Project"))) {
+        kddbg << "Project found\n";
         while(0 != ln.left(10).compare(QString("EndProject"))) {
 
           //BEGIN // Read project section info, dependencies
           if(0 == ln.left(15).compare(QString("ProjectSection"))) {
+            kddbg << "Project section found\n";
             while(0 != ln.left(17).compare(QString("EndProjectSection"))) {
               printf("Project section data: %s\n", ln.ascii());
               ln = str.readLine();
@@ -278,36 +283,83 @@ namespace VStudio {
           //END // Read project section info, dependencies
 
           // Read project data
-          /**
-          * E.G. project info inside sln looks like this.
-          * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
-          * So we need to split it into these pieces:
-          *
-          * - "Project" string
-          *
-          * - ("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}")
-          *   solution internal UUID of project
-          *
-          * - "project name" internal for solution
-          *
-          */
           QTextStream prjstream(&ln, IO_ReadOnly);
-          QString token;
-          prjstream >> token;
-          kddbg << "Token: " << token << endl;
-
-          // Get the project GUID
-          QRegExp rx("[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}");
-          int irx = rx.search(token);
-          QString prjname;
-          QString prjguid = token.mid(irx, 36);
-          QUuid prj_uid(prjguid);
-
-          kddbg << "Project \"" << prjname << "data:\n";
-          printf("\tGUID: %X\n", prj_uid.data1);
-
+          bool internaluid_found = false;
+          bool prjuid_found = false;
+          bool prjname_found = false;
+          bool prjrltpath_found = false;
+          QUuid puid; //Internal and project UIDs
+          QString prjname, prjpath_rlt;
+          QChar ch(0);
+          char latin1ch;
+          /**
+           * Project info inside sln looks like this.
+           * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
+           */
+          while(!prjstream.atEnd()) { // Analyze project string to get project parameters
+            switch(ch.latin1()) {
+              case '"': {
+                if(!internaluid_found) {
+                  prjstream >> ch;
+                  if(ch.latin1() != '{') {
+                    kddbg << "Error! Can't get GUID, incorrect character" << endl;
+                    return false;
+                  }
+                  if(!readGUID(prjstream, sguid))
+                    kddbg << "Failed to obtain internal GUID !"<< endl;
+                  kddbg << "\tInternal solution GUID: " << sguid.toString() << endl;
+                  if(!slnguid_found) {
+                    sln->uidSet(sguid);
+                  }
+                  internaluid_found = true;
+                  prjstream >> ch >> ch >> ch >> ch >> ch;
+                }
+                else if(internaluid_found && !prjname_found) {
+                  prjstream >> ch;
+                  do {
+                    prjname.append(ch);
+                    prjstream >> ch;
+                  } while(ch.latin1() != '"');
+                  kddbg << "\tProject name: " << prjname << endl;
+                  prjname_found = true;
+                  prjstream >> ch >> ch;
+                }
+                else if(prjname_found && !prjrltpath_found) {
+                  prjstream >> ch;
+                  do {
+                    prjpath_rlt.append(ch);
+                    prjstream >> ch;
+                  } while(ch.latin1() != '"');
+                  kddbg << "\tProject path: " << prjpath_rlt << endl;
+                  prjrltpath_found = true;
+                  prjstream >> ch >> ch;
+                }
+                else if(!prjuid_found) {
+                  prjstream >> ch;
+                  if(ch.latin1() != '{') {
+                    kddbg << "Error! Can't get GUID, incorrect character" << endl;
+                    return false;
+                  }
+                  if(!readGUID(prjstream, puid))
+                    kddbg << "Failed to obtain project GUID !"<< endl;
+                  kddbg << "\tProject GUID: " << puid.toString() << endl;
+                  prjuid_found = true;
+                  prjstream >> ch >> ch;
+                }
+                break;
+              }
+              default:
+                prjstream >> ch;
+                latin1ch = ch.latin1();
+                break;
+            }
+          }
+          // Create and add model representation
+          VSProject *prj = new VSProject(prjname, puid, prjpath_rlt);
+          if(prj == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
+          sln->insertProj(prj);
           // Create and add widget project item
-          //m_explorer_widget->addProjectNode("test_prj");
+          m_explorer_widget->addProjectNode(sln_n, prj);
           ln = str.readLine();
         }
       }

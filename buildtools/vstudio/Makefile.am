@@ -1,16 +1,9 @@
 METASOURCES = AUTO
-INCLUDES = -I$(top_srcdir)/buildtools/vstudio \
-	-I$(top_srcdir)/lib/interfaces \
-	-I$(top_srcdir)/lib/interfaces/extensions \
-	-I$(top_srcdir)/lib/interfaces/external \
-	-I$(top_srcdir)/lib/interfaces/extras \
-	-I$(top_srcdir)/lib/util \
-	-I$(top_srcdir)/lib/widgets \
-	-I$(top_srcdir)/buildtools/lib \
-	-I$(top_srcdir)/buildtools/lib/base \
-	-I$(top_srcdir)/buildtools/lib/widgets \
-	-I$(top_builddir)/buildtools/lib/widgets \
-	$(all_includes)
+INCLUDES = -I$(top_srcdir)/buildtools/lib -I$(top_srcdir)/buildtools/lib/base \
+	-I$(top_srcdir)/buildtools/lib/widgets -I$(top_srcdir)/buildtools/vstudio -I$(top_srcdir)/lib/interfaces \
+	-I$(top_srcdir)/lib/interfaces/extensions -I$(top_srcdir)/lib/interfaces/external \
+	-I$(top_srcdir)/lib/interfaces/extras -I$(top_srcdir)/lib/util -I$(top_srcdir)/lib/widgets $(all_includes) \
+	-I$(top_builddir)/buildtools/lib/widgets
 
 noinst_HEADERS = vs_common.h vs_explorer.h vs_explorer_widget.h vs_model.h \
 	vs_part.h
@@ -26,5 +19,5 @@ service_DATA = kdevpart_vs.desktop
 servicedir = $(kde_servicesdir)
 # $(kdedir)/share/services/kdevpart_vs.desktop
 rc_DATA = kdevpart_vs.rc
-rcdir = $(kde_datadir)/kdevpart_vs
+rcdir = $(kde_datadir)/kdevvs
 # $(kdedir)/share/apps/kdevvs/kdevpart_vs.rc

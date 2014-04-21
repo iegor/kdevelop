@@ -24,6 +24,7 @@
 // #include <fancylistviewitem.h>
 
 #include "vs_explorer_widget.h"
+#include "vs_model.h"
 
 class KSelectAction;
 class KToggleAction;
@@ -34,6 +35,8 @@ class AutoProjectPart;
 //BEGIN //VStudio namespace
 namespace VStudio {
   class VSPart;
+  class VSSlnNode;
+  class VSPrjNode;
   //TODO: A template would look nicer
   // struct FindOp { const FunctionDom& m_dom; };
   // struct FindOp2 { const FunctionDefinitionDom& m_dom; };
@@ -44,8 +47,8 @@ namespace VStudio {
     VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
     virtual ~VSExplorer();
   //   bool selectItem(ItemDom item);
-    bool addSolutionNode(const QString &name);
-    bool addProjectNode(const QString &name);
+    VSSlnNode* addSolutionNode(VSSolution *sln);
+    VSPrjNode* addProjectNode(VSSlnNode *sln, VSProject *prj);
   protected:
     void contentsContextMenuEvent(QContextMenuEvent*);
     void maybeTip(QPoint const &);
@@ -66,16 +69,14 @@ namespace VStudio {
   */
   class VSExplorerEntity : public QListViewItem {
   public:
-    enum Type { Solution, Project, File };
-  public:
-    VSExplorerEntity(Type type, QListView *parent, const QString &text);
-    VSExplorerEntity(Type type, VSExplorerEntity *parent, const QString &text);
+    VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text);
+    VSExplorerEntity(e_VSEntityType type, VSExplorerEntity *parent, const QString &text);
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     void setBold(bool b) { bld = b; }
     bool isBold() const { return bld; }
-    Type type() { return typ; }
-  private:
-    Type typ;
+    e_VSEntityType type() { return typ; }
+  protected:
+    e_VSEntityType typ;
     bool bld;
   };
 
@@ -84,10 +85,23 @@ namespace VStudio {
   */
   class VSSlnNode : public VSExplorerEntity {
   public:
-    VSSlnNode(QListView *lv, const QString &text);
-  private:
+    VSSlnNode(QListView *lv, VSSolution *sln);
+  protected:
     QString name;
-    QString uiFileLink;
+//     QString uiFileLink;
+    VSSolution *sln;
+  };
+
+  /**
+  * Project node for vs widget
+  */
+  class VSPrjNode : public VSExplorerEntity {
+  public:
+    VSPrjNode(VSSlnNode *sln, VSProject *prj);
+  protected:
+    QString name;
+    VSSlnNode *sln; //parent solution
+    VSProject *prj;
   };
 };
 //END // VStudio namespace

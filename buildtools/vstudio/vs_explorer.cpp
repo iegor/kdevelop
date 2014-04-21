@@ -75,35 +75,44 @@ namespace VStudio {
   void VSExplorer::slotProjectClosed() {
   }
 
-  bool VSExplorer::addSolutionNode(const QString &name) {
-    VSSlnNode *item = new VSSlnNode(m_listView, name);
-    item->setPixmap(1, SmallIcon("document"));
+  VSSlnNode* VSExplorer::addSolutionNode(VSSolution *sln) {
+    VSSlnNode *item = new VSSlnNode(m_listView, sln);
+    if(item == 0) {
+      kddbg << "Error! Out of memory" << endl;
+    } else {
+      item->setPixmap(1, SmallIcon("document"));
 //     item->setText(1, name);
 //     m_listView->insertItem(item);
-    return true;
+    }
+    return item;
   }
 
-  bool VSExplorer::addProjectNode(const QString &name) {
-    VSSlnNode *sln = new VSSlnNode(m_listView, name);
-    return true;
+  VSPrjNode* VSExplorer::addProjectNode(VSSlnNode *sln, VSProject *prj) {
+    VSPrjNode *item = new VSPrjNode(sln, prj);
+    if(item == 0) {
+      kddbg << "Error! Out of memory" << endl;
+    } else {
+      item->setPixmap(1, SmallIcon("file"));
+    }
+    return item;
   }
 
   //===========================================================================
   // Visual studio explorer widget entity base class methods
   //===========================================================================
-  VSExplorerEntity::VSExplorerEntity(Type type, QListView *parent, const QString &text)
+  VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text)
   : QListViewItem(parent, text)
   , typ(type) {
     bld = false;
   }
 
-  VSExplorerEntity::VSExplorerEntity(Type type, VSExplorerEntity *parent, const QString &text)
+  VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, VSExplorerEntity *parent, const QString &text)
     : QListViewItem(parent, text), typ(type) {
     bld = false;
   }
 
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
-    if(isBold()) {
+    if(isBold() || type() == vs_solution) {
       QFont font(p->font());
       font.setBold(true);
       p->setFont(font);
@@ -114,8 +123,19 @@ namespace VStudio {
   //===========================================================================
   // Visual studio explorer widget entity solution class methods
   //===========================================================================
-  VSSlnNode::VSSlnNode(QListView *lv, const QString &text)
-  : VSExplorerEntity(VSExplorerEntity::Solution, lv, text) {
+  VSSlnNode::VSSlnNode(QListView *lv, VSSolution *s)
+  : VSExplorerEntity(vs_solution, lv, s->getName())
+  , sln(s) {
+    name = s->getName();
+  }
+
+  //===========================================================================
+  // Visual studio explorer widget entity project class methods
+  //===========================================================================
+  VSPrjNode::VSPrjNode(VSSlnNode *s, VSProject *p)
+  : VSExplorerEntity(vs_project, s, p->getName())
+  , prj(p) {
+    name = p->getName();
   }
 };
 #include "vs_explorer.moc"

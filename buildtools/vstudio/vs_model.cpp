@@ -20,12 +20,12 @@ namespace VStudio {
   //===========================================================================
   // Visual Studio entity methods
   //===========================================================================
-  VSEntity::VSEntity(_vs_ent_type typ, const QString &nm)
+  VSEntity::VSEntity(e_VSEntityType typ, const QString &nm)
   : name(nm), type(typ) {
     uuid = QUuid::createUuid();
   }
 
-  VSEntity::VSEntity(_vs_ent_type typ, const QString &nm, const QUuid &uid)
+  VSEntity::VSEntity(e_VSEntityType typ, const QString &nm, const QUuid &uid)
   : name(nm) , type(typ) {
     uuid = uid;
   }
@@ -37,31 +37,52 @@ namespace VStudio {
   // Visual studio solution methods
   //===========================================================================
   VSSolution::VSSolution(const QString &nm, const QString &path)
-  : VSEntity(VSEntity::vs_solution, nm)
+  : VSEntity(vs_solution, nm)
   , path_rlt(path) {
   }
 
   VSSolution::VSSolution(const QString &nm, const QUuid &uid, const QString &path)
-  : VSEntity(VSEntity::vs_solution, nm, uid)
+  : VSEntity(vs_solution, nm, uid)
   , path_rlt(path) {
   }
 
   VSSolution::~VSSolution() {
+#ifdef USE_BOOST
+    for(proj_v_i it=projects.begin(); it!=projects.end(); ++it) {
+      if((*it) != NULL) {
+        delete (*it); (*it)=NULL;
+      }
+    }
+#else
+#endif
+  }
+
+  void VSSolution::insertProj(VSProject *prj) {
+#ifdef USE_BOOST
+    projects.push_back(prj);
+#else
+#endif
+    prj->setParent(this);
   }
 
   //===========================================================================
   // Visual studio project methods
   //===========================================================================
   VSProject::VSProject(const QString &nm, const QString &path)
-  : VSEntity(VSEntity::vs_project, nm)
+  : VSEntity(vs_project, nm)
   , path_rlt(path) {
   }
 
   VSProject::VSProject(const QString &nm, const QUuid &uid, const QString &path)
-  : VSEntity(VSEntity::vs_project, nm, uid)
+  : VSEntity(vs_project, nm, uid)
   , path_rlt(path) {
   }
 
   VSProject::~VSProject() {
+    parent = 0;
+  }
+
+  void VSProject::setParent(VSSolution *pnt) {
+    parent = pnt;
   }
 };

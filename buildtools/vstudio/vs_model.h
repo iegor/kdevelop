@@ -13,47 +13,78 @@
 #ifndef __KDEVPART_VSTUDIOPART_SOLUTION_H__
 #define __KDEVPART_VSTUDIOPART_SOLUTION_H__
 
-#include <qfile.h>
+// #include <qfile.h>
 #include <qguardedptr.h>
 
 #include "vs_common.h"
 
+#ifdef USE_BOOST
+#include <boost/container/vector.hpp>
+#endif
+
 //BEGIN //VStudio namespace
 namespace VStudio {
+  class VSProject;
+  class VSSolution;
+
   class VSEntity {
   public:
-    enum _vs_ent_type {
-      vs_solution = 0,
-      vs_project,
-      vs_filter,
-      vs_file,
-    };
-  public:
-    VSEntity(_vs_ent_type typ, const QString &name);
-    VSEntity(_vs_ent_type typ, const QString &name, const QUuid &uid);
+    VSEntity(e_VSEntityType typ, const QString &name);
+    VSEntity(e_VSEntityType typ, const QString &name, const QUuid &uid);
     virtual ~VSEntity();
 
+    void uidSet(const QUuid &uid) {
+      uuid = uid;
+    }
+
+    QUuid uidGet() {
+      return uuid;
+    }
+
+    QString getName() {
+      return name;
+    }
+
+    e_VSEntityType getType() {
+      return type;
+    }
+
+  protected:
     QString name;
     QUuid uuid;
-    _vs_ent_type type;
+    e_VSEntityType type;
+  };
+
+  class VSProject : public VSEntity {
+    public:
+      VSProject(const QString &name, const QString &path_rlt);
+      VSProject(const QString &name, const QUuid &uid, const QString &path_rlt);
+      virtual ~VSProject();
+
+      void setParent(VSSolution* parent);
+    private:
+      QString path_rlt;
+      VSSolution *parent;
   };
 
   class VSSolution : public VSEntity {
+#ifdef USE_BOOST
+    typedef boost::container::vector<VSProject*>::const_iterator proj_v_ci;
+    typedef boost::container::vector<VSProject*>::iterator proj_v_i;
+#else
+#endif
   public:
     VSSolution(const QString &name, const QString &path_rlt);
     VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
     virtual ~VSSolution();
-  private:
-    QString path_rlt;
-  };
 
-  class VSProject : public VSEntity {
-  public:
-    VSProject(const QString &name, const QString &path_rlt);
-    VSProject(const QString &name, const QUuid &uid, const QString &path_rlt);
-    virtual ~VSProject();
+    void insertProj(VSProject* prj);
   private:
     QString path_rlt;
+#ifdef USE_BOOST
+    boost::container::vector<VSProject*> projects;
+#else
+#endif
   };
 };
 //END // VStudio namespace
