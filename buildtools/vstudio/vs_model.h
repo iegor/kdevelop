@@ -37,15 +37,15 @@ namespace VStudio {
       uuid = uid;
     }
 
-    QUuid uidGet() {
+    QUuid uidGet() const {
       return uuid;
     }
 
-    QString getName() {
+    QString getName() const {
       return name;
     }
 
-    e_VSEntityType getType() {
+    e_VSEntityType getType() const {
       return type;
     }
 
@@ -62,6 +62,7 @@ namespace VStudio {
       virtual ~VSProject();
 
       void setParent(VSSolution* parent);
+      QString getRelativePath() const { return path_rlt; }
     private:
       QString path_rlt;
       VSSolution *parent;
@@ -79,6 +80,8 @@ namespace VStudio {
     virtual ~VSSolution();
 
     void insertProj(VSProject* prj);
+    QString getRelativePath() const { return path_rlt; }
+    bool dumpProjectsLayout(QString &layout);
   private:
     QString path_rlt;
 #ifdef USE_BOOST

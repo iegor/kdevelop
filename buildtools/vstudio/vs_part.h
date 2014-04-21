@@ -90,6 +90,7 @@ namespace VStudio {
     //===========================================================================
     bool loadVsSolution(const QString &sln_name, const QString &sln_path);
     bool unloadVsSolution(const QString &sln_path);
+    bool saveVsSolution(VSSolution &sln);
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);
 

@@ -65,6 +65,25 @@ namespace VStudio {
     prj->setParent(this);
   }
 
+  bool VSSolution::dumpProjectsLayout(QString &layout) {
+    QString ln;
+    //BEGIN // Save project layout data
+    for(proj_v_ci it=projects.begin(); it!=projects.end(); ++it) {
+      if((*it) == 0) {
+        kddbg << "Error!!! Project data either missing or corrupted." << endl;
+        return false;
+      }
+      VSProject &prj = (*(*it));
+      /* Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}" */
+      ln.append("Project(\"").append(guid2String(uidGet()));
+      ln.append("\") = \"").append(prj.getName()).append("\", \"").append(prj.getRelativePath()).append("\", \"");
+      ln.append(guid2String(prj.uidGet())).append("\"").append("\n");
+      //BEGIN // Save project section data
+      //END // Save project section data
+    }
+    //END // Save project layout data
+  }
+
   //===========================================================================
   // Visual studio project methods
   //===========================================================================

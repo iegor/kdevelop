@@ -197,14 +197,14 @@ namespace VStudio {
   void VSPart::savePartialProjectSession(QDomElement* /*el*/) {
   }
 
-  bool VSPart::loadVsSolution(const QString &name, const QString &path) {
+  bool VSPart::loadVsSolution(const QString &internal_name, const QString &path) {
     QString abspath = m_prjpath+"/"+path;
     QFile sln_f;
     QString ln;
     bool slnguid_found = false;
     QUuid sguid;  // Solution GUID
 
-    kddbg << "Solution NAME: " << name << endl;
+    kddbg << "Solution internal NAME: " << internal_name << endl;
     kddbg << "Solution PATH: " << path << endl;
 
     if(!sln_f.exists(abspath)) { kddbg << "is not there" << endl; return false; }
@@ -232,19 +232,19 @@ namespace VStudio {
     ms_sharp_guard = str.readLine();
 
     if(ms_sharp_guard.compare(QString("# Visual Studio 2008")) == 0) {
-      sln_ver_expected = 10;
-    } else if(ms_sharp_guard.compare(QString("# Visual Studio 2005")) == 0) {
       sln_ver_expected = 9;
-    } else {
+    } else if(ms_sharp_guard.compare(QString("# Visual Studio 2005")) == 0) {
       sln_ver_expected = 8;
+    } else {
+      sln_ver_expected = 7;
     }
 
-    kddbg << "MS_GUARD: " << ms_guard.ascii() << endl;
-    kddbg << "MS_#GUARD: " << ms_sharp_guard.ascii() << endl;
+    kddbg << "MS_GUARD: " << ms_guard << endl;
+    kddbg << "MS_#GUARD: " << ms_sharp_guard << endl;
 
     ms_ver = ms_guard.right(5);
     ms_ver.remove(ms_ver.find('.'), 3);
-    kddbg << "MS_VER: \"" << ms_ver.ascii() << "\"\n";
+    kddbg << "MS_VER: \"" << ms_ver << "\" expected (" << sln_ver_expected << ")\n";
     bool b_ok = false;
     sln_ver = ms_ver.toInt(&b_ok, 10);
 
@@ -257,7 +257,7 @@ namespace VStudio {
     //END // Read the MS guards and version info
 
     // Create model::solution item
-    VSSolution *sln = new VSSolution(name, abspath);
+    VSSolution *sln = new VSSolution(internal_name, abspath);
     if(sln == 0) { kddbg << "Can't parse solution file" << endl; return false; }
     m_entities.append((VSEntity**)&sln);
     // Create and add widget solution item
@@ -421,6 +421,29 @@ namespace VStudio {
   }
 
   bool VSPart::unloadVsSolution(const QString &/*sln_path*/) {
+    return true;
+  }
+
+  bool VSPart::saveVsSolution(VSSolution &sln) {
+    kddbg << "<<<<<< Saving: " << sln.getName() << " >>>>>>" << endl;
+    QString abspath = m_prjpath+"/"+sln.getRelativePath();
+    QString prj_layout;
+    QFile sln_f;
+
+    if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
+    sln_f.setName(abspath);
+    if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
+    if(!sln_f.isWritable()) { kddbg << "is not writable" << endl; return false; }
+
+    QString os;
+
+    os.append("Microsoft Visual Studio Solution File, Format Version 10.00\n");
+    os.append("# Visual Studio 2008\n");
+
+    sln.dumpProjectsLayout(prj_layout);
+    os.append(prj_layout);
+
+    kddbg << "<<<<<<" << sln.getName() << " saved >>>>>>" << endl;
     return true;
   }
 
