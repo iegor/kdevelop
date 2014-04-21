@@ -72,12 +72,9 @@ namespace VStudio {
     VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text);
     VSExplorerEntity(e_VSEntityType type, VSExplorerEntity *parent, const QString &text);
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
-    void setBold(bool b) { bld = b; }
-    bool isBold() const { return bld; }
     e_VSEntityType type() { return typ; }
   protected:
     e_VSEntityType typ;
-    bool bld;
   };
 
   /**

@@ -80,7 +80,8 @@ namespace VStudio {
     if(item == 0) {
       kddbg << "Error! Out of memory" << endl;
     } else {
-      item->setPixmap(1, SmallIcon("document"));
+      item->setPixmap(0, SmallIcon("tar"));
+      //setPixmap( 0, SmallIcon( "tar" ) : SmallIcon( "binary" ) );
 //     item->setText(1, name);
 //     m_listView->insertItem(item);
     }
@@ -92,7 +93,7 @@ namespace VStudio {
     if(item == 0) {
       kddbg << "Error! Out of memory" << endl;
     } else {
-      item->setPixmap(1, SmallIcon("file"));
+      item->setPixmap(0, SmallIcon("file"));
     }
     return item;
   }
@@ -103,16 +104,14 @@ namespace VStudio {
   VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text)
   : QListViewItem(parent, text)
   , typ(type) {
-    bld = false;
   }
 
   VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, VSExplorerEntity *parent, const QString &text)
     : QListViewItem(parent, text), typ(type) {
-    bld = false;
   }
 
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
-    if(isBold() || type() == vs_solution) {
+    if(type() == vs_solution) {
       QFont font(p->font());
       font.setBold(true);
       p->setFont(font);
