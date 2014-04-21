@@ -1,7 +1,7 @@
 <!DOCTYPE kdeveloptoc>
 <kdeveloptoc>
 <title>Qt Designer-3 and KDevelop-3</title>
-<base href="http://women.kde.org/articles/tutorials/kdevelop3"/>
+<base href="http://www.trinitydesktop.org/docs/qt3"/>
 <tocsect1 name="Index" url="index.html">
 </tocsect1>
 <tocsect1 name="Introduction" url="introduction.html">
