@@ -24,6 +24,8 @@
 #define VSPART_SOLUTION_ITEM "vs_solution"
 #define VSSOLUTION_VERSION 10
 
+#define VSPART_PRJSECTION_DEPENDENCIES "ProjectDependencies"
+
 //BEGIN //VStudio namespace
 namespace VStudio {
   enum e_VSEntityType {

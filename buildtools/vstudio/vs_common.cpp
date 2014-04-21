@@ -22,6 +22,9 @@ namespace VStudio {
   */
 
   bool readGUID(QTextStream &s, QUuid &uid) {
+    // if(!s) {
+    //   kddbg << "Error! unusable stream supplied" << endl;
+    //   return false; }
 #ifndef QT_NO_QUUID_STRING
     ushort raw[37]={0};
     s.readRawBytes((char*)raw, 72);

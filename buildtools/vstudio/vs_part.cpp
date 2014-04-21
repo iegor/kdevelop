@@ -260,7 +260,6 @@ namespace VStudio {
     VSSolution *sln = new VSSolution(name, abspath);
     if(sln == 0) { kddbg << "Can't parse solution file" << endl; return false; }
     m_entities.append((VSEntity**)&sln);
-
     // Create and add widget solution item
     VSSlnNode *sln_n = m_explorer_widget->addSolutionNode(sln);
     if(!sln_n) { kddbg << "failed to add solution node" << endl; return false;}
@@ -271,95 +270,144 @@ namespace VStudio {
       if(0 == ln.left(7).compare(QString("Project"))) {
         kddbg << "Project found\n";
         while(0 != ln.left(10).compare(QString("EndProject"))) {
+          kddbg << "Line: " << ln << endl;
 
           //BEGIN // Read project section info, dependencies
-          if(0 == ln.left(15).compare(QString("ProjectSection"))) {
+          if(ln.find(QRegExp("ProjectSection"), 0) >= 0) {
             kddbg << "Project section found\n";
-            while(0 != ln.left(17).compare(QString("EndProjectSection"))) {
-              printf("Project section data: %s\n", ln.ascii());
+
+            //TODO: Analyze project setion header line
+            /** e.g. ProjectSection(ProjectDependencies) = postProject */
+            QTextStream s(&ln, IO_ReadOnly);
+            QChar ch(0);
+            QString psname;  // Section name
+            QString pssetting; // Sestion setting
+            while(!s.atEnd()) {
+              switch(ch.latin1()) {
+                case '(': {
+                  s >> ch;
+                  do {
+                    psname.append(ch);
+                    s >> ch;
+                  } while(ch.latin1() != ')');
+                  break; }
+                case '=': {
+                  s >> pssetting;
+                  break; }
+                default:
+                  s >> ch;
+                  break;
+              }
+            }
+
+            kddbg << "\t\tSection: " << psname << " set: " << pssetting << endl;
+            ln = str.readLine();
+
+            while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
+              QTextIStream si(&ln);
+              ch = 0;
+              QUuid uuid1, uuid2, *uid=&uuid1;
+
+              while(!si.atEnd()) {
+                switch(ch.latin1()) {
+                  case '{': {
+                    if(!readGUID(si, *uid))
+                      kddbg << "Failed to obtain GUID !"<< endl;
+                    uid=&uuid2;
+                    si >> ch;
+                    break; }
+                  default:
+                    si >> ch;
+                    break;
+                }
+              }
+              kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
               ln = str.readLine();
             }
           }
           //END // Read project section info, dependencies
-
-          // Read project data
-          QTextStream prjstream(&ln, IO_ReadOnly);
-          bool internaluid_found = false;
-          bool prjuid_found = false;
-          bool prjname_found = false;
-          bool prjrltpath_found = false;
-          QUuid puid; //Internal and project UIDs
-          QString prjname, prjpath_rlt;
-          QChar ch(0);
-          char latin1ch;
-          /**
-           * Project info inside sln looks like this.
-           * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
-           */
-          while(!prjstream.atEnd()) { // Analyze project string to get project parameters
-            switch(ch.latin1()) {
-              case '"': {
-                if(!internaluid_found) {
-                  prjstream >> ch;
-                  if(ch.latin1() != '{') {
-                    kddbg << "Error! Can't get GUID, incorrect character" << endl;
-                    return false;
-                  }
-                  if(!readGUID(prjstream, sguid))
-                    kddbg << "Failed to obtain internal GUID !"<< endl;
-                  kddbg << "\tInternal solution GUID: " << sguid.toString() << endl;
-                  if(!slnguid_found) {
-                    sln->uidSet(sguid);
-                  }
-                  internaluid_found = true;
-                  prjstream >> ch >> ch >> ch >> ch >> ch;
-                }
-                else if(internaluid_found && !prjname_found) {
-                  prjstream >> ch;
-                  do {
-                    prjname.append(ch);
+          //BEGIN // Read and analyze project data
+          else {
+            // Read project data
+            QTextStream prjstream(&ln, IO_ReadOnly);
+            bool internaluid_found = false;
+            bool prjuid_found = false;
+            bool prjname_found = false;
+            bool prjrltpath_found = false;
+            QUuid puid; //Internal and project UIDs
+            QString prjname, prjpath_rlt;
+            QChar ch(0);
+            char latin1ch;
+            /** Analyze project string to get project parameters:
+            * Project info inside sln looks like this.
+            * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
+            */
+            while(!prjstream.atEnd()) {
+              switch(ch.latin1()) {
+                case '"': {
+                  if(!internaluid_found) {
                     prjstream >> ch;
-                  } while(ch.latin1() != '"');
-                  kddbg << "\tProject name: " << prjname << endl;
-                  prjname_found = true;
-                  prjstream >> ch >> ch;
-                }
-                else if(prjname_found && !prjrltpath_found) {
-                  prjstream >> ch;
-                  do {
-                    prjpath_rlt.append(ch);
-                    prjstream >> ch;
-                  } while(ch.latin1() != '"');
-                  kddbg << "\tProject path: " << prjpath_rlt << endl;
-                  prjrltpath_found = true;
-                  prjstream >> ch >> ch;
-                }
-                else if(!prjuid_found) {
-                  prjstream >> ch;
-                  if(ch.latin1() != '{') {
-                    kddbg << "Error! Can't get GUID, incorrect character" << endl;
-                    return false;
+                    if(ch.latin1() != '{') {
+                      kddbg << "Error! Can't get GUID, incorrect character" << endl;
+                      return false;
+                    }
+                    if(!readGUID(prjstream, sguid))
+                      kddbg << "Failed to obtain internal GUID !"<< endl;
+                    kddbg << "\tInternal solution GUID: " << sguid.toString() << endl;
+                    if(!slnguid_found) {
+                      sln->uidSet(sguid);
+                    }
+                    internaluid_found = true;
+                    prjstream >> ch >> ch >> ch >> ch >> ch;
                   }
-                  if(!readGUID(prjstream, puid))
-                    kddbg << "Failed to obtain project GUID !"<< endl;
-                  kddbg << "\tProject GUID: " << puid.toString() << endl;
-                  prjuid_found = true;
-                  prjstream >> ch >> ch;
+                  else if(internaluid_found && !prjname_found) {
+                    prjstream >> ch;
+                    do {
+                      prjname.append(ch);
+                      prjstream >> ch;
+                    } while(ch.latin1() != '"');
+                    kddbg << "\tProject name: " << prjname << endl;
+                    prjname_found = true;
+                    prjstream >> ch >> ch;
+                  }
+                  else if(prjname_found && !prjrltpath_found) {
+                    prjstream >> ch;
+                    do {
+                      prjpath_rlt.append(ch);
+                      prjstream >> ch;
+                    } while(ch.latin1() != '"');
+                    kddbg << "\tProject path: " << prjpath_rlt << endl;
+                    prjrltpath_found = true;
+                    prjstream >> ch >> ch;
+                  }
+                  else if(!prjuid_found) {
+                    prjstream >> ch;
+                    if(ch.latin1() != '{') {
+                      kddbg << "Error! Can't get GUID, incorrect character" << endl;
+                      return false;
+                    }
+                    if(!readGUID(prjstream, puid))
+                      kddbg << "Failed to obtain project GUID !"<< endl;
+                    kddbg << "\tProject GUID: " << puid.toString() << endl;
+                    prjuid_found = true;
+                    prjstream >> ch >> ch;
+                  }
+                  break;
                 }
-                break;
+                default:
+                  prjstream >> ch;
+                  latin1ch = ch.latin1();
+                  break;
               }
-              default:
-                prjstream >> ch;
-                latin1ch = ch.latin1();
-                break;
             }
+            // Create and add model representation
+            VSProject *prj = new VSProject(prjname, puid, prjpath_rlt);
+            if(prj == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
+            sln->insertProj(prj);
+            // Create and add widget project item
+            m_explorer_widget->addProjectNode(sln_n, prj);
           }
-          // Create and add model representation
-          VSProject *prj = new VSProject(prjname, puid, prjpath_rlt);
-          if(prj == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
-          sln->insertProj(prj);
-          // Create and add widget project item
-          m_explorer_widget->addProjectNode(sln_n, prj);
+          //END // Read and analyze project data
           ln = str.readLine();
         }
       }
