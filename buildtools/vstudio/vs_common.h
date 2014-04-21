@@ -67,6 +67,7 @@ namespace VStudio {
   };
   */
   bool readGUID(QTextStream &tstream, QUuid &uid);
+  QString guid2String(const QUuid &uid);
 };
 //END // VStudio namespace
 #endif

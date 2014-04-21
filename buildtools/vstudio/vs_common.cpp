@@ -44,4 +44,11 @@ namespace VStudio {
 #endif
     return true;
   }
+
+  QString guid2String(const QUuid &uid) {
+#ifndef QT_NO_QUUID_STRING
+    return uid.toString();
+#else
+#endif
+  }
 };
