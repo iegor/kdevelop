@@ -13,6 +13,9 @@
 #ifndef __KDEVPART_VSTUDIOPART_COMMON_H__
 #define __KDEVPART_VSTUDIOPART_COMMON_H__
 
+#include <config.h>
+
+#include <qtextstream.h>
 #include <quuid.h>
 
 // Debug messaging
@@ -23,6 +26,12 @@
 
 //BEGIN //VStudio namespace
 namespace VStudio {
+  enum e_VSEntityType {
+    vs_file = 0,
+    vs_filter,
+    vs_project,
+    vs_solution,
+  };
   /**
   * Unique identifier class helper
   * used mostly in VS entities
@@ -55,6 +64,7 @@ namespace VStudio {
     };
   };
   */
+  bool readGUID(QTextStream &tstream, QUuid &uid);
 };
 //END // VStudio namespace
 #endif
