@@ -22,6 +22,12 @@ KDEV_PATH_KDELIBSDOC
 AC_CHECK_FUNCS([mkfifo], [HAVE_MKFIFO=1], [HAVE_MKFIFO=0])
 
 dnl  **********
+dnl  Check if we use boost
+dnl  **********
+AC_ARG_ENABLE(boost, AC_HELP_STRING([--enable-boost=@<:@yes/no@:>@], [use boost @<:@default=no@:>@]), [boost=${enableval}], [boost=no])
+AM_CONDITIONAL(include_boost, test "x$with_boost" = "xyes")
+
+dnl  **********
 dnl  Check which programming languages support should be compiled
 dnl  **********
 
@@ -118,6 +124,12 @@ if test "$vstudio" = "yes"; then
   AC_DEFINE(VSTUDIO_SUPPORT, 1, [Defined when we have visual studio compatibility])
 fi
 
+dnl  **********
+dnl Check if we using boost and make definitions
+dnl  **********
+if test "$boost" = "yes"; then
+  AC_DEFINE(USE_BOOST, 1, [Defined if we use boost for our containers])
+fi
 
 AC_PATH_PROG(DOT_FOUND, dot, no)
 AC_CHECK_PROG(gmake_prog, gmake, gmake, make)

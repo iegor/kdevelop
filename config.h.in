@@ -150,6 +150,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Defined if we use boost for our containers */
+#undef USE_BOOST
+
 /* Version number of package */
 #undef VERSION
 
