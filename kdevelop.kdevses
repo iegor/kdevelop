@@ -1,16 +1,133 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="3" >
-  <Doc0 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/Makefile.am" >
-   <View0 Encoding="" line="9" Type="Source" />
+ <DocsAndViews NumberOfDocuments="42" >
+  <Doc0 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.cpp" >
+   <View0 Encoding="UTF-8" line="185" Type="Source" />
   </Doc0>
-  <Doc1 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/Makefile.am" >
-   <View0 Encoding="" line="7" Type="Source" />
+  <Doc1 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.h" >
+   <View0 Encoding="UTF-8" line="97" Type="Source" />
   </Doc1>
-  <Doc2 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vsmanagerwidget.h" >
+  <Doc2 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/src/projectmanager.cpp" >
    <View0 Encoding="UTF-8" line="0" Type="Source" />
   </Doc2>
+  <Doc3 NumberOfViews="1" URL="file:///usr/kde/git/include/kparts/componentfactory.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc3>
+  <Doc4 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/interfaces/kdevgenericfactory.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc4>
+  <Doc5 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/interfaces/kdevplugininfo.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc5>
+  <Doc6 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_explorer.cpp" >
+   <View0 Encoding="UTF-8" line="80" Type="Source" />
+  </Doc6>
+  <Doc7 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_model.cpp" >
+   <View0 Encoding="UTF-8" line="41" Type="Source" />
+  </Doc7>
+  <Doc8 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_model.h" >
+   <View0 Encoding="UTF-8" line="47" Type="Source" />
+  </Doc8>
+  <Doc9 NumberOfViews="1" URL="file:///usr/qt/3/include/qfile.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc9>
+  <Doc10 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_explorer.h" >
+   <View0 Encoding="UTF-8" line="120" Type="Source" />
+  </Doc10>
+  <Doc11 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectpart.cpp" >
+   <View0 Encoding="" line="131" Type="Source" />
+  </Doc11>
+  <Doc12 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectwidget.cpp" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc12>
+  <Doc13 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autosubprojectview.cpp" >
+   <View0 Encoding="" line="267" Type="Source" />
+  </Doc13>
+  <Doc14 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectwidget.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc14>
+  <Doc15 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autodetailsview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc15>
+  <Doc16 NumberOfViews="1" URL="file:///usr/kde/git/include/klistview.h" >
+   <View0 Encoding="UTF-8" line="528" Type="Source" />
+  </Doc16>
+  <Doc17 NumberOfViews="1" URL="file:///usr/qt/3/include/qlistview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc17>
+  <Doc18 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autolistviewitems.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc18>
+  <Doc19 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autolistviewitems.cpp" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc19>
+  <Doc20 NumberOfViews="1" URL="file:///usr/qt/3/include/qregexp.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc20>
+  <Doc21 NumberOfViews="1" URL="file:///usr/qt/3/include/qtextstream.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc21>
+  <Doc22 NumberOfViews="1" URL="file:///usr/qt/3/include/qiodevice.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc22>
+  <Doc23 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_common.h" >
+   <View0 Encoding="UTF-8" line="38" Type="Source" />
+  </Doc23>
+  <Doc24 NumberOfViews="1" URL="file:///usr/qt/3/include/quuid.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc24>
+  <Doc25 NumberOfViews="1" URL="file:///usr/qt/3/include/qstringlist.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc25>
+  <Doc26 NumberOfViews="1" URL="file:///usr/qt/3/include/qvector.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc26>
+  <Doc27 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrvector.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc27>
+  <Doc28 NumberOfViews="1" URL="file:///usr/qt/3/include/qstring.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc28>
+  <Doc29 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/Makefile.am" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc29>
+  <Doc30 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/Makefile.am" >
+   <View0 Encoding="" Type="Source" />
+  </Doc30>
+  <Doc31 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_common.cpp" >
+   <View0 Encoding="UTF-8" line="47" Type="Source" />
+  </Doc31>
+  <Doc32 NumberOfViews="1" URL="file:///home/rainman/projects/test_area/test_kdevelop_III_vstudio/testing_stuf/test.sln" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc32>
+  <Doc33 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autosubprojectview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc33>
+  <Doc34 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autotoolsaction.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc34>
+  <Doc35 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectpart.h" >
+   <View0 Encoding="" line="47" Type="Source" />
+  </Doc35>
+  <Doc36 NumberOfViews="1" URL="file:///usr/kde/git/include/kpopupmenu.h" >
+   <View0 Encoding="" line="199" Type="Source" />
+  </Doc36>
+  <Doc37 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrlist.h" >
+   <View0 Encoding="" line="119" Type="Source" />
+  </Doc37>
+  <Doc38 NumberOfViews="1" URL="file:///usr/kde/git/include/kaction.h" >
+   <View0 Encoding="" line="282" Type="Source" />
+  </Doc38>
+  <Doc39 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/kdevpart_vs.rc" >
+   <View0 Encoding="" line="19" Type="Source" />
+  </Doc39>
+  <Doc40 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/kdevautoproject.rc" >
+   <View0 Encoding="" line="15" Type="Source" />
+  </Doc40>
+  <Doc41 NumberOfViews="1" URL="file:///usr/kde/git/include/kshortcut.h" >
+   <View0 Encoding="" line="542" Type="Source" />
+  </Doc41>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>
@@ -24,36 +141,27 @@
     <breakpoint2 location="/home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectpart.cpp:71" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint2>
-    <breakpoint3 location="/home/rainman/projects/kde/kdevelop/src/projectmanager.cpp:245" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint3 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vstudiopart.cpp:239" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint3>
-    <breakpoint4 location="/home/rainman/projects/kde/kdevelop/src/projectmanager.cpp:267" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint4 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vstudiopart.cpp:70" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint4>
-    <breakpoint5 location="/home/rainman/projects/kde/kdevelop/src/projectmanager.cpp:484" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint5 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_solution.cpp:84" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint5>
-    <breakpoint6 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vstudiopart.cpp:239" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint6 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:83" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint6>
-    <breakpoint7 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vstudiopart.cpp:70" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint7 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:79" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint7>
-    <breakpoint8 location="/home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_solution.cpp:84" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint8 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:75" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint8>
-    <breakpoint9 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:83" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
+    <breakpoint9 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:70" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
      <tracedExpressions/>
     </breakpoint9>
-    <breakpoint10 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:79" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint10>
-    <breakpoint11 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:75" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint11>
-    <breakpoint12 location="/home/rainman/projects/kde/kdevelop/parts/astyle/astyle_adaptor.cpp:70" type="1" tracingFormatString="" traceFormatStringEnabled="0" condition="" tracingEnabled="0" enabled="1" >
-     <tracedExpressions/>
-    </breakpoint12>
    </breakpointList>
    <showInternalCommands value="1" />
   </kdevdebugger>
@@ -62,14 +170,8 @@
   </kdevastyle>
   <kdevbookmarks>
    <bookmarks>
-    <bookmark url="/usr/kde/git/include/kparts/componentfactory.h" >
-     <mark line="138" />
-    </bookmark>
     <bookmark url="/home/rainman/projects/kde/kdevelop/debug_gcc_x86_64/src/projectmanager.moc" >
      <mark line="118" />
-    </bookmark>
-    <bookmark url="/home/rainman/projects/kde/kdevelop/src/projectmanager.cpp" >
-     <mark line="510" />
     </bookmark>
    </bookmarks>
   </kdevbookmarks>

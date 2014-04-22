@@ -91,13 +91,13 @@
   </kdevdebugger>
   <kdevfilecreate>
     <filetypes>
-      <type icon="source_h" ext="h" create="template" name="C/C++ Header" >
+      <type icon="source_h" ext="h" name="C/C++ Header" create="template" >
         <descr>A new empty header file for C or C++.</descr>
       </type>
-      <type icon="source_c" ext="c" create="template" name="C Source" >
+      <type icon="source_c" ext="c" name="C Source" create="template" >
         <descr>A new empty C file.</descr>
       </type>
-      <type icon="source_cpp" ext="cpp" create="template" name="C++ Source" >
+      <type icon="source_cpp" ext="cpp" name="C++ Source" create="template" >
         <descr>A new empty C++ file.</descr>
       </type>
     </filetypes>
@@ -154,6 +154,7 @@
     </splitheadersource>
     <references>
       <pcs>Qt3</pcs>
+      <pcs>kde</pcs>
       <pcs>automatic_%2Fhome%2Frainman%2Fprojects%2Fkde%2Fkdevelop</pcs>
     </references>
   </kdevcppsupport>
@@ -164,8 +165,8 @@
         <envvar value="1" name="WANT_AUTOMAKE_1_11" />
       </envvars>
       <abortonerror>true</abortonerror>
-      <runmultiplejobs>true</runmultiplejobs>
-      <numberofjobs>5</numberofjobs>
+      <runmultiplejobs>false</runmultiplejobs>
+      <numberofjobs>1</numberofjobs>
       <dontact>false</dontact>
       <makebin>gmake</makebin>
       <prio>0</prio>
@@ -190,7 +191,7 @@
       </default>
       <debug_gcc_x86_64>
         <envvars/>
-        <configargs>--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
+        <configargs>--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --enable-boost --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --enable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=full --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
         <builddir>debug_gcc_x86_64</builddir>
         <topsourcedir/>
         <cppflags/>
@@ -225,7 +226,7 @@
     </configurations>
     <general>
       <useconfiguration>debug_gcc_x86_64</useconfiguration>
-      <activetarget>buildtools/vstudio/libvstudio.la</activetarget>
+      <activetarget>buildtools/vstudio/libkdevvs.la</activetarget>
     </general>
     <run>
       <mainprogram>/usr/kde/git/bin/kdevelop</mainprogram>
