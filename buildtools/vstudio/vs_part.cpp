@@ -68,39 +68,108 @@ namespace VStudio {
     QWhatsThis::add(m_explorer_widget, i18n("<b>VS explorer</b><p> The tree looks like a standard VS project explorer,"
                                             "yet it has some additiona \"power\" features."));
 
-    mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"),
-                                  i18n("VS Explorer, manages vs solution files"));
+    mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"), i18n("VS Explorer, manages vs solution files"));
+
+    // Add solution action
+    actAddSolution = new KAction(i18n("Insert solution"), "make_kdevelop", 0, this,
+                                 SLOT(slotAddSolution()), actionCollection(), VSPART_ACTION_ADD_SOLUTION);
+    actAddSolution->setToolTip(i18n(VSPART_ACTION_ADD_SOLUTION_TIP));
+    actAddSolution->setWhatsThis(i18n(VSPART_ACTION_ADD_SOLUTION_WIT));
+    actAddSolution->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
     // Build solution action
-    action = new KAction(i18n("&Build Solution"), "make_kdevelop", Key_F8, this,
-                        SLOT(slotBuildSolution()), actionCollection(), "build_build_solution");
-    action->setToolTip(i18n("Builds entire solution"));
-    action->setWhatsThis(i18n("<b>Build solution</b>"
-                              "<p>Runs <b>build process</b>from the project directory.<br>"
-                              "Environment variables and make arguments can be specified"
-                              "in the project settings dialog, <b>Make Options</b> tab."));
-    action->setGroup("vstools");
+    actBuildSolution = new KAction(i18n("&Build solution"), "make_kdevelop", VSPART_ACTION_BUILD_SOLUTION_KEY, this,
+                                   SLOT(slotBuildSolution()), actionCollection(), VSPART_ACTION_BUILD_SOLUTION);
+    actBuildSolution->setToolTip(i18n(VSPART_ACTION_BUILD_SOLUTION_TIP));
+    actBuildSolution->setWhatsThis(i18n(VSPART_ACTION_BUILD_SOLUTION_WIT));
+    actBuildSolution->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
-    // Build project action
-    action = new KAction(i18n("&Build Project"), "make_kdevelop", Key_F7, this,
-                        SLOT(slotBuildProject()), actionCollection(), "build_build_project");
-    action->setToolTip(i18n("Builds selected(active) project"));
-    action->setWhatsThis(i18n("<b>Build project</b>"
-                              "<p>Runs <b>build process</b> from the project directory.<br>"
-                              "Environment variables and make arguments can be specified"
-                              "in the project settings dialog, <b>Make Options</b> tab."));
-    action->setGroup("vstools");
+    // Rebuild solution action
+    actRebuildSolution = new KAction(i18n("&Rebuild solution"), "make_kdevelop", 0, this,
+                                     SLOT(slotRebuildSolution()), actionCollection(), VSPART_ACTION_REBUILD_SOLUTION);
+    actRebuildSolution->setToolTip(i18n(VSPART_ACTION_REBUILD_SOLUTION_TIP));
+    actRebuildSolution->setWhatsThis(i18n(VSPART_ACTION_REBUILD_SOLUTION_WIT));
+    actRebuildSolution->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
     // Clean solution action
-    action = new KAction(i18n("Clean solution"), "make_kdevelop", Key_F7, this,
-                        SLOT(slotCleanSolution()), actionCollection(), "build_clean_solution");
-    action->setToolTip(i18n("Cleans whole solution from produced binaries."));
-    action->setWhatsThis(i18n("<b>Clean solution</b>"
-                              "<p>Cleans out all output produced previously."));
-    action->setGroup("vstools");
+    actCleanSolution = new KAction(i18n("&Clean solution"), "make_kdevelop", 0, this,
+                                   SLOT(slotCleanSolution()), actionCollection(), VSPART_ACTION_CLEAN_SOLUTION);
+    actCleanSolution->setToolTip(i18n(VSPART_ACTION_CLEAN_SOLUTION_TIP));
+    actCleanSolution->setWhatsThis(i18n(VSPART_ACTION_CLEAN_SOLUTION_WIT));
+    actCleanSolution->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
-  //   connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
-  //   connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
+    // Add project action
+    actAddProject = new KAction(i18n("Insert project"), "make_kdevelop", 0, this,
+                                SLOT(slotAddProject()), actionCollection(), VSPART_ACTION_ADD_PROJECT);
+    actAddProject->setToolTip(i18n(VSPART_ACTION_ADD_PROJECT_TIP));
+    actAddProject->setWhatsThis(i18n(VSPART_ACTION_ADD_PROJECT_WIT));
+    actAddProject->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Build project action
+    actBuildProject = new KAction(i18n("&Build project"), "make_kdevelop", VSPART_ACTION_BUILD_PROJECT_KEY, this,
+                                  SLOT(slotBuildProject()), actionCollection(), VSPART_ACTION_BUILD_PROJECT);
+    actBuildProject->setToolTip(i18n(VSPART_ACTION_BUILD_PROJECT_TIP));
+    actBuildProject->setWhatsThis(i18n(VSPART_ACTION_BUILD_PROJECT_WIT));
+    actBuildProject->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Rebuild project action
+    actRebuildProject = new KAction(i18n("&Rebuild project"), "make_kdevelop", 0, this,
+                                    SLOT(slotRebuildProject()), actionCollection(), VSPART_ACTION_REBUILD_PROJECT);
+    actRebuildProject->setToolTip(i18n(VSPART_ACTION_REBUILD_PROJECT_TIP));
+    actRebuildProject->setWhatsThis(i18n(VSPART_ACTION_REBUILD_PROJECT_WIT));
+    actRebuildProject->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Clean project action
+    actCleanProject = new KAction(i18n("Clean project"), "make_kdevelop", 0, this,
+                                  SLOT(slotCleanProject()), actionCollection(), VSPART_ACTION_CLEAN_PROJECT);
+    actCleanProject->setToolTip(i18n(VSPART_ACTION_CLEAN_PROJECT_TIP));
+    actCleanProject->setWhatsThis(i18n(VSPART_ACTION_CLEAN_PROJECT_WIT));
+    actCleanProject->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Add file action
+    actAddFile = new KAction(i18n("Add file"), "make_kevelop", 0, this,
+                             SLOT(slotAddFile()), actionCollection(), VSPART_ACTION_ADD_FILE);
+    actAddFile->setToolTip(VSPART_ACTION_ADD_FILE_TIP);
+    actAddFile->setWhatsThis(VSPART_ACTION_ADD_FILE_WIT);
+    actAddFile->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Build file action
+    actBuildFile = new KAction(i18n("Compile file"), "make_kevelop", 0, this,
+                               SLOT(slotAddFile()), actionCollection(), VSPART_ACTION_BUILD_FILE);
+    actBuildFile->setToolTip(VSPART_ACTION_BUILD_FILE_TIP);
+    actBuildFile->setWhatsThis(VSPART_ACTION_BUILD_FILE_WIT);
+    actBuildFile->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Clean file action
+    actCleanFile = new KAction(i18n("Clean file"), "make_kevelop", 0, this,
+                               SLOT(slotCleanFile()), actionCollection(), VSPART_ACTION_CLEAN_FILE);
+    actCleanFile->setToolTip(VSPART_ACTION_CLEAN_FILE_TIP);
+    actCleanFile->setWhatsThis(VSPART_ACTION_CLEAN_FILE_WIT);
+    actCleanFile->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Add filter action
+    actAddFilter = new KAction(i18n("Add filter"), "make_kdevelop", 0, this,
+                               SLOT(slotAddFilter()), actionCollection(), VSPART_ACTION_ADD_FILTER);
+    actAddFilter->setToolTip(VSPART_ACTION_ADD_FILTER_TIP);
+    actAddFilter->setWhatsThis(VSPART_ACTION_ADD_FILTER_WIT);
+    actAddFilter->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Build filter action
+    actBuildFilter = new KAction(i18n("Build filter"), "make_kdevelop", 0, this,
+                                 SLOT(slotAddFilter()), actionCollection(), VSPART_ACTION_BUILD_FILTER);
+    actBuildFilter->setToolTip(VSPART_ACTION_BUILD_FILTER_TIP);
+    actBuildFilter->setWhatsThis(VSPART_ACTION_BUILD_FILTER_WIT);
+    actBuildFilter->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Clean filter action
+    actCleanFilter = new KAction(i18n("Clean filter"), "make_kdevelop", 0, this,
+                                 SLOT(slotAddFilter()), actionCollection(), VSPART_ACTION_CLEAN_FILTER);
+    actCleanFilter->setToolTip(VSPART_ACTION_CLEAN_FILTER_TIP);
+    actCleanFilter->setWhatsThis(VSPART_ACTION_CLEAN_FILTER_WIT);
+    actCleanFilter->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
+    // connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
   }
 
   VSPart::~VSPart() {
@@ -455,13 +524,62 @@ namespace VStudio {
     return true;
   }
 
-  void VSPart::slotClean() {
+  //BEGIN // Slot methods
+  void VSPart::slotAddSolution() {
+    kddbg << "slotAddSolution test" << endl;
   }
 
-  void VSPart::slotCompileFile() {
+  void VSPart::slotBuildSolution() {
+    kddbg << "slotBuildSolution test" << endl;
   }
 
-  void VSPart::slotBuild() {
+  void VSPart::slotRebuildSolution() {
+    kddbg << "slotRebuildSolution test" << endl;
   }
+
+  void VSPart::slotCleanSolution() {
+    kddbg << "slotCleanSolution test" << endl;
+  }
+
+  void VSPart::slotAddProject() {
+    kddbg << "slotAddProject test" << endl;
+  }
+
+  void VSPart::slotBuildProject() {
+    kddbg << "slotBuildProject test" << endl;
+  }
+
+  void VSPart::slotRebuildProject() {
+    kddbg << "slotRebuildProject test" << endl;
+  }
+
+  void VSPart::slotCleanProject() {
+    kddbg << "slotCleanProject test" << endl;
+  }
+
+  void VSPart::slotAddFile() {
+    kddbg << "slotAddFile test" << endl;
+  }
+
+  void VSPart::slotBuildFile() {
+    kddbg << "slotBuildFile test" << endl;
+  }
+
+  void VSPart::slotCleanFile() {
+    kddbg << "slotCleanFile test" << endl;
+  }
+
+  void VSPart::slotAddFilter() {
+    kddbg << "slotAddFilter test" << endl;
+  }
+
+  void VSPart::slotBuildFilter() {
+    kddbg << "slotBuildFilter test" << endl;
+  }
+
+  void VSPart::slotCleanFilter() {
+    kddbg << "slotCleanFilter test" << endl;
+  }
+  //END // Slot methods
 };
 #include "vs_part.moc"

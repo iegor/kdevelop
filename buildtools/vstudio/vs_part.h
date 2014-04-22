@@ -95,11 +95,37 @@ namespace VStudio {
     bool unloadVsProject(const QString &prj_path);
 
   private slots:
-    void slotBuild();
-    void slotCompileFile();
-    void slotClean();
+    void slotAddSolution();
+    void slotBuildSolution();
+    void slotRebuildSolution();
+    void slotCleanSolution();
+    void slotAddProject();
+    void slotBuildProject();
+    void slotRebuildProject();
+    void slotCleanProject();
+    void slotAddFile();
+    void slotBuildFile();
+    void slotCleanFile();
+    void slotAddFilter();
+    void slotBuildFilter();
+    void slotCleanFilter();
 
   private:
+    KAction *actAddSolution;
+    KAction *actBuildSolution;
+    KAction *actRebuildSolution;
+    KAction *actCleanSolution;
+    KAction *actAddProject;
+    KAction *actBuildProject;
+    KAction *actRebuildProject;
+    KAction *actCleanProject;
+    KAction *actAddFile;
+    KAction *actBuildFile;
+    KAction *actCleanFile;
+    KAction *actAddFilter;
+    KAction *actBuildFilter;
+    KAction *actCleanFilter;
+
     QGuardedPtr<VSExplorer> m_explorer_widget;
     QString m_projectName;
     QString m_projectPath;

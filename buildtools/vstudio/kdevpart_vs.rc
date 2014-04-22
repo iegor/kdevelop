@@ -1,23 +1,28 @@
 <!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
-<kpartgui name="KDevVStudioProject" version="10">
+<kpartgui name="kdevpart_vs" version="1">
 <MenuBar>
-	<Menu name="project" >
-    <Action name="project_addtranslation" />
-    <Action name="project_configuration" />
-	</Menu>
-  <Menu name="build" >
-    <Action name="build_build_solution" />
-    <Action name="build_build_project" />
-    <Action name="build_build_file" />
-    <Action name="build_clear_solution" />
-    <Action name="build_clear_project" />
-    <Action name="build_execute" />
-  </Menu>
+    <Menu name="project" >
+        <Action name="project_addsolution" />
+        <Action name="project_addproject" />
+        <Action name="project_addfile" />
+        <Action name="project_addfilter" />
+    </Menu>
+    <Menu name="build" >
+        <Action name="build_buildsolution" />
+        <Action name="build_rebuildsolution" />
+        <Action name="build_cleansolution" />
+        <Action name="build_buildproject" />
+        <Action name="build_rebuildproject" />
+        <Action name="build_cleanproject" />
+        <Action name="build_buildfile" />
+        <Action name="build_cleanfile" />
+        <Action name="build_buildfilter" />
+        <Action name="build_cleanfilter" />
+    </Menu>
 </MenuBar>
 <ToolBar name="VSToolBar" noMerge="1">
-  <Action name="build_build" group="build_operations" />
-  <Action name="build_buildactivetarget" group="build_operations" />
-  <Action name="build_execute" group="build_operations" />
+    <Action name="build_buildsolution" group="vstools" />
+    <Action name="build_buildproject" group="vstools" />
 </ToolBar>
 </kpartgui>
 
