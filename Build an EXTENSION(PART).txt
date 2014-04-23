@@ -1,0 +1,74 @@
+Get clear with part name ======================================================
+This is realy important, because kdevelop and kde at all will be looking up
+many components based on the name and correspondency of the name to what is
+loaded. for here I use <PART_NAME> to describe the name of part and where it
+should be used
+===============================================================================
+
+Makefile.am ===================================================================
+METASOURCES = AUTO
+INCLUDES =
+noinst_HEADERS = <PART_NAME>.h
+kde_module_LTLIBRARIES = <LIBRARY_NAME>.la
+libkdevvs_la_SOURCES = <PART_NAME>.cpp
+libkdevvs_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
+libkdevvs_la_LIBADD = $(top_builddir)/lib/libkdevelop.la ... and others
+# sevice data block (.desktop file)
+service_DATA = <PART_NAME>.desktop
+servicedir = $(kde_servicesdir)
+# resource data block (.rc file)
+rc_DATA = <PART_NAME>.rc
+rcdir = $(kde_datadir)/<PART_NAME>
+===============================================================================
+
+Dir structure =================================================================
+|-Somewhere_in_kdevelop_dir
+|---parts
+|-----Makefile.am
+|-----<part's rc file>
+|-----<part's .desktop file>
+|-----<partname.cpp>
+|-----<partname.h>
+|-----...Other sources and headers...
+===============================================================================
+
+<PART_NAME>.desktop file ======================================================
+[Desktop Entry]
+Type=Service
+Exec=blubb
+Comment=My super feature
+Name=<PART_NAME>
+GenericName=Some generic name
+ServiceTypes=<SERVICE_TYPE> for me it was KDevelop/Project
+Icon=make
+X-KDE-Library=<LIBRARY_NAME>
+X-KDevelop-Version=5
+X-KDevelop-Args=Well, I am not sure about that parameter
+===============================================================================
+
+<PART_NAME>.rc file ===========================================================
+must be placed in the $(kde_datadir). i.e.
+rcdir = $(kde_datadir)/<partname>
+Must be a rule, or expect actions to fallof, etc
+===============================================================================
+
+In the sources ================================================================
+<< Header file >>
+namespace <PART_NAMESPACE> {
+  class <PART_CLASSNAME> : public <Ancestor> {
+<< Source file >>
+static const KDevPluginInfo data("<PART_NAME>");
+namespace <PART_NAMESPACE> {
+  typedef KDevGenericFactory<<PART_CLASSNAME>> <PART_FACTORYNAME>;
+  K_EXPORT_COMPONENT_FACTORY(<LIBRARY_NAME>, <PART_FACTORYNAME>(data))
+  <PART_CLASSNAME>::<PART_CLASSNAME>() {
+    setInstance(<PART_FACTORYNAME>::instance());
+    setXMLFile("<PART_NAME>.rc");
+    ...
+  }
+===============================================================================
+
+That should cover it.
+
+! You are free to use any desired name for class, watch though so that your
+<PART_NAME> is persistant across whole part code
