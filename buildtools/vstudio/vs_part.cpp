@@ -58,7 +58,6 @@ namespace VStudio {
 
   VSPart::VSPart(QObject *parent, const char *name, const QStringList &/*args*/)
     : KDevBuildTool(&data, parent, name ? name : "VSPart") {
-    KAction *action;
     setInstance(VSFactory::instance());
     setXMLFile("kdevpart_vs.rc");
 

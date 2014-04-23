@@ -19,5 +19,5 @@ service_DATA = kdevpart_vs.desktop
 servicedir = $(kde_servicesdir)
 # $(kdedir)/share/services/kdevpart_vs.desktop
 rc_DATA = kdevpart_vs.rc
-rcdir = $(kde_datadir)/kdevvs
+rcdir = $(kde_datadir)/kdevpart_vs
 # $(kdedir)/share/apps/kdevvs/kdevpart_vs.rc
