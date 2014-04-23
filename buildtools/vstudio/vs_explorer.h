@@ -71,7 +71,7 @@ namespace VStudio {
 
   private:
     KAction *actSetEntityRltPath; //TODO: Remove that later, that will be part of test only
-    KAction *actConfigureEntity;
+    KAction *actCfgEntity;
     KAction *actRenameEntity;
     VSPart *m_part;
     KActionCollection *actions;

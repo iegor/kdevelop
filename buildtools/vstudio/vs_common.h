@@ -93,6 +93,20 @@ Environment variables and make arguments can be specified in the project setting
 #define VSPART_ACTION_CLEAN_FILTER_TIP "Clean filter"
 #define VSPART_ACTION_CLEAN_FILTER_WIT "Cleans out build outputs of solutions/or projects under selected filter"
 
+#define VSPART_ACTION_CONFIGURE_ENTITY "confentity"
+#define VSPART_ACTION_CONFIGURE_ENTITY_KEY "Alt+F7"
+#define VSPART_ACTION_CONFIGURE_ENTITY_TIP "Configure vs entity"
+#define VSPART_ACTION_CONFIGURE_ENTITY_WIT "Opens up configuration dialog for vs entity"
+#define VSPART_ACTION_CONFIGURE_ENTITY_WIT_LONG \
+"<qt><b>Configure entity</b><p>Change configuration values for selected entity.</p></qt>"
+
+#define VSPART_ACTION_RENAME_ENTITY "renfentity"
+#define VSPART_ACTION_RENAME_ENTITY_KEY Key_F2
+#define VSPART_ACTION_RENAME_ENTITY_TIP "Rename vs entity"
+#define VSPART_ACTION_RENAME_ENTITY_WIT "Allows to change selected entity's name"
+#define VSPART_ACTION_RENAME_ENTITY_WIT_LONG \
+"<qt><b>Rename entity</b><p>Change internal name of selected entity.</p></qt>"
+
 //BEGIN //VStudio namespace
 namespace VStudio {
   enum e_VSEntityType {

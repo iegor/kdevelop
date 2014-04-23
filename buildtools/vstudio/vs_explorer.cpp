@@ -68,27 +68,22 @@ namespace VStudio {
     actions = new KActionCollection(this);
 
     //TODO: Remove that later, that will be part of test only ###########
-    actSetEntityRltPath = new KAction(i18n("Set relative path:"), 0, this, SLOT(slotSetEntityRltPath()),
-                                      actions, "setrelpath");
+    actSetEntityRltPath = new KAction(i18n("Set relative path:"), 0, this, SLOT(slotSetEntityRltPath()), actions, "setrelpath");
     actSetEntityRltPath->setToolTip(i18n("Set relative path for entity"));
     actSetEntityRltPath->setWhatsThis(i18n("<qt><b>Set relative path</b>"
         "<p>Change the relative path for selected entity.</p></qt>"));
-    actSetEntityRltPath->setGroup("vs");
+    actSetEntityRltPath->setGroup(VSPART_ACTION_TOOLS_GROUP);
     //###################################################################
 
-    actConfigureEntity = new KAction(i18n("Configure"), 0, this, SLOT(slotConfigureEntity()),
-                                     actions, "confentity");
-    actConfigureEntity->setToolTip(i18n("Entity configuration"));
-    actConfigureEntity->setWhatsThis(i18n("<qt><b>Configure entity</b>"
-        "<p>Change configuration values for selected entity.</p></qt>"));
-    actConfigureEntity->setGroup("vs");
+    actCfgEntity = new KAction(i18n("Configure"), 0, this, SLOT(slotConfigureEntity()), actions, VSPART_ACTION_CONFIGURE_ENTITY);
+    actCfgEntity->setToolTip(i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
+    actCfgEntity->setWhatsThis(i18n(VSPART_ACTION_CONFIGURE_ENTITY_WIT));
+    actCfgEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
-    actRenameEntity = new KAction(i18n("Rename"), 0, this, SLOT(slotRenameEntity()),
-                                     actions, "renfentity");
-    actRenameEntity->setToolTip(i18n("Entity renaming"));
-    actRenameEntity->setWhatsThis(i18n("<qt><b>Rename entity</b>"
-        "<p>Change internal name of selected entity.</p></qt>"));
-    actRenameEntity->setGroup("vs");
+    actRenameEntity = new KAction(i18n("Rename"), 0, this, SLOT(slotRenameEntity()), actions, VSPART_ACTION_RENAME_ENTITY);
+    actRenameEntity->setToolTip(i18n(VSPART_ACTION_RENAME_ENTITY_TIP));
+    actRenameEntity->setWhatsThis(i18n(VSPART_ACTION_RENAME_ENTITY_WIT));
+    actRenameEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
     connect(m_listView, SIGNAL(contextMenu(KListView*, QListViewItem*, const QPoint&)),
         this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&)));
@@ -131,7 +126,7 @@ namespace VStudio {
     KPopupMenu menu(this);
     menu.insertTitle(pixmap, caption_mask);
     actSetEntityRltPath->plug(&menu);
-    actConfigureEntity->plug(&menu);
+    actCfgEntity->plug(&menu);
     actRenameEntity->plug(&menu);
     menu.exec(p);
   }
