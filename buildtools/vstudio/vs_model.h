@@ -109,6 +109,7 @@ namespace VStudio {
 #endif
   };
 
+  /*
   class VSFilter : public VSEntity {
   public:
     VSFilter(const QString &name, vse_p parent);
@@ -130,6 +131,7 @@ namespace VStudio {
 #endif
     vse_p parent;
   };
+  */
 
   class VSFile : public VSEntity {
   public:

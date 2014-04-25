@@ -54,8 +54,10 @@ namespace VStudio {
     VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
     virtual ~VSExplorer();
   //   bool selectItem(ItemDom item);
-    VSSlnNode* addSolutionNode(VSSolution *sln);
-    VSPrjNode* addProjectNode(VSSlnNode *sln, VSProject *prj);
+    uivss_p addSolutionNode(vss_p sln);
+    uivsp_p addProjectNode(vss_p sln, vsp_p prj);
+    uivsf_p addFilterNode(uivse_p parent);
+    uivsfl_p addFileNode(unvse_p parent, vsfl_p file);
   protected:
     void contentsContextMenuEvent(QContextMenuEvent*);
     void maybeTip(QPoint const &);
@@ -108,6 +110,7 @@ namespace VStudio {
     virtual ~VSExplorerEntity();
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType type() { return typ; }
+    QString getName() { return name; }
     virtual const VSEntity* getModelRepresentation() const = 0;
     virtual VSEntity* getModelRepresentation() = 0;
   protected:
@@ -123,8 +126,11 @@ namespace VStudio {
     VSSlnNode(QListView *parent, VSSolution *sln);
     virtual ~VSSlnNode();
 
+    // VSExplorerEntity interface
     virtual const VSSolution* getModelRepresentation() const { return sln; }
     virtual VSSolution* getModelRepresentation() { return sln; }
+
+    // VSSlnNode interface
   private:
 //     QString uiFileLink;
     VSSolution *sln;
@@ -143,15 +149,19 @@ namespace VStudio {
     VSPrjNode(VSSlnNode *parent, VSProject *prj);
     virtual ~VSPrjNode();
 
+    // VSExplorerEntity interface
     virtual const VSProject* getModelRepresentation() const { return prj; }
     virtual VSProject* getModelRepresentation() { return prj; }
+
+    // VSPrjNode interface
+    uivss_p getSolution() const { return sln; }
   private:
 #ifdef USE_BOOST
     boost::container::vector<uivsfl_p> files;
     boost::container::vector<uivsf_p> filters;
 #else
 #endif
-    uivss_p sln; //parent solution
+    uivss_p sln; // Parent solution
     vsp_p prj;
   };
 
@@ -160,15 +170,21 @@ namespace VStudio {
   */
   class VSFltNode : public VSExplorerEntity {
   public:
-    VSFltNode(uivse_p parent);
+    VSFltNode(uivse_p parent, const QString &name);
     virtual ~VSFltNode();
+
+    // VSExplorerEntity interface
+    virtual const vse_p getModelRepresentation() const { return 0; }
+    virtual vse_p getModelRepresentation() { return 0; }
+
+    // VSFltNode interface
+    uivse_p getParent() const { return parent; }
   private:
+    uivse_p parent; // Parent solution or project
 #ifdef USE_BOOST
     boost::container::vector<uivse_p> contents;
 #else
 #endif
-    uivse_p parent; //parent solution or project
-    vsf_p filter;
   };
 
   /**
@@ -178,8 +194,15 @@ namespace VStudio {
   public:
     VSFilNode(uivse_p parent, vsfl_p file);
     virtual ~VSFilNode();
+
+    // VSExplorerEntity interface
+    virtual const vsfl_p getModelRepresentation() { return file; }
+    virtual vsfl_p getModelRepresentation() { return file; }
+
+    // VSFilNode interface
+    uivsp_p getProject() const { return project; }
   private:
-    uivsp_p parent;
+    uivsp_p project; // Parent project
     vsfl_p file;
   };
 };

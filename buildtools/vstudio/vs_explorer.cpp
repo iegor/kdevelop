@@ -175,26 +175,54 @@ namespace VStudio {
     }
   }
 
-  VSSlnNode* VSExplorer::addSolutionNode(VSSolution *sln) {
-    VSSlnNode *item = new VSSlnNode(m_listView, sln);
+  uivss_p VSExplorer::addSolutionNode(vss_p sln) {
+    uivss_p item = new VSSlnNode(m_listView, sln);
     if(item == 0) {
       kddbg << "Error! Out of memory" << endl;
     } else {
-      item->setPixmap(0, SmallIcon("tar"));
+      item->setPixmap(0, SmallIcon("home"));
 //     item->setText(1, name);
 //     m_listView->insertItem(item);
     }
     return item;
   }
 
-  VSPrjNode* VSExplorer::addProjectNode(VSSlnNode *sln, VSProject *prj) {
-    VSPrjNode *item = new VSPrjNode(sln, prj);
+  uivsp_p VSExplorer::addProjectNode(uivss_p sln, vsp_p prj) {
+    uivsp_p item = new VSPrjNode(sln, prj);
     if(item == 0) {
       kddbg << "Error! Out of memory" << endl;
     } else {
-      item->setPixmap(0, SmallIcon("file"));
+      item->setPixmap(0, SmallIcon("tar"));
     }
     return item;
+  }
+
+  uivsf_p VSExplorer::addFilterNode(uivse_p pnt) {
+    if(parent->getType() != vs_project || parent->getType() != vs_solution) {
+      kddbg << "Can't add filter into unsupported parent type node" << endl;
+      return 0;
+    }
+    uivse_p ent = new VSFltNode(pnt);
+    if(ent == 0) {
+      kddbg << "Error! Out of memory" << endl;
+    } else {
+      ent->setPixmap(0, SmallIcon("folder"));
+    }
+    return item;
+  }
+
+  uivsfl_p VSExplorer::addFileNode(uivse_p parent, vsfl_p fl) {
+    if(parent->getType() != vs_project || parent->getType() != vs_filter) {
+      kddbg << "Can't add file into unsupported parent type node" << endl;
+      return 0;
+    }
+    uivsfl_p file = new VSFilNode(parent, fl);
+    if(file == 0) {
+      kddbg << "Error! Out of memory" << endl;
+    } else {
+      ent->setPixmap(0, SmallIcon("file"));
+    }
+    return file;
   }
 
   //===========================================================================
@@ -235,6 +263,9 @@ namespace VStudio {
     : QListViewItem(parent, text), typ(type) {
   }
 
+  VSExplorerEntity::~VSExplorerEntity () {
+  }
+
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
     if(type() == vs_solution) {
       QFont font(p->font());
@@ -253,6 +284,9 @@ namespace VStudio {
     name = s->getName();
   }
 
+  VSSlnNode::~VSSlnNode() {
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity project class methods
   //===========================================================================
@@ -262,11 +296,15 @@ namespace VStudio {
     name = p->getName();
   }
 
+  VSPrjNode::~VSPrjNode() {
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity filter class methods
   //===========================================================================
-  VSFltNode::VSFltNode(uivse_p pnt)
-  : parent(pnt) {
+  VSFltNode::VSFltNode(uivse_p pnt, const QString &nm)
+  : VSExplorerEntity(vs_filter, pnt, nm)
+  , parent(pnt) {
   }
 
   VSFltNode::~VSFltNode() {
@@ -276,7 +314,8 @@ namespace VStudio {
   // Visual studio explorer widget entity file class methods
   //===========================================================================
   VSFilNode::VSFilNode(uivse_p pnt, vsfl_p fl)
-  : parent(pnt)
+  : VSExplorerEntity(vs_file, pnt, fl->getName())
+  , parent(pnt)
   , file(fl) {
   }
 
