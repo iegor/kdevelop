@@ -51,4 +51,9 @@ namespace VStudio {
 #else
 #endif
   }
+
+  e_VSEntityType uid2VSType(const QUuid &uid) const {
+    if(uid == uid_vs8project) return vs_project;
+    else if(uid == uid_vs8filter) return vs_filter;
+  }
 };

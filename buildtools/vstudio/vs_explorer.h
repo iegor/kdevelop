@@ -14,6 +14,7 @@
 #ifndef __VSMANAGER_WIDGET_H__
 #define __VSMANAGER_WIDGET_H__
 
+#include <qpushbutton.h>
 #include <qptrlist.h>
 #include <qmap.h>
 #include <qtooltip.h>
@@ -27,6 +28,9 @@
 #include "vs_explorer_widget.h"
 #include "vs_model.h"
 
+class QPushButton;
+class QGridLayout;
+
 class KSelectAction;
 class KToggleAction;
 class TargetItem;
@@ -35,10 +39,6 @@ class AutoProjectPart;
 
 //BEGIN //VStudio namespace
 namespace VStudio {
-  class VSPart;
-  class VSExplorerEntity;
-  class VSSlnNode;
-  class VSPrjNode;
   //TODO: A template would look nicer
   // struct FindOp { const FunctionDom& m_dom; };
   // struct FindOp2 { const FunctionDefinitionDom& m_dom; };
@@ -81,18 +81,38 @@ namespace VStudio {
   };
 
   /**
+  * Dialog for setting paths
+  */
+  class SetPathWidget : public QWidget {
+    Q_OBJECT
+  public:
+    SetPathWidget(QWidget *parent = 0, const char *name = 0, WFlags fl = 0);
+    virtual ~SetPathWidget();
+
+    QPushButton* btn_change;
+  public slots:
+    virtual void widgetDestroyed(QObject*);
+  protected:
+    QGridLayout* layout;
+  protected slots:
+    virtual void languageChange();
+  };
+
+  /**
   * Base class for all items
   */
   class VSExplorerEntity : public QListViewItem {
   public:
     VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text);
     VSExplorerEntity(e_VSEntityType type, VSExplorerEntity *parent, const QString &text);
+    virtual ~VSExplorerEntity();
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType type() { return typ; }
     virtual const VSEntity* getModelRepresentation() const = 0;
     virtual VSEntity* getModelRepresentation() = 0;
   protected:
     e_VSEntityType typ;
+    QString name;
   };
 
   /**
@@ -100,14 +120,19 @@ namespace VStudio {
   */
   class VSSlnNode : public VSExplorerEntity {
   public:
-    VSSlnNode(QListView *lv, VSSolution *sln);
+    VSSlnNode(QListView *parent, VSSolution *sln);
+    virtual ~VSSlnNode();
 
     virtual const VSSolution* getModelRepresentation() const { return sln; }
     virtual VSSolution* getModelRepresentation() { return sln; }
-  protected:
-    QString name;
+  private:
 //     QString uiFileLink;
     VSSolution *sln;
+#ifdef USE_BOOST
+    boost::container::vector<uivsp_p> projects;
+    boost::container::vector<uivsf_p> filters;
+#else
+#endif
   };
 
   /**
@@ -115,14 +140,47 @@ namespace VStudio {
   */
   class VSPrjNode : public VSExplorerEntity {
   public:
-    VSPrjNode(VSSlnNode *sln, VSProject *prj);
+    VSPrjNode(VSSlnNode *parent, VSProject *prj);
+    virtual ~VSPrjNode();
 
     virtual const VSProject* getModelRepresentation() const { return prj; }
     virtual VSProject* getModelRepresentation() { return prj; }
-  protected:
-    QString name;
-    VSSlnNode *sln; //parent solution
-    VSProject *prj;
+  private:
+#ifdef USE_BOOST
+    boost::container::vector<uivsfl_p> files;
+    boost::container::vector<uivsf_p> filters;
+#else
+#endif
+    uivss_p sln; //parent solution
+    vsp_p prj;
+  };
+
+  /**
+  * Filter node for vs widget
+  */
+  class VSFltNode : public VSExplorerEntity {
+  public:
+    VSFltNode(uivse_p parent);
+    virtual ~VSFltNode();
+  private:
+#ifdef USE_BOOST
+    boost::container::vector<uivse_p> contents;
+#else
+#endif
+    uivse_p parent; //parent solution or project
+    vsf_p filter;
+  };
+
+  /**
+  * File node for vs widget
+  */
+  class VSFilNode : public VSExplorerEntity {
+  public:
+    VSFilNode(uivse_p parent, vsfl_p file);
+    virtual ~VSFilNode();
+  private:
+    uivsp_p parent;
+    vsfl_p file;
   };
 };
 //END // VStudio namespace

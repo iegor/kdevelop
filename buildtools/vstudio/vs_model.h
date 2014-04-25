@@ -6,6 +6,10 @@
 * Description:
 * <_rlt> prefix means relative path
 *
+* NOTE: multiple parents stored for entities
+* That is done mainly to track an entity from it's internals in all parent instances
+* used in current session
+*
 * Author: iegor <rmtdev@gmail.com>, (C) 2013
 *
 * Copyright: See COPYING file that comes with this distribution
@@ -24,9 +28,6 @@
 
 //BEGIN //VStudio namespace
 namespace VStudio {
-  class VSProject;
-  class VSSolution;
-
   class VSEntity {
   public:
     VSEntity(e_VSEntityType typ, const QString &name);
@@ -51,10 +52,37 @@ namespace VStudio {
       return type;
     }
 
+    virtual QString getRelativePath() const = 0;
+    virtual bool setRelativePath(const QString &path) = 0;
+    virtual vse_p getByUID(const QUuid &uid) const = 0;
   protected:
     QString name;
     QUuid uuid;
     e_VSEntityType type;
+  };
+
+  class VSSolution : public VSEntity {
+    public:
+      VSSolution(const QString &name, const QString &path_rlt);
+      VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
+      virtual ~VSSolution();
+
+    // VS Entity interface methods:
+      virtual QString getRelativePath() const { return path_rlt; }
+      virtual bool setRelativePath(const QString &path);
+      virtual vsp_p getByUID(const QUuid &uid) const; // This will return project ptr, to reuse code
+
+    // VS Solution methods:
+      void insertProj(vsp_p prj);
+      bool dumpProjectsLayout(QString &layout);
+      vsf_p getFltByUID(const QUuid &uid) const;
+    private:
+      QString path_rlt;
+#ifdef USE_BOOST
+      boost::container::vector<vsp_p> projects;
+      boost::container::vector<vsf_p> filters;
+#else
+#endif
   };
 
   class VSProject : public VSEntity {
@@ -63,31 +91,69 @@ namespace VStudio {
       VSProject(const QString &name, const QUuid &uid, const QString &path_rlt);
       virtual ~VSProject();
 
-      void setParent(VSSolution* parent);
-      QString getRelativePath() const { return path_rlt; }
+      // VS Entity methods:
+      virtual QString getRelativePath() const { return path_rlt; }
+      virtual bool setRelativePath(const QString &path);
+      virtual vsp_p getByUID(const QUuid &uid) const; // This will get dependency to reuse code
+
+      // VS Project methods:
+      void setParent(vss_p parent);
+      vsp_p getReqByUid(const QUuid &uid) const;
     private:
       QString path_rlt;
-      VSSolution *parent;
-  };
-
-  class VSSolution : public VSEntity {
 #ifdef USE_BOOST
-    typedef boost::container::vector<VSProject*>::const_iterator proj_v_ci;
-    typedef boost::container::vector<VSProject*>::iterator proj_v_i;
+      boost::container::vector<vss_p> pnts; // Parent solutions
+      boost::container::vector<vsp_p> deps; // Projects dependant on this one
+      boost::container::vector<vsp_p> reqs; // Projects required to build this one, i.e. dependencies
 #else
 #endif
-  public:
-    VSSolution(const QString &name, const QString &path_rlt);
-    VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
-    virtual ~VSSolution();
+  };
 
-    void insertProj(VSProject* prj);
-    QString getRelativePath() const { return path_rlt; }
-    bool dumpProjectsLayout(QString &layout);
+  class VSFilter : public VSEntity {
+  public:
+    VSFilter(const QString &name, vse_p parent);
+    virtual ~VSFilter();
+
+    // VS Entity interface methods:
+    virtual QString getRelativePath() const;
+    virtual bool setRelativePath(const QString &path);
+    virtual vse_p getByUID(const QUuid &uid) const;
+
+    // VS Filter methods:
+    e_VSEntityType getParentType() {
+      return parent->getType();
+    }
   private:
-    QString path_rlt;
 #ifdef USE_BOOST
-    boost::container::vector<VSProject*> projects;
+    boost::container::vector<vse_p> chld; // Children
+#else
+#endif
+    vse_p parent;
+  };
+
+  class VSFile : public VSEntity {
+  public:
+    VSFile(const QString &name, vsp_p parent);
+    virtual ~VSFile();
+
+    // VS Entity interface methods:
+    virtual QString getRelativePath() const;
+    virtual bool setRelativePath(const QString &path);
+    /*!
+    * NOTE: that this will return a pointer to project, one of
+    * possible many parents.
+    */
+    virtual vse_p getByUID(const QUuid &uid) const;
+  private:
+    vsp_p parent; // Current parent project
+    /**
+    * List of parent projects
+    * used to store every parent project that uses current file
+     * to detect usage of sources, to maybe then optimize the
+    * archtecture of projects
+    */
+#ifdef USE_BOOST
+    boost::container::vector<vsp_p> pnts;
 #else
 #endif
   };

@@ -10,6 +10,7 @@
 *
 * Copyright: See COPYING file that comes with this distribution
 */
+#include <qlayout.h>
 #include <qpainter.h>
 #include <qheader.h>
 #include <qdir.h>
@@ -147,13 +148,12 @@ namespace VStudio {
   }
 
   void VSExplorer::slotSetEntityRltPath() {
-    kddbg << "slotSetEntityRltPath" << endl;
-// //     if(!item) {
-// //       kddbg << "Error! no item" << endl;
-// //       return;
-// //     }
-
-//     kddbg << "Change path for " << ((VSExplorerEntity*)item)->getModelRepresentation()->getName() << endl;
+    // ((VSExplorerEntity*)item)->getModelRepresentation()->setRelativePath("");
+    /*
+    kddbg << "\"" << ((VSExplorerEntity*)item)->getModelRepresentation()->getName() <<
+        "\" is set to \"" << ((VSExplorerEntity*)item)->getModelRepresentation()->getRelativePath()
+        << "\"\n";
+    */
   }
 
   void VSExplorer::slotConfigureEntity() {
@@ -198,6 +198,32 @@ namespace VStudio {
   }
 
   //===========================================================================
+  // Visual studio SetPathWidget methods
+  //===========================================================================
+  SetPathWidget::SetPathWidget(QWidget *parent, const char *name, WFlags fl)
+  : QWidget(parent, name, fl) {
+    if(!name) setName(VSPART_SETPATH_WIDGET_NAME);
+    layout = new QGridLayout(this, 1, 1, 1, 0, "SetPathWidgetLayout");
+    btn_change = new QPushButton(this, "btn_change");
+    layout->addWidget(btn_change, 0, 0);
+    languageChange();
+    resize(QSize(253, 670).expandedTo(minimumSizeHint()));
+    clearWState(WState_Polished);
+  }
+
+  SetPathWidget::~SetPathWidget() {
+    // no need to delete child widgets, Qt does it all for us
+  }
+
+  void SetPathWidget::languageChange() {
+    setCaption(tr2i18n("Form2"));
+  }
+
+  void SetPathWidget::widgetDestroyed(QObject*) {
+    qWarning("SetPathWidget::widgetDestroyed(QObject*): Not implemented yet");
+  }
+
+  //===========================================================================
   // Visual studio explorer widget entity base class methods
   //===========================================================================
   VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text)
@@ -234,6 +260,27 @@ namespace VStudio {
   : VSExplorerEntity(vs_project, s, p->getName())
   , prj(p) {
     name = p->getName();
+  }
+
+  //===========================================================================
+  // Visual studio explorer widget entity filter class methods
+  //===========================================================================
+  VSFltNode::VSFltNode(uivse_p pnt)
+  : parent(pnt) {
+  }
+
+  VSFltNode::~VSFltNode() {
+  }
+
+  //===========================================================================
+  // Visual studio explorer widget entity file class methods
+  //===========================================================================
+  VSFilNode::VSFilNode(uivse_p pnt, vsfl_p fl)
+  : parent(pnt)
+  , file(fl) {
+  }
+
+  VSFilNode::~VSFilNode() {
   }
 };
 #include "vs_explorer.moc"

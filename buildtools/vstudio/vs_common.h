@@ -107,8 +107,74 @@ Environment variables and make arguments can be specified in the project setting
 #define VSPART_ACTION_RENAME_ENTITY_WIT_LONG \
 "<qt><b>Rename entity</b><p>Change internal name of selected entity.</p></qt>"
 
+//Widget data
+#define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
+
 //BEGIN //VStudio namespace
 namespace VStudio {
+  //===========================================================================
+  // Visual studio model representation classes
+  //===========================================================================
+  class VSEntity;
+  class VSProject;
+  class VSSolution;
+  class VSFilter;
+  class VSFile;
+  typedef VSEntity* vse_p; // Pointer typedef for VS entity model representation
+  typedef VSProject* vsp_p; // Pointer typedef for VS project model representation
+  typedef VSSolution* vss_p; // Pointer typedef for VS solution model representation
+  typedef VSFilter* vsf_p; // Pointer typedef for VS filter model representation
+  typedef VSFile* vsfl_p; // Pointer typedef for VS file model representation
+
+#ifdef USE_BOOST
+  typedef boost::container::vector<vsp_p>::const_iterator vp_ci;
+  typedef boost::container::vector<vss_p>::const_iterator vs_ci;
+  typedef boost::container::vector<vse_p>::const_iterator ve_ci;
+  typedef boost::container::vector<vsf_p>::const_iterator vf_ci;
+  typedef boost::container::vector<vsfl_p>::const_iterator vfl_ci;
+  typedef boost::container::vector<vsp_p>::iterator vp_i;
+  typedef boost::container::vector<vss_p>::iterator vs_i;
+  typedef boost::container::vector<vse_p>::iterator ve_i;
+  typedef boost::container::vector<vsf_p>::iterator vf_i;
+  typedef boost::container::vector<vsfl_p>::iterator vfl_i;
+#else
+#endif
+  //===========================================================================
+  // Visual studio UI representation classes
+  //===========================================================================
+  class VSPart;
+  class VSExplorerEntity;
+  class VSSlnNode; // VS solution UI representation
+  class VSPrjNode; // VS project UI representation
+  class VSFltNode; // VS filter UI representation
+  class VSFilNode; // VS file UI representation
+  typedef VSExplorerEntity* uivse_p; // Pointer typedef for VS entity UI representation
+  typedef VSSlnNode* uivss_p; // Pointer typedef for VS solution UI representation
+  typedef VSPrjNode* uivsp_p; // Pointer typedef for VS project UI representation
+  typedef VSFltNode* uivsf_p; // Pointer typedef for VS filter UI representation
+  typedef VSFilNode* uivsfl_p; // Pointer typedef for VS file UI representation
+
+#ifdef USE_BOOST
+  typedef boost::container::vector<uivse_p>::const_iterator uive_ci;
+  typedef boost::container::vector<uivss_p>::const_iterator uivs_ci;
+  typedef boost::container::vector<uivsp_p>::const_iterator uivp_ci;
+  typedef boost::container::vector<uivsf_p>::const_iterator uivf_ci;
+  typedef boost::container::vector<uivsfl_p>::const_iterator uivfl_ci;
+  typedef boost::container::vector<uivse_p>::iterator uive_i;
+  typedef boost::container::vector<uivss_p>::iterator uivs_i;
+  typedef boost::container::vector<uivsp_p>::iterator uivp_i;
+  typedef boost::container::vector<uivsf_p>::iterator uivf_i;
+  typedef boost::container::vector<uivsfl_p>::iterator uivfl_i;
+#else
+#endif
+  //some necessary GUIDs
+#ifndef QT_NO_QUUID_STRING
+  static const QUuid uid_vs8project("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
+  static const QUuid uid_vs8filter("2150E333-8FDC-42A3-9474-1A3956D46DE8");
+#else
+  static const QUuid uid_vs8project(0x8BC9CEB8, 0x8B4A, 0x11D0, 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42);
+  static const QUuid uid_vs8filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
+#endif
   enum e_VSEntityType {
     vs_file = 0,
     vs_filter,
@@ -149,6 +215,7 @@ namespace VStudio {
   */
   bool readGUID(QTextStream &tstream, QUuid &uid);
   QString guid2String(const QUuid &uid);
+  e_VSEntityType uid2VSType(const QUuid &uid) const;
 };
 //END // VStudio namespace
 #endif
