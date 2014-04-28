@@ -12,61 +12,152 @@
 */
 #include <string.h>
 #include <qtextstream.h>
+
 #include <kdebug.h>
+#include <kaction.h>
 
 #include "vs_model.h"
+#include "vs_part.h"
+#include "vs_explorer.h"
 
 namespace VStudio {
+  //BEGIN // Basic entity types
+
   //===========================================================================
   // Visual Studio entity methods
   //===========================================================================
+  VSPart *VSEntity::sys_part = 0;
   VSEntity::VSEntity(e_VSEntityType typ, const QString &nm)
-  : name(nm), type(typ) {
+  : name(nm)
+  , type(typ)
+  , refs(0) {
     uuid = QUuid::createUuid();
   }
 
   VSEntity::VSEntity(e_VSEntityType typ, const QString &nm, const QUuid &uid)
-  : name(nm) , type(typ) {
+  : name(nm)
+  , type(typ)
+  , refs(0) {
     uuid = uid;
   }
 
   VSEntity::~VSEntity() {
+    if(refs > 0) kddbg << "Error! deleting referenced entity!\n";
+    kddbg << "Freeing " << type2String(getType()) << ": " << getName() << endl;
+  }
+
+  bool VSEntity::release() {
+    if((--refs) == 0) return true;
+    return false;
+  }
+
+  void VSEntity::acquire() {
+    ++refs;
+#ifdef DEBUG
+    kddbg << type2String(getType()) << " \"" << getName() << "\" refcount = "
+        << refs << endl;
+#endif
+  }
+
+  void VSEntity::setPart(VSPart *part) {
+    if(part==0) {
+      kddbg << "Warning!!! Setting sys part to 0\n";
+    } else  {
+    //if(sys_part==0) {
+      kddbg << "Setting sys part\n";
+    }
+      sys_part = part;
+    //}
   }
 
   void VSEntity::setName(const QString &nm) {
     name = nm;
   }
 
+  void VSEntity::setParent(vse_p pnt) {
+    kddbg << type2String(getType()) << " \"" << getName() << "\" is parented by "
+        << type2String(pnt->getType()) << " \"" << pnt->getName() << "\"\n";
+    acquire();
+  }
+
+  void VSEntity::insert(vse_p pnt) {
+    kddbg << type2String(getType()) << "'s ::insert method is not implemented. "
+        << "when inserting \"" << pnt->getName() << "\" "
+        << type2String(pnt->getType()) << endl;
+  }
+
+  bool VSEntity::createUI(uivse_p /*pnt*/) { return true; }
   //===========================================================================
   // Visual studio solution methods
   //===========================================================================
   VSSolution::VSSolution(const QString &nm, const QString &path)
   : VSEntity(vs_solution, nm)
-  , path_rlt(path) {
+  , path_rlt(path)
+  , uisln(0) {
   }
 
   VSSolution::VSSolution(const QString &nm, const QUuid &uid, const QString &path)
   : VSEntity(vs_solution, nm, uid)
-  , path_rlt(path) {
+  , path_rlt(path)
+  , uisln(0) {
   }
 
   VSSolution::~VSSolution() {
+    // Delete UI representation
+    if(uisln!=0) { delete uisln; uisln=0; }
+    // Delete all filters
 #ifdef USE_BOOST
-    for(proj_v_i it=projects.begin(); it!=projects.end(); ++it) {
-      if((*it) != NULL) {
-        delete (*it); (*it)=NULL;
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it) != 0) {
+        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+      } else {
+        kddbg << "Error! Solution's filters list is corrupted\n";
       }
     }
+
+    // Delete all projects
+#ifdef USE_BOOST
+    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
+      //TODO: Implement this
 #endif
+      if((*it) != 0) {
+        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+      } else {
+        kddbg << "Error! Solution's projects list is corrupted\n";
+      }
+    }
   }
 
-  void VSSolution::insertProj(VSProject *prj) {
+  void VSSolution::insert(vse_p item) {
+    switch(item->getType()) {
+      case vs_project:
 #ifdef USE_BOOST
-    projects.push_back(prj);
+        projects.push_back((vsp_p)item);
 #else
+        //TODO: Implement this
 #endif
-    prj->setParent(this);
+        break;
+      case vs_filter:
+#ifdef USE_BOOST
+        filters.push_back((vsf_p)item);
+#else
+        //TODO: Implement this
+#endif
+        break;
+      default:
+        kddbg << "Error! Can't insert unknown node of type \"" <<
+            type2String(item->getType()) << "\" into solution\n";
+       return;
+    }
+    item->setParent(this); //NOTE: acquires item
+  }
+
+  void VSSolution::setParent(vse_p pnt) {
+    VSEntity::setParent(pnt);
   }
 
   bool VSSolution::setRelativePath(const QString &p) {
@@ -78,74 +169,200 @@ namespace VStudio {
     return true;
   }
 
-  vsp_p VSSolution::getByUID(const QUuid &uid) const {
+  vse_p VSSolution::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
-      if((*it) == 0) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
         kddbg << "Error!!! corrupted projects list in solution: \"" << name << "\"\n";
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
-      }
     }
-#else
-#endif
+    return 0;
   }
 
-  bool VSSolution::dumpProjectsLayout(QString &layout) {
-    QString ln;
+  bool VSSolution::createUI() {
+    if(uisln==0) {
+      uisln = part()->explorerWidget()->addSolutionNode(this);
+      if(uisln==0) { kddbg << "failed to add sln UI node" << endl; return false; }
+      kddbg << "<<< Sln: " << name << endl;
+    }
+    return true;
+  }
+
+  bool VSSolution::dumpProjectsLayout(QString &ln) {
     //BEGIN // Save project layout data
-    for(proj_v_ci it=projects.begin(); it!=projects.end(); ++it) {
+    for(vp_i it=projects.begin(); it!=projects.end(); ++it) {
       if((*it) == 0) {
         kddbg << "Error!!! Project data either missing or corrupted." << endl;
         return false;
       }
-      VSProject &prj = (*(*it));
+      vsp_p prj = (*it);
       /* Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}" */
       ln.append("Project(\"").append(guid2String(uidGet()));
-      ln.append("\") = \"").append(prj.getName()).append("\", \"").append(prj.getRelativePath()).append("\", \"");
-      ln.append(guid2String(prj.uidGet())).append("\"").append("\n");
+      ln.append("\") = \"").append(prj->getName()).append("\", \"").append(prj->getRelativePath()).append("\", \"");
+      ln.append(guid2String(prj->uidGet())).append("\"").append("\n");
       //BEGIN // Save project section data
       //END // Save project section data
     }
     //END // Save project layout data
+    return true;
   }
 
   vsf_p VSSolution::getFltByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
-      if((*it) == 0) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
         kddbg << "Error!!! corrupted filters list in solution: \"" << name << "\"\n";
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
+    }
+    return 0;
+  }
+
+  void VSSolution::forEachProj(entityFunctor fctr) {
+#ifdef USE_BOOST
+    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if(!fctr(*it)) {
+        kddbg << "forEachProject: project \"" << (*it)->getName() << "\" failed in functor\n";
+        return;
       }
     }
+  }
+
+  void VSSolution::forEachFilter(entityFunctor fctr) {
+#ifdef USE_BOOST
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if(!fctr(*it)) {
+        kddbg << "forEachFilter: filter \"" << (*it)->getName() << "\" failed in functor\n";
+        return;
+      }
+    }
+  }
+
+  bool VSSolution::populateUI() {
+    // Solution item
+    if(!createUI()) {
+      kddbg << "Error! Failed to create UI representation for sln \""
+          << name << "\"\n";
+      return false;
+    }
+    // Insert leve filters, if any
+#ifdef USE_BOOST
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if(!(*it)->createUI()) return false;
+      if(!(*it)->populateUI()) return false;
+    }
+#ifdef USE_BOOST
+    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
 #endif
+      if(!(*it)->createUI(uisln)) return false;
+      if(!(*it)->populateUI()) return false;
+    }
+    return true;
   }
 
   //===========================================================================
   // Visual studio project methods
   //===========================================================================
-  VSProject::VSProject(const QString &nm, const QString &path)
+  VSProject::VSProject(e_VSPrjLangType ltype, const QString &nm, const QString &path)
   : VSEntity(vs_project, nm)
-  , path_rlt(path) {
+  , lang(ltype)
+  , path_rlt(path)
+  , sln(0)
+  , uiprj(0) {
   }
 
-  VSProject::VSProject(const QString &nm, const QUuid &uid, const QString &path)
+  VSProject::VSProject(e_VSPrjLangType ltype, const QString &nm, const QUuid &uid, const QString &path)
   : VSEntity(vs_project, nm, uid)
-  , path_rlt(path) {
+  , lang(ltype)
+  , path_rlt(path)
+  , sln(0)
+  , uiprj(0) {
   }
 
   VSProject::~VSProject() {
-    parent = 0;
+    // Delete UI representation
+    if(uiprj!=0) { delete uiprj; uiprj=0; }
+    // Delete all filters
+#ifdef USE_BOOST
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+      } else {
+        kddbg << "Error! Project's filters list corrupted.\n";
+        //TODO: In future, maybe throw and exception here
+      }
+    }
+
+#ifdef USE_BOOST
+    for(vfl_ci it=files.begin(); it!=files.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+      } else {
+        kddbg << "Error! Project's files list is corrupted.\n";
+      }
+    }
+    sln = 0;
   }
 
-  void VSProject::setParent(VSSolution *pnt) {
-    parent = pnt;
+  void VSProject::insert(vse_p item) {
+    switch(item->getType()) {
+      case vs_filter:
+#ifdef USE_BOOST
+        filters.push_back((vsf_p)item);
+#else
+        //TODO: Implement this
+#endif
+        break;
+      case vs_file:
+#ifdef USE_BOOST
+        files.push_back((vsfl_p)item);
+#else
+        //TODO: Implement this
+#endif
+        break;
+      default:
+        kddbg << "Error! Can't insert unknown node of type \"" <<
+            type2String(item->getType()) << "\" into project\n";
+        return;
+    }
+    item->setParent(this); //NOTE: acquires item
+  }
+
+  void VSProject::setParent(vss_p pnt) {
+    sln = pnt;
+#ifdef USE_BOOST
+    pnts.push_back(pnt);
+#else
+    //TODO: Implement this
+#endif
+    VSEntity::setParent((vse_p)pnt); //NOTE: increases refcount
   }
 
   bool VSProject::setRelativePath(const QString &p) {
@@ -157,47 +374,240 @@ namespace VStudio {
     return true;
   }
 
-  vsp_p VSProject::getByUID(const QUuid &uid) const {
+  vse_p VSProject::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    for(vp_ci it=deps.begin(); it!=deps.end(); ++it) {
-      if((*it) == 0) {
-        kddbg << "Error!!! corrupted depencies list in project: \"" << name << "\"\n";
+    for(vfl_ci it=files.begin(); it!=files.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
+        kddbg << "Error!!! corrupted files list in project: \"" << name << "\"\n";
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
-      }
     }
-#else
-#endif
     return 0;
   }
 
-  vsp_p VSProject::getReqByUid(const QUuid &uid) const {
+  bool VSProject::createUI(uivse_p uipnt) {
+    if(uiprj==0) {
+      uiprj = part()->explorerWidget()->addProjectNode(uipnt, this);
+      if(uiprj==0) { kddbg << "failed to add prj UI node" << endl; return false; }
+      kddbg << "Prj: " << name << " in " << uipnt->getName() << endl;
+    }
+    return true;
+  }
+
+  vsp_p VSProject::getReqByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
-      if((*it) == 0) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
+        kddbg << "Error!!! corrupted dependencies list in project: \"" << name << "\"\n";
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  vsp_p VSProject::getDepByUID(const QUuid &uid) const {
+#ifdef USE_BOOST
+    for(vp_ci it=deps.begin(); it!=deps.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
         kddbg << "Error!!! corrupted requirements list in project: \"" << name << "\"\n";
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
-      }
     }
-#else
-#endif
+    return 0;
   }
 
-  /*
+  vsf_p VSProject::getFltByUID(const QUuid &uid) const {
+#ifdef USE_BOOST
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
+        kddbg << "Error!!! corrupted filters list in solution: \"" << name << "\"\n";
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  bool VSProject::addDependency(vsp_p dp) {
+    // Scan for circularity
+#ifdef USE_BOOST
+    for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)->uidGet() == dp->uidGet()) {
+        kddbg << "Error! Circularity in dependency chain found. "
+            << "|" << (*it)->getName() << "|" << getName() << "|"
+            << dp->getName() << "|\n";
+        return false;
+      }
+    }
+
+    // Scan for duplicates
+#ifdef USE_BOOST
+    for(vp_ci it=deps.begin(); it!=deps.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)->uidGet() == dp->uidGet()) {
+        kddbg << "Warning! Can't add \"" << dp->getName() << "\" as dependency to \""
+            << getName() << "\". Duplicated dependencies aren't allowed.\n";
+        return false;
+      }
+    }
+
+#ifdef USE_BOOST
+    deps.push_back(dp);
+#else
+    //TODO: Implement this
+#endif
+    return true;
+  }
+
+  bool VSProject::addRequirement(vsp_p rq) {
+    //Scan for circularity
+#ifdef USE_BOOST
+    for(vp_ci it=deps.begin(); it!=deps.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)->uidGet() == rq->uidGet()) {
+        kddbg << "Error! Circularity in dependency chain found. "
+            << "|" << rq->getName() << "|" << getName() << "|"
+            << (*it)->getName() << "|\n";
+        return false;
+      }
+    }
+
+    // Scan for duplicates
+#ifdef USE_BOOST
+    for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)->uidGet() == rq->uidGet()) {
+        kddbg << "Warning! Can't add \"" << rq->getName() << "\" as requirement to \""
+            << getName() << "\". Duplicated requirements aren't allowed.\n";
+        return false;
+      }
+    }
+
+#ifdef USE_BOOST
+    reqs.push_back(rq);
+#else
+    //TODO: Implement this
+#endif
+    return true;
+  }
+
+  bool VSProject::populateUI() {
+#ifdef USE_BOOST
+    if(!filters.empty()) {
+      for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+#endif
+        if(!(*it)->createUI()) return false;
+        if(!(*it)->populateUI()) return false;
+      }
+    } else {
+#ifdef USE_BOOST
+      for(vfl_ci it=files.begin(); it!=files.end(); ++it) {
+#else
+#endif
+        if(!(*it)->createUI((uivse_p)uiprj)) return false;
+      }
+    }
+    return true;
+  }
+
+  void VSProject::setLanguage(e_VSPrjLangType lng) {
+    if(lng==vs_prjlang_unknown) {
+      kddbg << "Warning!!! Tried to set unknown project language in \""
+          << name << "\" project \n";
+      return;
+    }
+    lang = lng;
+  }
+
   //===========================================================================
   // Visual studio filter methods
   //===========================================================================
-  VSFilter::VSFilter(const QString &name, vse_p pnt)
+  VSFilter::VSFilter(const QString &nm)
   : VSEntity(vs_filter, nm)
-  , parent(pnt) {
+  , parent(0)
+  , uiflt(0) {
+  }
+
+  VSFilter::VSFilter(const QString &nm, const QUuid &uid)
+  : VSEntity(vs_filter, nm, uid)
+  , parent(0)
+  , uiflt(0) {
   }
 
   VSFilter::~VSFilter() {
+    if(uiflt!=0) { delete uiflt; uiflt=0; }
+  }
+
+  void VSFilter::insert(vse_p item) {
+    switch(item->getType()) {
+      case vs_file:
+      case vs_project:
+#ifdef USE_BOOST
+        chld.push_back(item);
+#else
+        //TODO: Implement this
+#endif
+        //NOTE: We are not setting this filter as parent of
+        // projects and files. Those already have a proper parent,
+        // solution or project.
+        break;
+      case vs_filter:
+#ifdef USE_BOOST
+        chld.push_back(item);
+#else
+        //TODO: Implement this
+#endif
+        item->setParent(this);
+        break;
+      default:
+        kddbg << "Error! Can't insert unknown node of type \"" <<
+            type2String(item->getType()) << "\" into filter\n";
+        return;
+    }
+  }
+
+  void VSFilter::setParent(vse_p pnt) {
+    switch(pnt->getType()) {
+      case vs_solution:
+      case vs_project:
+      case vs_filter:
+        parent = pnt;
+        break;
+      default:
+        kddbg << "Error! Can't set \"" << type2String(pnt->getType())
+            << "\" as a parent of \"" << type2String(getType()) << "\"\n";
+        return;
+    }
+    VSEntity::setParent(pnt); //NOTE: increases refcount
   }
 
   QString VSFilter::getRelativePath() const {
@@ -214,35 +624,86 @@ namespace VStudio {
   vse_p VSFilter::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(ve_ci it=chld.begin(); it!=chld.end(); ++it) {
-      if((*it) == 0) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->uidGet() == uid) { return (*it); }
+      } else {
         kddbg << "Error!!! corrupted children list in filter: \"" << name << "\"\n";
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
+    }
+    return 0;
+  }
+
+  bool VSFilter::createUI() {
+    if(uiflt==0) {
+      uiflt = part()->explorerWidget()->addFilterNode(parent->getUI(), this);
+      if(uiflt==0) { kddbg << "failed to add filter UI node" << endl; return false; }
+      kddbg << "Flt: " << name << " in " << parent->getName() << endl;
+    }
+    return true;
+  }
+
+  bool VSFilter::populateUI() {
+#ifdef USE_BOOST
+    for(ve_ci it=chld.begin(); it!=chld.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      switch((*it)->getType()) {
+        case vs_project: {
+          vsp_p prj=(vsp_p)(*it);
+          if(!prj->createUI((uivse_p)uiflt)) return false;
+          if(!prj->populateUI()) return false;
+          break; }
+        case vs_file: {
+          vsfl_p fl=(vsfl_p)(*it);
+          if(!fl->createUI((uivse_p)uiflt)) return false;
+          break; }
+        default:
+          break;
       }
     }
-#else
-#endif
+    return true;
   }
-  */
 
   //===========================================================================
   // Visual studio file methods
   //===========================================================================
   VSFile::VSFile(const QString &nm, vsp_p pnt)
   : VSEntity(vs_file, nm)
-  , parent(pnt) {
-#ifdef USE_BOOST
-    pnts.push_back(parent);
-#else
-#endif
+  , uifl(0) {
+    setParent(pnt);
+  }
+
+  VSFile::VSFile(const QString &nm, const QUuid &uid, vsp_p pnt)
+  : VSEntity(vs_file, nm, uid)
+  , uifl(0) {
+    setParent(pnt);
   }
 
   VSFile::~VSFile() {
+    if(uifl!=0) { delete uifl; uifl=0; }
+  }
+
+  void VSFile::setParent(vsp_p pnt) {
+    switch(pnt->getType()) {
+      case vs_project: {
+        parent = pnt;
+        break; }
+      default:
+        kddbg << "Error! Can't set \"" << type2String(pnt->getType())
+            << "\" as a parent of \"" << type2String(getType()) << "\"\n";
+        return;
+    }
 #ifdef USE_BOOST
+    pnts.push_back(parent);
 #else
+    //TODO: Implement this
 #endif
+    VSEntity::setParent(pnt); //NOTE: increases refcount
   }
 
   QString VSFile::getRelativePath() const {
@@ -261,6 +722,9 @@ namespace VStudio {
   vsp_p VSFile::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(vp_ci it=pnts.begin(); it!=pnts.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
       if((*it) == 0) {
         kddbg << "Error!!! corrupted parents list for file: \"" << name << "\"\n";
         return 0;
@@ -269,7 +733,33 @@ namespace VStudio {
         return (*it);
       }
     }
-#else
-#endif
+    return 0;
   }
+
+  bool VSFile::createUI(uivse_p pnt) {
+    if(uifl==0) {
+      uifl = part()->explorerWidget()->addFileNode(pnt, this);
+      if(uifl==0) { kddbg << "failed to add file UI node" << endl; return false; }
+      kddbg << "File: " << name << " in " << pnt->getName() << endl;
+    }
+    return true;
+  }
+  //END // Basic entity types
+
+  //BEGIN // Inherited entity types
+
+  //===========================================================================
+  // Visual studio file methods
+  //===========================================================================
+  VSProject_c::VSProject_c(const QString &nm, const QString &path)
+  : VSProject(vs_prjlang_c, nm, path) {
+  }
+
+  VSProject_c::VSProject_c(const QString &nm, const QUuid &uid, const QString &path)
+  : VSProject(vs_prjlang_c, nm, uid, path) {
+  }
+
+  VSProject_c::~VSProject_c() {
+  }
+  //END // Inherited entity types
 };

@@ -49,11 +49,84 @@ namespace VStudio {
 #ifndef QT_NO_QUUID_STRING
     return uid.toString();
 #else
+    //TODO: Implement this
 #endif
   }
 
-  e_VSEntityType uid2VSType(const QUuid &uid) const {
-    if(uid == uid_vs8project) return vs_project;
-    else if(uid == uid_vs8filter) return vs_filter;
+  e_VSEntityType uid2VSType(const QUuid &uid) {
+    if(uid == uid_vs9project_c) return vs_project;
+    else if(uid == uid_vs9project_cs) return vs_project;
+    else if(uid == uid_vs9filter) return vs_filter;
+    else return vs_unknown;
+  }
+
+  e_VSPrjLangType uid2PrjLangType(const QUuid &uid) {
+    if(uid == uid_vs9project_c) return vs_prjlang_c;
+    else if(uid == uid_vs9project_cs) return vs_prjlang_cs;
+    else return vs_prjlang_unknown;
+  }
+
+  QString type2String(e_VSEntityType typ) {
+    switch(typ) {
+      case vs_solution: return VSPART_SOLUTION;
+      case vs_project: return VSPART_PROJECT;
+      case vs_filter: return VSPART_FILTER;
+      case vs_file: return VSPART_FILE;
+      default: return "unknown";
+    }
+  }
+
+  e_VSEntityType string2Type(const QString &typ) {
+    if(typ == VSPART_SOLUTION) return vs_solution;
+    else if(typ == VSPART_PROJECT) return vs_project;
+    else if(typ == VSPART_FILTER) return vs_filter;
+    else if(typ == VSPART_FILE) return vs_file;
+    else return vs_unknown;
+  }
+
+  QString prjLangType2String(e_VSPrjLangType typ) {
+    switch(typ) {
+      case vs_prjlang_c: return VSPART_PRJLANG_CPP;
+      case vs_prjlang_cs: return VSPART_PRJLANG_CSP;
+      default: return "unknown";
+    }
+  }
+
+  e_VSPrjLangType string2PrjLangType(const QString &typ) {
+    if(typ == VSPART_PRJLANG_CPP) return vs_prjlang_c;
+    else if(typ == VSPART_PRJLANG_CSP) return vs_prjlang_cs;
+    else return vs_prjlang_unknown;
+  }
+
+  QString slnSectionType2String(e_VSSlnSection typ) {
+    switch(typ) {
+      case slns_sln_cfgplatforms: return VSPART_SLNSECTION_SCFG_PLATFORMS;
+      case slns_prj_cfgplatforms: return VSPART_SLNSECTION_PCFG_PLATFORMS;
+      case slns_sln_properties: return VSPART_SLNSECTION_SPROPS;
+      case slns_nested_prjs: return VSPART_SLNSECTION_NESTEDPRJ;
+      default: return "unknown";
+    }
+  }
+
+  e_VSSlnSection string2SlnSectionType(const QString &typ) {
+    if(typ == VSPART_SLNSECTION_SCFG_PLATFORMS) return slns_sln_cfgplatforms;
+    else if(typ == VSPART_SLNSECTION_PCFG_PLATFORMS) return slns_prj_cfgplatforms;
+    else if(typ == VSPART_SLNSECTION_SPROPS) return slns_sln_properties;
+    else if(typ == VSPART_SLNSECTION_NESTEDPRJ) return slns_nested_prjs;
+    else return slns_unknown;
+  }
+
+  QString prjSectionType2String(e_VSPrjSection typ) {
+    switch(typ) {
+      case prjs_dependencies: return VSPART_PRJSECTION_DEPENDENCIES;
+      case prjs_slnitems: return VSPART_PRJSECTION_SLNITEMS;
+      default: return "unknown";
+    }
+  }
+
+  e_VSPrjSection string2PrjSectionType(const QString &typ) {
+    if(typ == VSPART_PRJSECTION_DEPENDENCIES) return prjs_dependencies;
+    else if(typ == VSPART_PRJSECTION_SLNITEMS) return prjs_slnitems;
+    else return prjs_unknown;
   }
 };

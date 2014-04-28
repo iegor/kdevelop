@@ -18,13 +18,33 @@
 #include <qtextstream.h>
 #include <quuid.h>
 
+#ifdef USE_BOOST
+#include <boost/container/vector.hpp>
+#else
+#endif
+
 // Debug messaging
 #define kddbg kdDebug() << "[-- VS PART --]: "
 
-#define VSPART_SOLUTION_ITEM "vs_solution"
 #define VSSOLUTION_VERSION 10
+#define VSPART_SOLUTION "vs_solution"
+#define VSPART_PROJECT "vs_project"
+#define VSPART_FILTER "vs_filter"
+#define VSPART_FILE "vs_file"
 
+// Language of project
+#define VSPART_PRJLANG_CPP "vs_prjlang_c"
+#define VSPART_PRJLANG_CSP "vs_prjlang_cs"
+
+// Project setcion types
 #define VSPART_PRJSECTION_DEPENDENCIES "ProjectDependencies"
+#define VSPART_PRJSECTION_SLNITEMS "SolutionItems"
+
+// Solution section types
+#define VSPART_SLNSECTION_SCFG_PLATFORMS "SolutionConfigurationPlatforms"
+#define VSPART_SLNSECTION_PCFG_PLATFORMS "ProjectConfigurationPlatforms"
+#define VSPART_SLNSECTION_SPROPS "SolutionProperties"
+#define VSPART_SLNSECTION_NESTEDPRJ "NestedProjects"
 
 //Actions
 #define VSPART_ACTION_TOOLS_GROUP "vstools"
@@ -112,11 +132,13 @@ Environment variables and make arguments can be specified in the project setting
 
 //BEGIN //VStudio namespace
 namespace VStudio {
+  class VSPart;
   //===========================================================================
   // Visual studio model representation classes
   //===========================================================================
   class VSEntity;
   class VSProject;
+  class VSProject_c;
   class VSSolution;
   class VSFilter;
   class VSFile;
@@ -125,6 +147,7 @@ namespace VStudio {
   typedef VSSolution* vss_p; // Pointer typedef for VS solution model representation
   typedef VSFilter* vsf_p; // Pointer typedef for VS filter model representation
   typedef VSFile* vsfl_p; // Pointer typedef for VS file model representation
+  typedef VSProject_c* vspc_p; // Pointer typedef for VS project (C lang) model representation
 
 #ifdef USE_BOOST
   typedef boost::container::vector<vsp_p>::const_iterator vp_ci;
@@ -132,17 +155,19 @@ namespace VStudio {
   typedef boost::container::vector<vse_p>::const_iterator ve_ci;
   typedef boost::container::vector<vsf_p>::const_iterator vf_ci;
   typedef boost::container::vector<vsfl_p>::const_iterator vfl_ci;
+  typedef boost::container::vector<vspc_p>::const_iterator vpc_ci;
   typedef boost::container::vector<vsp_p>::iterator vp_i;
   typedef boost::container::vector<vss_p>::iterator vs_i;
   typedef boost::container::vector<vse_p>::iterator ve_i;
   typedef boost::container::vector<vsf_p>::iterator vf_i;
   typedef boost::container::vector<vsfl_p>::iterator vfl_i;
+  typedef boost::container::vector<vspc_p>::iterator vpc_i;
 #else
 #endif
   //===========================================================================
   // Visual studio UI representation classes
   //===========================================================================
-  class VSPart;
+  class VSExplorer;
   class VSExplorerEntity;
   class VSSlnNode; // VS solution UI representation
   class VSPrjNode; // VS project UI representation
@@ -169,18 +194,42 @@ namespace VStudio {
 #endif
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
-  static const QUuid uid_vs8project("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
-  static const QUuid uid_vs8filter("2150E333-8FDC-42A3-9474-1A3956D46DE8");
+  static const QUuid uid_vs9project_c("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
+  static const QUuid uid_vs9project_cs("FAE04EC0-301F-11D3-BF4B-00C04F79EFBC");
+  static const QUuid uid_vs9filter("2150E333-8FDC-42A3-9474-1A3956D46DE8");
 #else
-  static const QUuid uid_vs8project(0x8BC9CEB8, 0x8B4A, 0x11D0, 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42);
-  static const QUuid uid_vs8filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
+  static const QUuid uid_vs9project_c(0x8BC9CEB8, 0x8B4A, 0x11D0, 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42);
+  static const QUuid uid_vs9project_cs(0xFAE04EC0, 0x301F, 0x11D3, 0xBF, 0x4B, 0x00, 0xC0, 0x4F, 0x79, 0xEF, 0xBC);
+  static const QUuid uid_vs9filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
 #endif
   enum e_VSEntityType {
-    vs_file = 0,
+    vs_unknown = 0,
+    vs_file,
     vs_filter,
     vs_project,
     vs_solution,
   };
+
+  enum e_VSPrjLangType {
+    vs_prjlang_unknown=0,
+    vs_prjlang_c,
+    vs_prjlang_cs,
+  };
+
+  enum e_VSSlnSection {
+    slns_unknown = 0,
+    slns_sln_cfgplatforms,
+    slns_prj_cfgplatforms,
+    slns_sln_properties,
+    slns_nested_prjs,
+  };
+
+  enum e_VSPrjSection {
+    prjs_unknown = 0,
+    prjs_dependencies,
+    prjs_slnitems,
+  };
+
   /**
   * Unique identifier class helper
   * used mostly in VS entities
@@ -215,7 +264,23 @@ namespace VStudio {
   */
   bool readGUID(QTextStream &tstream, QUuid &uid);
   QString guid2String(const QUuid &uid);
-  e_VSEntityType uid2VSType(const QUuid &uid) const;
+
+  e_VSEntityType uid2VSType(const QUuid &uid);
+  e_VSPrjLangType uid2PrjLangType(const QUuid &uid);
+
+  QString prjLangType2String(e_VSPrjLangType type);
+  e_VSPrjLangType string2PrjLangType(const QString &type);
+
+  QString type2String(e_VSEntityType type);
+  e_VSEntityType string2Type(const QString &type);
+
+  QString slnSectionType2String(e_VSSlnSection type);
+  e_VSSlnSection string2SlnSectionType(const QString &type);
+
+  QString prjSectionType2String(e_VSPrjSection type);
+  e_VSPrjSection string2PrjSectionType(const QString &type);
+
+  typedef bool (*entityFunctor)(vse_p entity);
 };
 //END // VStudio namespace
 #endif

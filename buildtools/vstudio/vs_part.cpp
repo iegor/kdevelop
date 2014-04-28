@@ -169,13 +169,28 @@ namespace VStudio {
 
     // connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
     // connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
+
+    VSEntity::setPart(this);
   }
 
   VSPart::~VSPart() {
+#ifdef USE_BOOST
+    for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
+#else
+    //TODO: Implement this
+#endif
+      if((*it)!=0) {
+        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+      } else {
+        kddbg << "Error! vspart's entities list corrupted.\n";
+      }
+    }
     if(m_explorer_widget) {
       mainWindow()->removeView (m_explorer_widget);
     }
     delete m_explorer_widget;
+
+    VSEntity::setPart(0);
   }
 
   void VSPart::openProject(const QString &dirName, const QString &projectName) {
@@ -188,7 +203,7 @@ namespace VStudio {
 
     // Read all solutions and projects parse and setup them
     DomUtil::PairList vsitems = DomUtil::readPairListEntry(dom,
-        "kdevvstudioproject/general", VSPART_SOLUTION_ITEM, "name", "path");
+        "kdevvstudioproject/general", VSPART_SOLUTION, "name", "path");
     DomUtil::PairList::ConstIterator it;
     for(it = vsitems.begin(); it != vsitems.end(); ++it) {
       if(!loadVsSolution((*it).first, (*it).second)) {
@@ -269,8 +284,7 @@ namespace VStudio {
     QString abspath = m_prjpath+"/"+path;
     QFile sln_f;
     QString ln;
-    bool slnguid_found = false;
-    QUuid sguid;  // Solution GUID
+    vsp_p prj_active = 0; // Active project to collect dependencies from project section
 
     kddbg << "Solution internal NAME: " << internal_name << endl;
     kddbg << "Solution PATH: " << path << endl;
@@ -325,167 +339,304 @@ namespace VStudio {
     //END // Read the MS guards and version info
 
     // Create model::solution item
-    VSSolution *sln = new VSSolution(internal_name, abspath);
+    vss_p sln = new VSSolution(internal_name, abspath);
     if(sln == 0) { kddbg << "Can't parse solution file" << endl; return false; }
-    m_entities.append((VSEntity**)&sln);
-    // Create and add widget solution item
-    VSSlnNode *sln_n = m_explorer_widget->addSolutionNode(sln);
-    if(!sln_n) { kddbg << "failed to add solution node" << endl; return false;}
+#ifdef USE_BOOST
+    m_entities.push_back((vse_p)&sln);
+#else
+    m_entities.append((vse_p)&sln);
+#endif
 
     while(!str.atEnd()) {
       ln = str.readLine();
       //BEGIN // Read project info
       if(0 == ln.left(7).compare(QString("Project"))) {
-        kddbg << "Project found\n";
+        // kddbg << " >>>>> Solution item section\n";
         while(0 != ln.left(10).compare(QString("EndProject"))) {
-          kddbg << "Line: " << ln << endl;
+          // kddbg << "Line: " << ln << endl;
 
           //BEGIN // Read project section info, dependencies
           if(ln.find(QRegExp("ProjectSection"), 0) >= 0) {
-            kddbg << "Project section found\n";
+            // kddbg << "Project section found\n";
 
             //TODO: Analyze project setion header line
             /** e.g. ProjectSection(ProjectDependencies) = postProject */
-            QTextStream s(&ln, IO_ReadOnly);
+            QTextIStream s(&ln);
             QChar ch(0);
             QString psname;  // Section name
-            QString pssetting; // Sestion setting
-            while(!s.atEnd()) {
-              switch(ch.latin1()) {
-                case '(': {
-                  s >> ch;
-                  do {
-                    psname.append(ch);
-                    s >> ch;
-                  } while(ch.latin1() != ')');
-                  break; }
-                case '=': {
-                  s >> pssetting;
-                  break; }
-                default:
-                  s >> ch;
-                  break;
-              }
-            }
+            QString pssetting; // Section setting
 
-            kddbg << "\t\tSection: " << psname << " set: " << pssetting << endl;
+            if(!parseSectionHeader(s, psname, pssetting)) {
+              kddbg << "Error! Can't parse section header\n";
+              return false;
+            }
             ln = str.readLine();
 
-            while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
-              QTextIStream si(&ln);
-              ch = 0;
-              QUuid uuid1, uuid2, *uid=&uuid1;
+            // Read section data
+            e_VSPrjSection stype = string2PrjSectionType(psname);
+            switch(stype) {
+              //BEGIN // ProjectDependencies section
+              case prjs_dependencies: {
+                while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
+                  QTextIStream si(&ln);
+                  ch = 0;
+                  QUuid uuid1, uuid2, *uid=&uuid1;
 
-              while(!si.atEnd()) {
-                switch(ch.latin1()) {
-                  case '{': {
-                    if(!readGUID(si, *uid))
-                      kddbg << "Failed to obtain GUID !"<< endl;
-                    uid=&uuid2;
-                    si >> ch;
-                    break; }
-                  default:
-                    si >> ch;
-                    break;
+                  while(!si.atEnd()) {
+                    switch(ch.latin1()) {
+                      case '{': {
+                        if(!parseGUID(si, ch, *uid)) return false;
+                        uid=&uuid2;
+                        si >> ch;
+                        break; }
+                      default:
+                        si >> ch;
+                        break;
+                    }
+                  }
+                  // kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
+                  // prj_active->addDependency((vsp_p)sln->getByUID(uuid2));
+                  ln = str.readLine();
                 }
-              }
-              kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
-              ln = str.readLine();
+                break; }
+              //END // ProjectDependencies section
+              //BEGIN // SolutionItems section
+              case prjs_slnitems: {
+                while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
+                  //kddbg << psname << ": " << ln << endl;
+                  ln = str.readLine();
+                }
+                break; }
+              //END // SolutionItems section
+              default:
+                kddbg << "Error! Unknown section type: " << psname << endl;
+                return false;
             }
           }
           //END // Read project section info, dependencies
           //BEGIN // Read and analyze project data
           else {
             // Read project data
-            QTextStream prjstream(&ln, IO_ReadOnly);
-            bool internaluid_found = false;
+            QTextIStream is(&ln);
+            bool typeuid_found = false;
             bool prjuid_found = false;
             bool prjname_found = false;
             bool prjrltpath_found = false;
             QUuid puid; //Internal and project UIDs
+            e_VSEntityType typ;
+            e_VSPrjLangType ltyp;
             QString prjname, prjpath_rlt;
             QChar ch(0);
-            char latin1ch;
+#ifdef DEBUG
+            char latin1ch = 0x00;
+#endif
             /** Analyze project string to get project parameters:
             * Project info inside sln looks like this.
-            * Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}"
+            * Project("TYPE_GUID") = "internal name" , "rel path", "PRJ_GUID"
             */
-            while(!prjstream.atEnd()) {
+            while(!is.atEnd()) {
               switch(ch.latin1()) {
                 case '"': {
-                  if(!internaluid_found) {
-                    prjstream >> ch;
-                    if(ch.latin1() != '{') {
-                      kddbg << "Error! Can't get GUID, incorrect character" << endl;
-                      return false;
-                    }
-                    if(!readGUID(prjstream, sguid))
-                      kddbg << "Failed to obtain internal GUID !"<< endl;
-                    kddbg << "\tInternal solution GUID: " << sguid.toString() << endl;
-                    if(!slnguid_found) {
-                      sln->uidSet(sguid);
-                    }
-                    internaluid_found = true;
-                    prjstream >> ch >> ch >> ch >> ch >> ch;
+                  if(!typeuid_found) {
+                    QUuid tuid;
+                    is >> ch;
+                    if(!parseGUID(is, ch, tuid)) return false;
+                    typeuid_found = true;
+                    is >> ch >> ch >> ch >> ch;
+                    typ = uid2VSType(tuid);
+                    ltyp = uid2PrjLangType(tuid);
                   }
-                  else if(internaluid_found && !prjname_found) {
-                    prjstream >> ch;
+                  else if(typeuid_found && !prjname_found) {
+                    is >> ch;
                     do {
                       prjname.append(ch);
-                      prjstream >> ch;
+                      is >> ch;
                     } while(ch.latin1() != '"');
-                    kddbg << "\tProject name: " << prjname << endl;
                     prjname_found = true;
-                    prjstream >> ch >> ch;
+                    is >> ch >> ch;
                   }
                   else if(prjname_found && !prjrltpath_found) {
-                    prjstream >> ch;
+                    is >> ch;
                     do {
                       prjpath_rlt.append(ch);
-                      prjstream >> ch;
+                      is >> ch;
                     } while(ch.latin1() != '"');
-                    kddbg << "\tProject path: " << prjpath_rlt << endl;
                     prjrltpath_found = true;
-                    prjstream >> ch >> ch;
+                    is >> ch >> ch;
                   }
                   else if(!prjuid_found) {
-                    prjstream >> ch;
-                    if(ch.latin1() != '{') {
-                      kddbg << "Error! Can't get GUID, incorrect character" << endl;
-                      return false;
-                    }
-                    if(!readGUID(prjstream, puid))
-                      kddbg << "Failed to obtain project GUID !"<< endl;
-                    kddbg << "\tProject GUID: " << puid.toString() << endl;
+                    is >> ch;
+                    if(!parseGUID(is, ch, puid)) return false;
                     prjuid_found = true;
-                    prjstream >> ch >> ch;
+                    is >> ch;
                   }
                   break;
                 }
                 default:
-                  prjstream >> ch;
+                  is >> ch;
+#ifdef DEBUG
                   latin1ch = ch.latin1();
+#endif
                   break;
               }
             }
-            // Create and add model representation
-            VSProject *prj = new VSProject(prjname, puid, prjpath_rlt);
-            if(prj == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
-            sln->insertProj(prj);
-            // Create and add widget project item
-            m_explorer_widget->addProjectNode(sln_n, prj);
+
+            switch(typ) {
+              case vs_project: {
+                vsp_p prj=0;
+                kddbg << "Project [" << prjLangType2String(ltyp) << "] "
+                    << puid.toString() << " \"" << prjname << "\" under: \""
+                    << prjpath_rlt << "\"\n";
+                switch(ltyp) {
+                  case vs_prjlang_c: {
+                    // Create and add model representation
+                    prj = (vsp_p)new VSProject_c(prjname, puid, prjpath_rlt);
+                    break; }
+                  case vs_prjlang_cs: {
+                    kddbg << "VS Project for C# is not supported\n";
+                    ln = str.readLine();
+                    continue; }
+                  default:
+                    kddbg << "Error! " << type2String(typ) << " \"" << prjname
+                        << "\": language [" << prjLangType2String(ltyp) <<
+                        "] support is not implemented\n";
+                    ln = str.readLine();
+                    continue; //NOTE: Just skip this unknown project
+                }
+                if(prj==0) {
+                  kddbg << "Error! Out of memory space" << endl;
+                  return false; }
+                sln->insert(prj);
+                // Set most recent "active" project ptr
+                prj_active = prj;
+                break; }
+              case vs_filter: {
+                kddbg << "Filter " << puid.toString() << " \"" << prjname
+                    << "\" under: \"" << prjpath_rlt << "\"\n";
+                // Create and add model representation
+                vsf_p flt = new VSFilter(prjname, puid);
+                if(flt == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
+                sln->insert(flt);
+                // Create and add widget filter item
+                //uivsf_p filter = m_explorer_widget->addFilterNode(sln_n, flt);
+                break; }
+              default:
+                kddbg << "Warning!!! Creation of uncompatible type \""
+                    << type2String(typ) << "\" is requested" << endl;
+                break;
+            }
           }
           //END // Read and analyze project data
           ln = str.readLine();
         }
       }
       //END // Read project info
+      //BEGIN // Read global solution sections
       else if(0 == ln.compare("Global")) {
+        kddbg << "Entering global settings section" << endl;
+        while(ln.find(QRegExp("EndGlobal"), 0) < 0) {
+          kddbg << "Line: " << ln << endl;
+          if(ln.find(QRegExp("GlobalSection"), 0) >= 0) {
+
+            kddbg << "(G)Line: " << ln << endl;
+            QTextIStream si(&ln);
+            QString sname; // Section name
+            QString sparam; // Section parameter
+
+            if(!parseSectionHeader(si, sname, sparam)) {
+              kddbg << "Error! Can't parse section header\n";
+              return false;
+            }
+            ln = str.readLine();
+
+            // Read section data
+            e_VSSlnSection stype = string2SlnSectionType(sname);
+            switch(stype) {
+              //BEGIN // SolutionConfigurationPlatforms
+              case slns_sln_cfgplatforms: {
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
+                  // kddbg << sname << ": " << ln << endl;
+                  ln = str.readLine();
+                }
+                break; }
+              //END // SolutionConfigurationPlatforms
+              //BEGIN // ProjectConfigurationPlaftorms
+              case slns_prj_cfgplatforms: {
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
+                  // kddbg << sname << ": " << ln << endl;
+                  ln = str.readLine();
+                }
+                break; }
+              //END // ProjectConfigurationPlaftorms
+              //BEGIN // SolutionProperties
+              case slns_sln_properties: {
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
+                  // kddbg << sname << ": " << ln << endl;
+                  ln = str.readLine();
+                }
+                break; }
+              //END // SolutionProperties
+              //BEGIN // NestedProjects
+              case slns_nested_prjs: {
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
+                  // kddbg << sname << ": " << ln << endl;
+                  QTextIStream si(&ln);
+                  QChar ch(0);
+                  QUuid uid1, uid2, *uid=&uid1;
+
+                  while(!si.atEnd()) {
+                    switch(ch.latin1()) {
+                      case '{': {
+                        if(!parseGUID(si, ch, *uid)) return false;
+                        uid=&uid2;
+                        si >> ch;
+                        break; }
+                      default:
+                        si >> ch;
+                        break;
+                    }
+                  }
+                  //Get filer and project model representation
+                  vsf_p cnt = sln->getFltByUID(uid2); // get container
+                  vse_p ent = sln->getByUID(uid1); // get entity
+                  if(cnt == 0) {
+                    kddbg << " >>>> Failed to obtain container for " << uid2.toString() << endl;
+                    ln = str.readLine();
+                    continue;
+                  }
+                  if(ent == 0) {
+                    ent = sln->getFltByUID(uid1);
+                    if(ent == 0) {
+                      kddbg << " >>>> Failed to obtain entity for " << uid1.toString() << endl;
+                      ln = str.readLine();
+                      continue;
+                    }
+                  }
+                  kddbg << type2String(cnt->getType()) << " \"" << cnt->getName()
+                      << "\" <<< " << type2String(ent->getType()) << " \""
+                      << ent->getName() << "\"\n";
+                  cnt->insert(ent);
+                  ln = str.readLine();
+                }
+                break; }
+              //END // NestedProjects
+              default:
+                kddbg << "Unknown section type: " << sname << endl;
+                return false;
+            }
+            // ln = str.readLine();
+          }
+          ln = str.readLine();
+        }
       }
+      //END // Read global solution sections
     }
 
     kddbg << "<<<<< Parsing FINISHED >>>>>" << endl;
-    return true;
+
+    // Create UI representation
+    return sln->populateUI();
+    // return true;
   }
 
   bool VSPart::unloadVsSolution(const QString &/*sln_path*/) {
@@ -520,6 +671,65 @@ namespace VStudio {
   }
 
   bool VSPart::unloadVsProject(const QString &/*prj_path*/) {
+    return true;
+  }
+
+  vse_p VSPart::getByUID(const QUuid &uid) const {
+#ifdef USE_BOOST
+    for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
+#else
+      //TODO: Implement this
+#endif
+      if((*it)==0) {
+        kddbg << "Error!!! entity list corrupted" << endl;
+        return 0;
+      }
+      if((*it)->uidGet() == uid) {
+        return (*it);
+      }
+    }
+    return 0;
+  }
+
+  bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {
+    QChar c(0);
+#ifdef DEBUG
+    char latin1c(0);
+#endif
+    while(!s.atEnd()) {
+      switch(c.latin1()) {
+        case '(': {
+          s >> c;
+          do {
+            nm.append(c);
+            s >> c;
+          } while(c.latin1() != ')');
+          break; }
+          case '=': {
+            s >> prm;
+            break; }
+        default:
+          s >> c;
+#ifdef DEBUG
+          latin1c = c.latin1();
+#endif
+          break;
+      }
+    }
+    kddbg << "| Section: " << nm << " set: " << prm << " |\n";
+    return true;
+  }
+
+  bool VSPart::parseGUID(QTextIStream &s, QChar &ch, QUuid &uid) {
+    if(ch.latin1() != '{') {
+      kddbg << "Error! Can't get GUID, incorrect uid string format, expect {XXXXX...XXXX} format" << endl;
+      return false;
+    }
+    if(!readGUID(s, uid)) {
+      kddbg << "Error! Failed to obtain GUID"<< endl;
+      return false;
+    }
+    s >> ch;
     return true;
   }
 

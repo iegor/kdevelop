@@ -86,13 +86,19 @@ namespace VStudio {
     virtual void savePartialProjectSession(QDomElement* el);
 
     //===========================================================================
-    // A set of XML routines for loading vs projects and solutions
+    // Own methods (e.g. vs projects and solutions loading)
     //===========================================================================
     bool loadVsSolution(const QString &sln_name, const QString &sln_path);
     bool unloadVsSolution(const QString &sln_path);
     bool saveVsSolution(VSSolution &sln);
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);
+    vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
+    VSExplorer* explorerWidget() const { return m_explorer_widget; }
+
+  private:
+    bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
+    bool parseGUID(QTextIStream &stream, QChar &control_char, QUuid &uid);
 
   private slots:
     void slotAddSolution();
@@ -130,7 +136,12 @@ namespace VStudio {
     QString m_projectName;
     QString m_projectPath;
     QMap<QString, QDateTime> m_timestamp;
-    QPtrList<VSEntity*> m_entities;
+    // Solutions
+#ifdef USE_BOOST
+    boost::container::vector<vse_p> m_entities;
+#else
+    QPtrList<vse_p> m_entities;
+#endif
     QString m_prjpath;
     QString m_prjname;
   };
