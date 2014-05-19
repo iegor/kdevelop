@@ -194,22 +194,21 @@ namespace VStudio {
     return true;
   }
 
-  bool VSSolution::dumpProjectsLayout(QString &ln) {
-    //BEGIN // Save project layout data
+  bool VSSolution::dumpLayout(QTextOStream &s) {
+    // Dump version data
+    s << "Microsoft Visual Studio Solution File, Format Version 10.00\n";
+    s << "# Visual Studio 2008\n";
+
+    // Save project layout data
     for(vp_i it=projects.begin(); it!=projects.end(); ++it) {
       if((*it) == 0) {
-        kddbg << "Error!!! Project data either missing or corrupted." << endl;
+        kddbg << "Error!!! corrupted projects list in solution: \"" << name << "\"\n";
         return false;
       }
-      vsp_p prj = (*it);
-      /* Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testing_stuf", "testing_stuf.vcproj", "{4B448DC1-8FF4-41AC-8734-A655187A84D7}" */
-      ln.append("Project(\"").append(guid2String(uidGet()));
-      ln.append("\") = \"").append(prj->getName()).append("\", \"").append(prj->getRelativePath()).append("\", \"");
-      ln.append(guid2String(prj->uidGet())).append("\"").append("\n");
-      //BEGIN // Save project section data
-      //END // Save project section data
+      (*it)->dumpLayout(s);
     }
-    //END // Save project layout data
+    //BEGIN // Save solution sections data
+    //END //Save solution sections data
     return true;
   }
 
@@ -399,6 +398,40 @@ namespace VStudio {
     return true;
   }
 
+  bool VSProject::dumpLayout(QTextOStream &s) {
+    // Write project header
+    s << "Project(\"";
+    switch(lang) {
+      case vs_prjlang_c: {
+        s << guid2String(uid_vs9project_c);
+        break; }
+      case vs_prjlang_cs: {
+        s << guid2String(uid_vs9project_cs);
+      }
+      default:
+        kddbg << "Error! project language \"" << prjLangType2String(lang)
+            << "\" is not handled\n";
+        return false;
+    }
+    s << "\" = \"" << getName() << "\", \"" << getRelativePath() << "\", \"";
+    s << guid2String(uidGet()) << "\"\n";
+
+    // Write project requirements
+#ifdef USE_BOOST
+    if(!reqs.empty()) {
+      s << "\tProjectSection(" << VSPART_PRJSECTION_DEPENDENCIES << ") = postProject\n";
+      for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
+#else
+        //TODO: Implement this
+#endif
+        s << "\t\t" << guid2String((*it)->uidGet()) << " = " << guid2String((*it)->uidGet()) << endl;
+      }
+      s << "\tEndProjectSection\n";
+    }
+    s << "EndProject\n";
+    return true;
+  }
+
   vsp_p VSProject::getReqByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
@@ -455,7 +488,7 @@ namespace VStudio {
       //TODO: Implement this
 #endif
       if((*it)->uidGet() == dp->uidGet()) {
-        kddbg << "Error! Circularity in dependency chain found. "
+        kddbg << "Error! Circularity in requirement chain found. "
             << "|" << (*it)->getName() << "|" << getName() << "|"
             << dp->getName() << "|\n";
         return false;
@@ -481,6 +514,16 @@ namespace VStudio {
     //TODO: Implement this
 #endif
     return true;
+  }
+
+  bool VSProject::addDependency(const QUuid &uid) {
+    vsp_p dp_p = (vsp_p)sln->getByUID(uid);
+    if(dp_p != 0) {
+      return addDependency(dp_p);
+    } else {
+      kddbg << "Error! can't find project by uid.\n";
+      return false;
+    }
   }
 
   bool VSProject::addRequirement(vsp_p rq) {
@@ -517,6 +560,16 @@ namespace VStudio {
     //TODO: Implement this
 #endif
     return true;
+  }
+
+  bool VSProject::addRequirement(const QUuid &uid) {
+    vsp_p rq_p = (vsp_p)sln->getByUID(uid);
+    if(rq_p != 0) {
+      return addRequirement(rq_p);
+    } else {
+      kddbg << "Error! Can't find project by uid. \n";
+      return false;
+    }
   }
 
   bool VSProject::populateUI() {

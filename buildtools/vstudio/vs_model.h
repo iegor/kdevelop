@@ -82,7 +82,7 @@ namespace VStudio {
       virtual bool createUI();
 
     // VS Solution methods:
-      bool dumpProjectsLayout(QString &layout);
+      bool dumpLayout(QTextOStream &layout);
       vsf_p getFltByUID(const QUuid &uid) const;
       void forEachProj(entityFunctor functor);
       void forEachFilter(entityFunctor functor);
@@ -113,11 +113,14 @@ namespace VStudio {
       virtual bool createUI(uivse_p parent_ui);
 
     // VS Project methods:
+      bool dumpLayout(QTextOStream &layout);
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
       vsf_p getFltByUID(const QUuid &uid) const;
       bool addDependency(vsp_p dep);
+      bool addDependency(const QUuid &uid);
       bool addRequirement(vsp_p req);
+      bool addRequirement(const QUuid &uid);
       bool populateUI();
       void setLanguage(e_VSPrjLangType lang);
 

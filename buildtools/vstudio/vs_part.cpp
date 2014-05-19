@@ -39,9 +39,6 @@
 #include <kdevappfrontend.h>
 #include <kdevmainwindow.h>
 #include <kdevpartcontroller.h>
-#include <makeoptionswidget.h>
-#include <runoptionswidget.h>
-#include <envvartools.h>
 
 #include <configwidgetproxy.h>
 #include <kdevplugininfo.h>
@@ -403,7 +400,7 @@ namespace VStudio {
               //BEGIN // SolutionItems section
               case prjs_slnitems: {
                 while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
-                  //kddbg << psname << ": " << ln << endl;
+                  kddbg << psname << ": " << ln << endl;
                   ln = str.readLine();
                 }
                 break; }
@@ -632,6 +629,7 @@ namespace VStudio {
       //END // Read global solution sections
     }
 
+    sln_f.close();
     kddbg << "<<<<< Parsing FINISHED >>>>>" << endl;
 
     // Create UI representation
@@ -643,26 +641,23 @@ namespace VStudio {
     return true;
   }
 
-  bool VSPart::saveVsSolution(VSSolution &sln) {
-    kddbg << "<<<<<< Saving: " << sln.getName() << " >>>>>>" << endl;
-    QString abspath = m_prjpath+"/"+sln.getRelativePath();
-    QString prj_layout;
-    QFile sln_f;
+  bool VSPart::saveVsSolution(vss_p sln) {
+    kddbg << "<<<<<< Saving: " << sln->getName() << " >>>>>>" << endl;
+    QString abspath = m_prjpath+"/"+sln->getRelativePath();
+    QString str;
+    QTextOStream s(&str);
+    // QFile sln_f;
 
-    if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
-    sln_f.setName(abspath);
-    if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
-    if(!sln_f.isWritable()) { kddbg << "is not writable" << endl; return false; }
+    // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
+    // sln_f.setName(abspath);
+    // if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
+    // if(!sln_f.isWritable()) { kddbg << "is not writable" << endl; return false; }
 
-    QString os;
+    sln->dumpLayout(s);
 
-    os.append("Microsoft Visual Studio Solution File, Format Version 10.00\n");
-    os.append("# Visual Studio 2008\n");
+    printf("%s\n", str.ascii()); //TEST: only stdout
 
-    sln.dumpProjectsLayout(prj_layout);
-    os.append(prj_layout);
-
-    kddbg << "<<<<<<" << sln.getName() << " saved >>>>>>" << endl;
+    kddbg << "<<<<<<" << sln->getName() << " saved >>>>>>" << endl;
     return true;
   }
 

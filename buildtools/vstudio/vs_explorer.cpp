@@ -142,7 +142,14 @@ namespace VStudio {
   }
 
   void VSExplorer::slotConfigureEntity() {
-    kddbg << "slotConfigureEntity" << endl;
+    // kddbg << "slotConfigureEntity" << endl;
+    QPtrList<QListViewItem> items = m_listView->selectedItems();
+    for(items_ci it=items.begin(); it!=items.end(); ++it) {
+      VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
+      if(ent->getType() == vs_solution) {
+        m_part->saveVsSolution((vss_p)ent->getModelRepresentation());
+      }
+    }
   }
 
   void VSExplorer::slotRenameEntity() {

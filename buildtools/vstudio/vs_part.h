@@ -21,10 +21,6 @@
 #include <qdir.h>
 #include <kdevgenericfactory.h>
 #include "kdevbuildtool.h"
-//#include "vsmanagerwidget.h"
-// #include <kdevplugin.h>
-// #include <codemodel.h>
-// #include <codebrowserfrontend.h>
 #include "vs_common.h"
 #include "vs_explorer.h"  // VS Explorer widget
 #include "vs_model.h"
@@ -90,7 +86,7 @@ namespace VStudio {
     //===========================================================================
     bool loadVsSolution(const QString &sln_name, const QString &sln_path);
     bool unloadVsSolution(const QString &sln_path);
-    bool saveVsSolution(VSSolution &sln);
+    bool saveVsSolution(vss_p sln);
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);
     vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
