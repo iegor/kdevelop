@@ -8,7 +8,7 @@
   - Core
     - Make sure all lib interfaces are available via DCOP
     - Find a nicer way to remove dynamic menu entries from context menus
-    - Resolve the path handling mess 
+    - Resolve the path handling mess
     - Project name should be able to contain spaces
     - Import existing directory: Should be named "Import existing project"
       and more intuitive (wizard-like)
@@ -27,7 +27,7 @@
     - Another look at the project files (shared, non-shared, session)
     - fix(redesign?) project language switching
     - editor handling could be made a bit saner if editor plugin switching was an after-restart-only feature
-    
+
   - Programming Language Support Parts
     - Create base classes for language support parts:
       - AntlrLanguageSupport
@@ -40,16 +40,16 @@
     - There is a possibility to create even something like
       - LanguageSupportBase
 
-    Look at java, pascal and ada support parts to get more inspiration. 
+    Look at java, pascal and ada support parts to get more inspiration.
     There should be base classes for ada, java and pascal language supports - too much code duplication.
- 
+
     - CppSupportPart
       - Extended "make member" functionality - run on a .h to implement stubs for all unimplemented non-abstract methods
       - Code Refactoring
     - text hint type info tooltips (edit mode)
     - text hint value info tooltips (debug mode)
     - Make the language plugin know stuff like what file patterns to look for (for instance, "find in files" needs this)
-    
+
   - Build tools Parts
     - Show .po files in project management
     - Custom actions for groups, targets and files for project managers:
@@ -101,26 +101,27 @@
     - QEditor
       - Replace editors/qeditor/koReplace.* and editors/qeditor/koFind.* with kdelibs/kutils/kreplace.* and kdelibs/kutils/kfind.*
 
-    
+
 \section extensiontodo Extensions / New Functionality:
 
   - Core
     - implement multiple-views per document (why?)
     - Document manager (not obviously useful)
-    - Implement Add Plugin 
+    - Implement Add Plugin
     - Show intro page on startup
   - Programming Language Support Parts
+    - Implement "restart" or reload functionality for project settings(esp. for C++ support and code completion)
   - Build tools Parts
   - Plugins
     - better sourcenav part (all navigation tools should be supported with at least a "back" action - forward much less important)
     - Integrate kontact's TODO-List and knotes plugin. (We need something like a
       server/client system that all the knotes/toto-clients are always synced.)
-    - a generic macro-tool (if possible, probably best implemented as a KTE plugin)
+    - a generic macro-tool (if possible, probably best implemented as a KATE plugin)
     - Free grouping of files in file group plugin
 
 
 \section misctodo Miscellaneous (and possibly invalid) items:
-   
+
   - UI bugs
     - Editor options dialog missing when all views are closed (virtually impossible to fix)
     - If you click an error in the output view, "Next Error"/"Previous
