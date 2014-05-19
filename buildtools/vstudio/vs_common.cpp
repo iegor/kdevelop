@@ -14,6 +14,10 @@
 
 #include "vs_common.h"
 
+#ifndef USE_BOOST
+#error "VStudio: Boost support is no enabled"
+#endif
+
 namespace VStudio {
   /*
   UUID::UUID() {
@@ -47,7 +51,7 @@ namespace VStudio {
 
   QString guid2String(const QUuid &uid) {
 #ifndef QT_NO_QUUID_STRING
-    return uid.toString();
+    return uid.toString().upper();
 #else
     //TODO: Implement this
 #endif

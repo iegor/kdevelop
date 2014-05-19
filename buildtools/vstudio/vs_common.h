@@ -24,7 +24,7 @@
 #endif
 
 // Debug messaging
-#define kddbg kdDebug() << "[-- VS PART --]: "
+#define kddbg kdDebug(9000) << "[ VSPART ] "
 
 #define VSSOLUTION_VERSION 10
 #define VSPART_SOLUTION "vs_solution"
@@ -130,68 +130,45 @@ Environment variables and make arguments can be specified in the project setting
 //Widget data
 #define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
 
+#ifdef USE_BOOST
+#define predeclare_vs_tl_iters(pname, citer, iter) \
+  typedef boost::container::vector<pname>::const_iterator citer; \
+  typedef boost::container::vector<pname>::iterator iter;
+#else
+#error "VStudio: Boost support is no enabled"
+#endif
+
+#define predeclare_vs_typ(cname, pname, citer, iter) \
+  class cname; \
+  typedef cname* pname; \
+  predeclare_vs_tl_iters(pname, citer, iter)
+
 //BEGIN //VStudio namespace
 namespace VStudio {
   class VSPart;
   //===========================================================================
-  // Visual studio model representation classes
+  // General types pre-declaration and simplification
   //===========================================================================
-  class VSEntity;
-  class VSProject;
-  class VSProject_c;
-  class VSSolution;
-  class VSFilter;
-  class VSFile;
-  typedef VSEntity* vse_p; // Pointer typedef for VS entity model representation
-  typedef VSProject* vsp_p; // Pointer typedef for VS project model representation
-  typedef VSSolution* vss_p; // Pointer typedef for VS solution model representation
-  typedef VSFilter* vsf_p; // Pointer typedef for VS filter model representation
-  typedef VSFile* vsfl_p; // Pointer typedef for VS file model representation
-  typedef VSProject_c* vspc_p; // Pointer typedef for VS project (C lang) model representation
+  //===========================================================================
+  // VS model representation classes pre-declaration
+  //===========================================================================
+  predeclare_vs_typ(VSEntity, vse_p, ve_ci, ve_i); // Pointer typedef for VS entity model representation
+  predeclare_vs_typ(VSSolution, vss_p, vs_ci, vs_i); // Pointer typedef for VS solution model representation
+  predeclare_vs_typ(VSProject, vsp_p, vp_ci, vp_i); // Pointer typedef for VS project model representation
+  predeclare_vs_typ(VSProject_c, vspc_p, vpc_ci, vpc_i); // Pointer typedef for VS project (C lang) model representation
+  predeclare_vs_typ(VSFilter, vsf_p, vf_ci, vf_i); // Pointer typedef for VS filter model representation
+  predeclare_vs_typ(VSFile, vsfl_p, vfl_ci, vfl_i); // Pointer typedef for VS file model representation
 
-#ifdef USE_BOOST
-  typedef boost::container::vector<vsp_p>::const_iterator vp_ci;
-  typedef boost::container::vector<vss_p>::const_iterator vs_ci;
-  typedef boost::container::vector<vse_p>::const_iterator ve_ci;
-  typedef boost::container::vector<vsf_p>::const_iterator vf_ci;
-  typedef boost::container::vector<vsfl_p>::const_iterator vfl_ci;
-  typedef boost::container::vector<vspc_p>::const_iterator vpc_ci;
-  typedef boost::container::vector<vsp_p>::iterator vp_i;
-  typedef boost::container::vector<vss_p>::iterator vs_i;
-  typedef boost::container::vector<vse_p>::iterator ve_i;
-  typedef boost::container::vector<vsf_p>::iterator vf_i;
-  typedef boost::container::vector<vsfl_p>::iterator vfl_i;
-  typedef boost::container::vector<vspc_p>::iterator vpc_i;
-#else
-#endif
   //===========================================================================
   // Visual studio UI representation classes
   //===========================================================================
   class VSExplorer;
-  class VSExplorerEntity;
-  class VSSlnNode; // VS solution UI representation
-  class VSPrjNode; // VS project UI representation
-  class VSFltNode; // VS filter UI representation
-  class VSFilNode; // VS file UI representation
-  typedef VSExplorerEntity* uivse_p; // Pointer typedef for VS entity UI representation
-  typedef VSSlnNode* uivss_p; // Pointer typedef for VS solution UI representation
-  typedef VSPrjNode* uivsp_p; // Pointer typedef for VS project UI representation
-  typedef VSFltNode* uivsf_p; // Pointer typedef for VS filter UI representation
-  typedef VSFilNode* uivsfl_p; // Pointer typedef for VS file UI representation
+  predeclare_vs_typ(VSExplorerEntity, uivse_p, uive_ci, uive_i); // Pointer typedef for VS entity UI representation
+  predeclare_vs_typ(VSSlnNode, uivss_p, uivs_ci, uivs_i); // Pointer typedef for VS solution UI representation
+  predeclare_vs_typ(VSPrjNode, uivsp_p, uivp_ci, uivp_i); // Pointer typedef for VS project UI representation
+  predeclare_vs_typ(VSFltNode, uivsf_p, uivf_ci, uivf_i); // Pointer typedef for VS filter UI representation
+  predeclare_vs_typ(VSFilNode, uivsfl_p, uivfl_ci, uivfl_i); // Pointer typedef for VS file UI representation
 
-#ifdef USE_BOOST
-  typedef boost::container::vector<uivse_p>::const_iterator uive_ci;
-  typedef boost::container::vector<uivss_p>::const_iterator uivs_ci;
-  typedef boost::container::vector<uivsp_p>::const_iterator uivp_ci;
-  typedef boost::container::vector<uivsf_p>::const_iterator uivf_ci;
-  typedef boost::container::vector<uivsfl_p>::const_iterator uivfl_ci;
-  typedef boost::container::vector<uivse_p>::iterator uive_i;
-  typedef boost::container::vector<uivss_p>::iterator uivs_i;
-  typedef boost::container::vector<uivsp_p>::iterator uivp_i;
-  typedef boost::container::vector<uivsf_p>::iterator uivf_i;
-  typedef boost::container::vector<uivsfl_p>::iterator uivfl_i;
-#else
-#endif
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
   static const QUuid uid_vs9project_c("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
@@ -202,6 +179,7 @@ namespace VStudio {
   static const QUuid uid_vs9project_cs(0xFAE04EC0, 0x301F, 0x11D3, 0xBF, 0x4B, 0x00, 0xC0, 0x4F, 0x79, 0xEF, 0xBC);
   static const QUuid uid_vs9filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
 #endif
+
   enum e_VSEntityType {
     vs_unknown = 0,
     vs_file,
@@ -230,38 +208,6 @@ namespace VStudio {
     prjs_slnitems,
   };
 
-  /**
-  * Unique identifier class helper
-  * used mostly in VS entities
-  */
-  /*
-  class UUID {
-  public:
-    UUID();
-  private:
-    union {
-      unsigned char m1[32];
-      struct {
-        unsigned int f1;
-        unsigned short s1;
-        unsigned short s2;
-        unsigned short s3;
-        union {
-          unsigned char m2[12];
-          struct {
-            unsigned int f2;
-            unsigned short s4;
-          };
-          struct {
-            unsigned short sx1;
-            unsigned short sx2;
-            unsigned short sx3;
-          };
-        };
-      };
-    };
-  };
-  */
   bool readGUID(QTextStream &tstream, QUuid &uid);
   QString guid2String(const QUuid &uid);
 
