@@ -393,6 +393,10 @@ namespace VStudio {
                   }
                   // kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
                   // prj_active->addDependency((vsp_p)sln->getByUID(uuid2));
+                  VSSolution::vsmd_p mdp = sln->metaDependency(prj_active->uidGet());
+                  if(mdp != 0) {
+                    mdp->addDependency(uuid2);
+                  }
                   ln = str.readLine();
                 }
                 break; }
@@ -632,6 +636,9 @@ namespace VStudio {
     sln_f.close();
     kddbg << "<<<<< Parsing FINISHED >>>>>" << endl;
 
+    if(!sln->updateDependencies()) {
+      kddbg << "Error! Failed to update dependencies.\n";
+    }
     // Create UI representation
     return sln->populateUI();
     // return true;

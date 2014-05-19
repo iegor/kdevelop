@@ -130,6 +130,21 @@ namespace VStudio {
         kddbg << "Error! Solution's projects list is corrupted\n";
       }
     }
+
+    // Delete all meta-dependencies
+#ifdef USE_BOOST
+    for(vsmd_ci mdci=mdeps.begin(); mdci!=mdeps.end(); ++mdci) {
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement later
+#endif
+      if((*mdci) != 0) {
+         delete (*mdci);
+         // (*mdci) = 0;
+      } else {
+        kddbg << "Error! Solution's meta-dependencies tree is corrupted.\n";
+      }
+    }
   }
 
   void VSSolution::insert(vse_p item) {
@@ -278,6 +293,72 @@ namespace VStudio {
       if(!(*it)->populateUI()) return false;
     }
     return true;
+  }
+
+  VSSolution::vsmd_p VSSolution::metaDependency(const QUuid &uuid) {
+    vsmd_p md = 0;
+#ifdef USE_BOOST
+    for(vsmd_i mdci=mdeps.begin(); mdci!=mdeps.end(); ++mdci) {
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement later
+#endif
+      if((*mdci)->uid == uuid) {
+        md = (*mdci);
+        break;
+      }
+    }
+
+    if(md == 0) {
+      md = new VSMetaDependency(uuid);
+      if(md != 0) {
+        mdeps.push_back(md);
+      } else {
+        kddbg << "Error! can't allocate meta-dependency\n";
+      }
+    }
+
+    return md;
+  }
+
+  bool VSSolution::updateDependencies() {
+#ifdef USE_BOOST
+    for(vsmd_ci mdci=mdeps.begin(); mdci!=mdeps.end(); ++mdci) {
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement later
+#endif
+      vsp_p p=(vsp_p)getByUID((*mdci)->uid);
+      if(p != 0) {
+        (*mdci)->syncToPrj(p);
+      } else {
+        kddbg << "Error! Can't find project by uid.\n";
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
+#ifdef USE_BOOST
+    for(boost::container::vector<QUuid>::const_iterator uidc=deps.begin(); uidc!=deps.end(); ++uidc) {
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement later
+#endif
+      prj->addRequirement((*uidc));
+    }
+  }
+
+  void VSSolution::VSMetaDependency::syncFromPrj(vsp_p prj) {
+#ifdef USE_BOOST
+    deps.clear();
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement later
+#endif
+    //TODO: Not sure if this method is needed at all
+    // For not I'll leave it just cleaning the meta-deps tree
   }
 
   //===========================================================================

@@ -68,6 +68,35 @@ namespace VStudio {
 
   class VSSolution : public VSEntity {
     public:
+      predeclare_vs_typ(VSMetaDependency, vsmd_p, vsmd_ci, vsmd_i);
+      class VSMetaDependency {
+        public:
+          VSMetaDependency(const QUuid &uuid) {
+            uid = uuid;
+          }
+          ~VSMetaDependency() {
+          }
+
+          void addDependency(const QUuid &uuid) {
+#ifdef USE_BOOST
+            deps.push_back(uuid);
+#else
+#error "VStudio: Boost support is no enabled"
+#endif
+          }
+
+          void syncToPrj(vsp_p prj);
+          void syncFromPrj(vsp_p prj);
+        public:
+          QUuid uid;
+#ifdef USE_BOOST
+          boost::container::vector<QUuid> deps;
+#else
+#error "VStudio: Boost support is no enabled"
+#endif
+      };
+
+    public:
       VSSolution(const QString &name, const QString &path_rlt);
       VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
       virtual ~VSSolution();
@@ -87,6 +116,8 @@ namespace VStudio {
       void forEachProj(entityFunctor functor);
       void forEachFilter(entityFunctor functor);
       bool populateUI(); // This will populate/update UI items tree
+      vsmd_p metaDependency(const QUuid &uid);
+      bool updateDependencies();
     private:
       QString path_rlt;
       uivss_p uisln;  // UI representation
@@ -94,6 +125,16 @@ namespace VStudio {
       boost::container::vector<vsp_p> projects;
       boost::container::vector<vsf_p> filters;
 #else
+#error "VStudio: Boost support is no enabled"
+#endif
+      /** Meta-dependencies tree
+       * Used to contain raw dependencies for projects
+       * Not filtered and allowed to have a cyclic dependencies
+      */
+#ifdef USE_BOOST
+      boost::container::vector<vsmd_p> mdeps;
+#else
+#error "VStudio: Boost support is no enabled"
 #endif
   };
 
