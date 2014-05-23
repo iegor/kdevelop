@@ -415,9 +415,9 @@ namespace VStudio {
             }
           }
           //END // Read project section info, dependencies
-          //BEGIN // Read and analyze project data
+          //BEGIN // Read and analyze solution unit data
           else {
-            // Read project data
+            // Read solution unit data
             QTextIStream is(&ln);
             bool typeuid_found = false;
             bool prjuid_found = false;
@@ -428,6 +428,7 @@ namespace VStudio {
             e_VSPrjLangType ltyp;
             QString prjname, prjpath_rlt;
             QChar ch(0);
+            vse_p unit(0);
 #ifdef DEBUG
             char latin1ch = 0x00;
 #endif
@@ -484,14 +485,13 @@ namespace VStudio {
 
             switch(typ) {
               case vs_project: {
-                vsp_p prj=0;
                 kddbg << "Project [" << prjLangType2String(ltyp) << "] "
                     << puid.toString() << " \"" << prjname << "\" under: \""
                     << prjpath_rlt << "\"\n";
                 switch(ltyp) {
                   case vs_prjlang_c: {
                     // Create and add model representation
-                    prj = (vsp_p)new VSProject_c(prjname, puid, prjpath_rlt);
+                    unit = new VSProject_c(prjname, puid, prjpath_rlt);
                     break; }
                   case vs_prjlang_cs: {
                     kddbg << "VS Project for C# is not supported\n";
@@ -504,30 +504,29 @@ namespace VStudio {
                     ln = str.readLine();
                     continue; //NOTE: Just skip this unknown project
                 }
-                if(prj==0) {
+                if(unit==0) {
                   kddbg << "Error! Out of memory space" << endl;
                   return false; }
-                sln->insert(prj);
                 // Set most recent "active" project ptr
-                prj_active = prj;
+                prj_active = static_cast<vsp_p>(unit);
                 break; }
               case vs_filter: {
                 kddbg << "Filter " << puid.toString() << " \"" << prjname
                     << "\" under: \"" << prjpath_rlt << "\"\n";
                 // Create and add model representation
-                vsf_p flt = new VSFilter(prjname, puid);
-                if(flt == 0) { kddbg << "Error! Out of memory space" << endl; return false; }
-                sln->insert(flt);
-                // Create and add widget filter item
-                //uivsf_p filter = m_explorer_widget->addFilterNode(sln_n, flt);
+                unit = new VSFilter(prjname, puid);
+                if(unit == 0) {
+                  kddbg << "Error! Out of memory space" << endl;
+                  return false; }
                 break; }
               default:
-                kddbg << "Warning!!! Creation of uncompatible type \""
-                    << type2String(typ) << "\" is requested" << endl;
-                break;
+                kddbg << "Error!!! Uncompatible solution unit type \""
+                    << type2String(typ) << "\" is requested\n";
+                return false;
             }
+            sln->insert(unit);
           }
-          //END // Read and analyze project data
+          //END // Read and analyze solution unit data
           ln = str.readLine();
         }
       }

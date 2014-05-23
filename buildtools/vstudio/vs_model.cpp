@@ -151,14 +151,14 @@ namespace VStudio {
     switch(item->getType()) {
       case vs_project:
 #ifdef USE_BOOST
-        projects.push_back((vsp_p)item);
+        projects.push_back(static_cast<vsp_p>(item));
 #else
         //TODO: Implement this
 #endif
         break;
       case vs_filter:
 #ifdef USE_BOOST
-        filters.push_back((vsf_p)item);
+        filters.push_back(static_cast<vsf_p>(item));
 #else
         //TODO: Implement this
 #endif
@@ -435,14 +435,16 @@ namespace VStudio {
     item->setParent(this); //NOTE: acquires item
   }
 
-  void VSProject::setParent(vss_p pnt) {
-    sln = pnt;
+  void VSProject::setParent(vse_p pnt) {
+    if(sln==0) {
+      sln = static_cast<vss_p>(pnt);
 #ifdef USE_BOOST
-    pnts.push_back(pnt);
+      pnts.push_back(sln);
 #else
-    //TODO: Implement this
+      //TODO: Implement this
 #endif
-    VSEntity::setParent((vse_p)pnt); //NOTE: increases refcount
+      VSEntity::setParent(pnt); //NOTE: increases refcount
+    }
   }
 
   bool VSProject::setRelativePath(const QString &p) {

@@ -146,7 +146,7 @@ namespace VStudio {
 
     // VS Entity methods:
       virtual void insert(vse_p item);
-      virtual void setParent(vss_p parent_sln);
+      virtual void setParent(vse_p parent);
       virtual QString getRelativePath() const { return path_rlt; }
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const; // This will get file in project
