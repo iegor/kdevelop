@@ -260,6 +260,90 @@ namespace VStudio {
   };
   //END VS derived entities
   //===========================================================================
+
+  //===========================================================================
+  //BEGIN VS build entities
+  class VSTool : public VSEntity{
+    public:
+      VSTool(e_VSBuildTool vstl);
+      virtual ~VSTool();
+
+    // VS Entity interface methods:
+      virtual void setName(const QString &name);
+      virtual QString getName() const { return name; }
+
+      virtual QString getRelativePath() const = 0;
+      virtual bool setRelativePath(const QString &path) = 0;
+      virtual vse_p getByUID(const QUuid &uid) const = 0;
+      virtual uivse_p getUI() const = 0;
+
+    // VS Tool interface methods:
+    protected:
+      e_VSBuildTool vstl;
+  };
+
+  class VSToolCompilerMSVC : public VSTool {
+    public:
+      VSToolCompilerMSVC();
+      virtual ~VSToolCompilerMSVC();
+
+    // VS Entity interface methods:
+      virtual QString getRelativePath() const;
+      virtual uivse_p getUI() const;
+    private:
+  };
+
+  class VSToolLinkerMSVC : public VSTool {
+    public:
+      VSToolLinkerMSVC();
+      virtual ~VSToolLinkerMSVC();
+
+    // VS Entity interface methods:
+      virtual QString getRelativePath() const;
+      virtual uivse_p getUI() const;
+    private:
+  };
+
+  class VSToolCompilerMSMidl : public VSTool {
+    public:
+      VSToolCompilerMSMidl();
+      virtual ~VSToolCompilerMSMidl();
+
+    // VS Entity interface methods:
+      virtual QString getRelativePath() const;
+      virtual uivse_p getUI() const;
+    private:
+  };
+
+  class VSPlatform {
+    public:
+      VSPlatform(e_VSPlatform platform);
+      virtual ~VSPlatform();
+
+      e_VSPlatform name() const { return vspl; }
+
+      static const VSPlatform* getVSPlatform(e_VSPlatform vspl);
+
+      //TODO: methods that configure tools like linker or midl
+    protected:
+      e_VSPlatform vspl;
+  };
+
+  class VSConfig : public VSEntity {
+    public:
+      VSConfig(const QString &name, e_VSPlatform vspl);
+      virtual ~VSConfig();
+
+    // VS Entity interface methods:
+      virtual QString getRelativePath() const;
+      virtual bool setRelativePath(const QString &path);
+      virtual vse_p getByUID(const QUuid &uid) const;
+      virtual uivse_p getUI() const;
+    private:
+      const VSPlatform &vspl;
+  };
+  //END VS build entities
+  //===========================================================================
 };
 //END // VStudio namespace
 #endif /*__KDEVPART_VSTUDIOPART_SOLUTION_H__ */

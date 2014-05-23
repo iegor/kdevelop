@@ -898,4 +898,183 @@ namespace VStudio {
   VSProject_c::~VSProject_c() {
   }
   //END // Inherited entity types
+
+  //BEGIN VS build entities
+  //===========================================================================
+  // Visual studio build tool methods
+  //===========================================================================
+  VSTool::VSTool(e_VSBuildTool t)
+  : VSEntity(vs_tool, tool2String(t))
+  , vstl(t) {
+  }
+
+  VSTool::~VSTool() {
+  }
+
+  void VSTool::setName(const QString &/*n*/) {
+#ifdef DEBUG
+    kddbg << "Error! It is impossible to change the name of a build tool.\n"
+        << "\tPlease remove call to this method from your code.\n";
+#endif
+  }
+
+  bool VSTool::setRelativePath(const QString &/*s*/) {
+#ifdef DEBUG
+    kddbg << "Error! It is not possible to change a path to build tool.\n"
+        << "\tPlease remove call to this method from your code.\n";
+#endif
+    return false;
+  }
+
+  vse_p VSTool::getByUID(const QUuid &/*uid*/) const {
+#ifdef DEBUG
+    kddbg << "Error! There is nothing that can be returned from buil tool by uid.\n"
+        << "\tPlease remove call to this method from your code.\n";
+#endif
+    return 0;
+  }
+
+  //===========================================================================
+  // Visual studio "MSVC compiler" build tool methods
+  //===========================================================================
+  VSToolCompilerMSVC::VSToolCompilerMSVC()
+  : VSTool(vstl_compiler) {
+  }
+
+  VSToolCompilerMSVC::~VSToolCompilerMSVC() {
+  }
+
+  QString VSToolCompilerMSVC::getRelativePath() const {
+    return "VStudio/MSVC/CompilerC";
+  }
+
+  uivse_p VSToolCompilerMSVC::getUI() const {
+    //TODO: Implement UI for MSVC compiler build tool
+    return 0;
+  }
+
+  //===========================================================================
+  // Visual studio "MSVC linker" build tool methods
+  //===========================================================================
+  VSToolLinkerMSVC::VSToolLinkerMSVC()
+  : VSTool(vstl_linker) {
+  }
+
+  VSToolLinkerMSVC::~VSToolLinkerMSVC() {
+  }
+
+  QString VSToolLinkerMSVC::getRelativePath() const {
+    return "VStudio/MSVC/LinkerC";
+  }
+
+  uivse_p VSToolLinkerMSVC::getUI() const {
+    //TODO: Implement UI for MSVC linker build tool
+    return 0;
+  }
+
+  //===========================================================================
+  // Visual studio "MSVC linker" build tool methods
+  //===========================================================================
+  VSToolCompilerMSMidl::VSToolCompilerMSMidl()
+  : VSTool(vstl_midl) {
+  }
+
+  VSToolCompilerMSMidl::~VSToolCompilerMSMidl() {
+  }
+
+  QString VSToolCompilerMSMidl::getRelativePath() const {
+    return "VStudio/MSVC/MidlC";
+  }
+
+  uivse_p VSToolCompilerMSMidl::getUI() const {
+    //TODO: Implement UI for MS midl compiler build tool
+    return 0;
+  }
+
+  //===========================================================================
+  // VS WIN32 Platform methods
+  //===========================================================================
+  class VSPlWin32 : public VSPlatform {
+    public:
+      VSPlWin32()
+      : VSPlatform(vspl_win32) {
+      }
+      virtual ~VSPlWin32() {
+      }
+  };
+  static const VSPlWin32 g_Win32Platform;
+
+  //===========================================================================
+  // VS WIN64 Platform methods
+  //===========================================================================
+  class VSPlWin64 : public VSPlatform {
+    public:
+      VSPlWin64()
+      : VSPlatform(vspl_win64) {
+      }
+      virtual ~VSPlWin64() {
+      }
+  };
+  static const VSPlWin64 g_Win64Platform;
+
+  //===========================================================================
+  // VS Platform methods
+  //===========================================================================
+  VSPlatform::VSPlatform(e_VSPlatform p)
+  : vspl(p) {
+  }
+
+  VSPlatform::~VSPlatform() {
+  }
+
+  const VSPlatform* VSPlatform::getVSPlatform(e_VSPlatform p) {
+    switch(p) {
+      case vspl_win32: return static_cast<const VSPlatform*>(&g_Win32Platform);
+      case vspl_win64: return static_cast<const VSPlatform*>(&g_Win64Platform);
+      default: {
+#ifdef DEBUG
+        kddbg << "Error!!! Unsupported platform \"" << platform2String(p)
+            << "\" is requested, aborting\n";
+#endif
+        return 0;
+      }
+    }
+  }
+
+  //===========================================================================
+  // VS Configuration methods
+  //===========================================================================
+  VSConfig::VSConfig(const QString &n, e_VSPlatform p)
+  : VSEntity(vs_config, n)
+  , vspl(*VSPlatform::getVSPlatform(p)) {
+  }
+
+  VSConfig::~VSConfig() {
+  }
+
+  QString VSConfig::getRelativePath() const {
+    return "VStudio/Configuration";
+  }
+
+  bool VSConfig::setRelativePath(const QString &/*s*/) {
+#ifdef DEBUG
+    kddbg << "Error! It is impossible to set the relative path for configuration.\n"
+        << "\tPlease remove call to this method from your code.\n";
+#endif
+    return false;
+  }
+
+  vse_p VSConfig::getByUID(const QUuid &/*uid*/) const {
+#ifdef DEBUG
+    kddbg << "Error! It is impossible to get anything by UID from configuration.\n"
+        << "\tPlease remove call to this method from your code.\n";
+#endif
+    return 0;
+  }
+
+  uivse_p VSConfig::getUI() const {
+    //TODO: Implement UI for VS configuration
+    return 0;
+  }
+  //END VS build entities
 };

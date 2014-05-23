@@ -26,11 +26,23 @@
 // Debug messaging
 #define kddbg kdDebug(9000) << "[ VSPART ] "
 
+// VStudio basic type names
 #define VSSOLUTION_VERSION 10
+#define VSPART_TOOL "vs_tool"
+#define VSPART_CONFIG "vs_config"
 #define VSPART_SOLUTION "vs_solution"
 #define VSPART_PROJECT "vs_project"
 #define VSPART_FILTER "vs_filter"
 #define VSPART_FILE "vs_file"
+
+// VS build tool names
+#define VSTOOL_COMPILER "vstl_compiler"
+#define VSTOOL_LINKER "vstl_linker"
+#define VSTOOL_MIDL "vstl_midl"
+
+// VS platform (arch) names
+#define VSPL_WIN32 "win32"
+#define VSPL_WIN64 "x64"
 
 // Language of project
 #define VSPART_PRJLANG_CPP "vs_prjlang_c"
@@ -169,6 +181,13 @@ namespace VStudio {
   predeclare_vs_typ(VSFltNode, uivsf_p, uivf_ci, uivf_i); // Pointer typedef for VS filter UI representation
   predeclare_vs_typ(VSFilNode, uivsfl_p, uivfl_ci, uivfl_i); // Pointer typedef for VS file UI representation
 
+  //===========================================================================
+  // VS build system classes
+  //===========================================================================
+  predeclare_vs_typ(VSConfig, vscf_p, vscf_ci, vscf_i); // VS Configuration
+  predeclare_vs_typ(VSPlatform, vspl_p, vspl_ci, vspl_i); // VS Platform
+  predeclare_vs_typ(VSTool, vstl_p, vstl_ci, vstl_i); // VS Build tool
+
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
   static const QUuid uid_vs9project_c("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
@@ -186,6 +205,8 @@ namespace VStudio {
     vs_filter,
     vs_project,
     vs_solution,
+    vs_config,
+    vs_tool,
   };
 
   enum e_VSPrjLangType {
@@ -208,6 +229,19 @@ namespace VStudio {
     prjs_slnitems,
   };
 
+  enum e_VSPlatform {
+    vspl_unknown = 0,
+    vspl_win32,
+    vspl_win64,
+  };
+
+  enum e_VSBuildTool {
+    vstl_unknown = 0,
+    vstl_compiler,
+    vstl_linker,
+    vstl_midl,
+  };
+
   bool readGUID(QTextStream &tstream, QUuid &uid);
   QString guid2String(const QUuid &uid);
 
@@ -225,6 +259,12 @@ namespace VStudio {
 
   QString prjSectionType2String(e_VSPrjSection type);
   e_VSPrjSection string2PrjSectionType(const QString &type);
+
+  QString platform2String(e_VSPlatform platform);
+  e_VSPlatform string2Platform(const QString &platform);
+
+  QString tool2String(e_VSBuildTool vstl);
+  e_VSBuildTool string2Tool(const QString &vstl);
 
   typedef bool (*entityFunctor)(vse_p entity);
 };

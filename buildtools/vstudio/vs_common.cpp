@@ -72,6 +72,8 @@ namespace VStudio {
 
   QString type2String(e_VSEntityType typ) {
     switch(typ) {
+      case vs_tool: return VSPART_TOOL;
+      case vs_config: return VSPART_CONFIG;
       case vs_solution: return VSPART_SOLUTION;
       case vs_project: return VSPART_PROJECT;
       case vs_filter: return VSPART_FILTER;
@@ -81,7 +83,9 @@ namespace VStudio {
   }
 
   e_VSEntityType string2Type(const QString &typ) {
-    if(typ == VSPART_SOLUTION) return vs_solution;
+    if(typ == VSPART_TOOL) return vs_tool;
+    else if(typ == VSPART_CONFIG) return vs_config;
+    else if(typ == VSPART_SOLUTION) return vs_solution;
     else if(typ == VSPART_PROJECT) return vs_project;
     else if(typ == VSPART_FILTER) return vs_filter;
     else if(typ == VSPART_FILE) return vs_file;
@@ -132,5 +136,35 @@ namespace VStudio {
     if(typ == VSPART_PRJSECTION_DEPENDENCIES) return prjs_dependencies;
     else if(typ == VSPART_PRJSECTION_SLNITEMS) return prjs_slnitems;
     else return prjs_unknown;
+  }
+
+  QString platform2String(e_VSPlatform p) {
+    switch(p) {
+      case vspl_win32: return VSPL_WIN32;
+      case vspl_win64: return VSPL_WIN64;
+      default: return "unknown";
+    }
+  }
+
+  e_VSPlatform string2Platform(const QString &s) {
+    if(s == VSPL_WIN32) return vspl_win32;
+    else if(s == VSPL_WIN64) return vspl_win64;
+    else return vspl_unknown;
+  }
+
+  QString tool2String(e_VSBuildTool t) {
+    switch(t) {
+      case vstl_compiler: return VSTOOL_COMPILER;
+      case vstl_linker: return VSTOOL_LINKER;
+      case vstl_midl: return VSTOOL_MIDL;
+      default: return "unknown";
+    }
+  }
+
+  e_VSBuildTool string2Tool(const QString &s) {
+    if(s == VSTOOL_COMPILER) return vstl_compiler;
+    else if(s == VSTOOL_LINKER) return vstl_linker;
+    else if(s == VSTOOL_MIDL) return vstl_midl;
+    else return vstl_unknown;
   }
 };
