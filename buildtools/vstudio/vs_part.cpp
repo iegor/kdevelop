@@ -554,8 +554,16 @@ namespace VStudio {
             switch(stype) {
               //BEGIN // SolutionConfigurationPlatforms
               case slns_sln_cfgplatforms: {
+                // ln = str.readLine();
                 while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-                  // kddbg << sname << ": " << ln << endl;
+#ifdef DEBUG
+                  kddbg << sname << ": " << ln << endl;
+#endif
+                  QRegExp rx("^\t\t(.+\|\w+)\ \=\ (.+\|\w+)$");
+                  if(-1 != rx.search(ln)) {
+                    kddbg << "Left part: " << rx.cap(1) << endl;
+                    kddbg << "Right part: " << rx.cap(2) << endl;
+                  }
                   ln = str.readLine();
                 }
                 break; }
