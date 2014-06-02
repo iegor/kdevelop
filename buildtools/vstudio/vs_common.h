@@ -41,7 +41,7 @@
 #define VSTOOL_MIDL "vstl_midl"
 
 // VS platform (arch) names
-#define VSPL_WIN32 "win32"
+#define VSPL_WIN32 "Win32"
 #define VSPL_WIN64 "x64"
 
 // Language of project
