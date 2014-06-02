@@ -75,8 +75,9 @@ namespace VStudio {
   }
 
   void VSEntity::setParent(vse_p pnt) {
-    kddbg << type2String(getType()) << " \"" << getName() << "\" is parented by "
+    /* kddbg << type2String(getType()) << " \"" << getName() << "\" is parented by "
         << type2String(pnt->getType()) << " \"" << pnt->getName() << "\"\n";
+    */
     acquire();
   }
 
@@ -476,7 +477,7 @@ namespace VStudio {
     if(uiprj==0) {
       uiprj = part()->explorerWidget()->addProjectNode(uipnt, this);
       if(uiprj==0) { kddbg << "failed to add prj UI node" << endl; return false; }
-      kddbg << "Prj: " << name << " in " << uipnt->getName() << endl;
+      // kddbg << "Prj: " << name << " in " << uipnt->getName() << endl;
     }
     return true;
   }
@@ -777,7 +778,7 @@ namespace VStudio {
     if(uiflt==0) {
       uiflt = part()->explorerWidget()->addFilterNode(parent->getUI(), this);
       if(uiflt==0) { kddbg << "failed to add filter UI node" << endl; return false; }
-      kddbg << "Flt: " << name << " in " << parent->getName() << endl;
+      // kddbg << "Flt: " << name << " in " << parent->getName() << endl;
     }
     return true;
   }

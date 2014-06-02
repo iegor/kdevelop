@@ -485,9 +485,10 @@ namespace VStudio {
 
             switch(typ) {
               case vs_project: {
-                kddbg << "Project [" << prjLangType2String(ltyp) << "] "
+                /* kddbg << "Project [" << prjLangType2String(ltyp) << "] "
                     << puid.toString() << " \"" << prjname << "\" under: \""
                     << prjpath_rlt << "\"\n";
+                */
                 switch(ltyp) {
                   case vs_prjlang_c: {
                     // Create and add model representation
@@ -511,8 +512,9 @@ namespace VStudio {
                 prj_active = static_cast<vsp_p>(unit);
                 break; }
               case vs_filter: {
-                kddbg << "Filter " << puid.toString() << " \"" << prjname
+                /* kddbg << "Filter " << puid.toString() << " \"" << prjname
                     << "\" under: \"" << prjpath_rlt << "\"\n";
+                */
                 // Create and add model representation
                 unit = new VSFilter(prjname, puid);
                 if(unit == 0) {
@@ -620,9 +622,10 @@ namespace VStudio {
                       continue;
                     }
                   }
-                  kddbg << type2String(cnt->getType()) << " \"" << cnt->getName()
+                  /* kddbg << type2String(cnt->getType()) << " \"" << cnt->getName()
                       << "\" <<< " << type2String(ent->getType()) << " \""
                       << ent->getName() << "\"\n";
+                  */
                   cnt->insert(ent);
                   ln = str.readLine();
                 }
@@ -725,7 +728,7 @@ namespace VStudio {
           break;
       }
     }
-    kddbg << "| Section: " << nm << " set: " << prm << " |\n";
+    // kddbg << "| Section: " << nm << " set: " << prm << " |\n";
     return true;
   }
 
