@@ -118,12 +118,14 @@ namespace VStudio {
       bool populateUI(); // This will populate/update UI items tree
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
+      bool addConfiguration(const QString &config);
     private:
       QString path_rlt;
       uivss_p uisln;  // UI representation
 #ifdef USE_BOOST
       boost::container::vector<vsp_p> projects;
       boost::container::vector<vsf_p> filters;
+      pv_VSConfig cfgs;  // Configurations
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -332,6 +334,8 @@ namespace VStudio {
   class VSConfig : public VSEntity {
     public:
       VSConfig(const QString &name, e_VSPlatform vspl);
+      VSConfig(const QString &name, const QString &vspl);
+      VSConfig(const QString &config);
       virtual ~VSConfig();
 
     // VS Entity interface methods:
@@ -339,6 +343,9 @@ namespace VStudio {
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+
+    // VS Config interface methods:
+      e_VSPlatform platform() { return vspl.name(); }
     private:
       const VSPlatform &vspl;
   };

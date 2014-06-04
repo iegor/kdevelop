@@ -340,6 +340,27 @@ namespace VStudio {
     return true;
   }
 
+  bool VSSolution::addConfiguration(const QString &c) {
+    QString name, platform;
+    name = c.left(c.find('|'));
+    platform = c.mid(c.find('|')+1);
+    vcfg_p pc = new VSConfig(name, platform);
+    if(pc != 0) {
+#ifdef USE_BOOST
+      cfgs.push_back(pc);
+#else
+#error "VStudio: Boost support is no enabled"
+      //TODO: Implement this
+#endif
+      kddbg << type2String(pc->getType()) << " \"" << pc->getName() <<
+           "\" [" << platform2String(pc->platform()) << "] added.\n";
+    } else {
+      kddbg << "Error! Can't create vs config, low mem.\n";
+      return false;
+    }
+    return true;
+  }
+
   void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
 #ifdef USE_BOOST
     for(boost::container::vector<QUuid>::const_iterator uidc=deps.begin(); uidc!=deps.end(); ++uidc) {
@@ -1048,6 +1069,19 @@ namespace VStudio {
   VSConfig::VSConfig(const QString &n, e_VSPlatform p)
   : VSEntity(vs_config, n)
   , vspl(*VSPlatform::getVSPlatform(p)) {
+  }
+
+  VSConfig::VSConfig(const QString &n, const QString &p)
+  : VSEntity(vs_config, n)
+  , vspl(*VSPlatform::getVSPlatform(string2Platform(p))) {
+    kddbg << "VSConfig: " << n << " [" << p << "]\n";
+  }
+
+  VSConfig::VSConfig(const QString &config)
+  : VSEntity(vs_config, config.left(config.find('|')))
+  , vspl(*VSPlatform::getVSPlatform(string2Platform(config.right(config.find('|', -1))))) {
+    kddbg << "VSConfig: (" << config << ") " << config.left(config.find('|')) <<
+        " [" << config.right(config.find('|', -1)) << "]\n";
   }
 
   VSConfig::~VSConfig() {
