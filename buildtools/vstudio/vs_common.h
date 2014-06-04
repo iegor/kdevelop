@@ -146,6 +146,9 @@ Environment variables and make arguments can be specified in the project setting
 #define predeclare_vs_tl_iters(pname, citer, iter) \
   typedef boost::container::vector<pname>::const_iterator citer; \
   typedef boost::container::vector<pname>::iterator iter;
+#define predeclare_vs_tl_vector(name) \
+  typedef boost::container::vector<name> v_##name; \
+  typedef boost::container::vector<name*> pv_##name;
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -153,7 +156,8 @@ Environment variables and make arguments can be specified in the project setting
 #define predeclare_vs_typ(cname, pname, citer, iter) \
   class cname; \
   typedef cname* pname; \
-  predeclare_vs_tl_iters(pname, citer, iter)
+  predeclare_vs_tl_iters(pname, citer, iter); \
+  predeclare_vs_tl_vector(cname);
 
 //BEGIN //VStudio namespace
 namespace VStudio {
@@ -170,6 +174,7 @@ namespace VStudio {
   predeclare_vs_typ(VSProject_c, vspc_p, vpc_ci, vpc_i); // Pointer typedef for VS project (C lang) model representation
   predeclare_vs_typ(VSFilter, vsf_p, vf_ci, vf_i); // Pointer typedef for VS filter model representation
   predeclare_vs_typ(VSFile, vsfl_p, vfl_ci, vfl_i); // Pointer typedef for VS file model representation
+  predeclare_vs_typ(VSConfig, vcfg_p, vcfg_ci, vcfg_i); //Pointer typedef for VS configuration model representation
 
   //===========================================================================
   // Visual studio UI representation classes
