@@ -92,6 +92,7 @@ namespace VStudio {
 #ifdef USE_BOOST
           boost::container::vector<QUuid> deps;
 #else
+          //TODO: Implement this
 #error "VStudio: Boost support is no enabled"
 #endif
       };
@@ -123,8 +124,8 @@ namespace VStudio {
       QString path_rlt;
       uivss_p uisln;  // UI representation
 #ifdef USE_BOOST
-      boost::container::vector<vsp_p> projects;
-      boost::container::vector<vsf_p> filters;
+      pv_VSProject projects;
+      pv_VSFilter filters;
       pv_VSConfig cfgs;  // Configurations
 #else
 #error "VStudio: Boost support is no enabled"

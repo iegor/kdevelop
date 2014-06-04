@@ -495,7 +495,8 @@ namespace VStudio {
                     unit = new VSProject_c(prjname, puid, prjpath_rlt);
                     break; }
                   case vs_prjlang_cs: {
-                    kddbg << "VS Project for C# is not supported\n";
+                    kddbg << "VS Project for C# \"" << guid2String(puid) <<
+                        "\" is not supported\n";
                     ln = str.readLine();
                     continue; }
                   default:
