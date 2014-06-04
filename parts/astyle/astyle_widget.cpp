@@ -514,6 +514,7 @@ class RemoteServicePrivate;\n\n\
 /**\nRemoteService class...\n\n\n\
 @short class representing service announced on remote machine.\n\
 @author Jakub Stachowski\n*/\n\
+struct point { union { struct { short x,y; }; unsigned int pos; }; };\
 class KDNSSD_EXPORT RemoteService : public QObject, public ServiceBase\n{\n\
 Q_OBJECT\n\
 public:\n\
