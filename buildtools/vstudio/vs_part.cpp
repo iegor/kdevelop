@@ -562,11 +562,19 @@ namespace VStudio {
 #ifdef DEBUG
                   kddbg << sname << ": " << ln << endl;
 #endif
+                  QString conf_name;
+                  QString c_internal_name;
                   QRegExp rx("^\t\t(.+\|\w+)\ \=\ (.+\|\w+)$");
                   if(-1 != rx.search(ln)) {
-                    kddbg << "Left part: " << rx.cap(1) << endl;
-                    kddbg << "Right part: " << rx.cap(2) << endl;
+                    conf_name = rx.cap(1);
+                    c_internal_name = rx.cap(2);
                   }
+#ifdef DEBUG
+                  kddbg << "Configuration: " << conf_name << " presented as: "
+                      << c_internal_name << endl;
+#endif
+                  // Create and add configuration
+                  sln->addConfiguration(conf_name);
                   ln = str.readLine();
                 }
                 break; }
