@@ -76,6 +76,7 @@ namespace VStudio {
     void slotSetEntityRltPath(); //TODO: Remove that later, that will be part of test only
     void slotConfigureEntity();
     void slotRenameEntity();
+    void slotActivateEntity();
 
   private:
     VSPart *m_part;

@@ -131,6 +131,7 @@ namespace VStudio {
           menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(i->getModel()->getName()));
           actSetEntityRltPath->plug(&menu);
           actRenameEntity->plug(&menu);
+          menu.insertItem("Activate", this, SLOT(slotActivateEntity()));
           menu.insertSeparator();
           actCfgEntity->plug(&menu);
           break; }
@@ -191,9 +192,9 @@ namespace VStudio {
     QPtrList<QListViewItem> items = m_listView->selectedItems();
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
-      if(ent->getType() == vs_solution) {
-        m_part->saveVsSolution((vss_p)ent->getModel());
-      }
+      // if(ent->getType() == vs_solution) {
+      //   m_part->saveVsSolution((vss_p)ent->getModel());
+      // }
     }
   }
 
@@ -209,6 +210,23 @@ namespace VStudio {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
       kddbg << "remaning item: " << ent->getModel()->getName() << endl;
       m_listView->rename((*it), 0);
+    }
+  }
+
+  void VSExplorer::slotActivateEntity() {
+    uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
+    if(sel != 0) {
+      switch(sel->getType()) {
+        case vs_solution: {
+          m_part->activateSln(static_cast<vss_p>(sel->getModel()));
+          break; }
+        case vs_project: {
+          break; }
+        default: {
+          kddbg << "Warning! Unsupported type [" << type2String(sel->getType())
+              << "] for activation.\n";
+          break; }
+      }
     }
   }
 
