@@ -93,8 +93,10 @@ namespace VStudio {
     vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
     VSExplorer* explorerWidget() const { return m_explorer_widget; }
 
-    bool setActiveSolution(vss_p sln);
-    vss_p getActiveSolution() const;
+    bool selectSln(vss_p sln);
+    vss_p getSelectedSln() const;
+    bool activateSln(vss_p sln);
+    vss_p getActiveSln() const;
 
   private:
     bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
@@ -118,6 +120,8 @@ namespace VStudio {
 
     void slotSelectCfgName(QListViewItem *item);
     void slotSelectCfgPlatform(QListViewItem *item);
+
+    // void slot( const QString &);
 
   private:
     KAction *actAddSolution;
@@ -143,7 +147,8 @@ namespace VStudio {
     QString m_projectPath;
     QMap<QString, QDateTime> m_timestamp;
 
-    vss_p m_active_sln; // Active solution
+    vss_p selected_sln;
+    vss_p active_sln;
 #ifdef USE_BOOST
     pv_VSEntity m_entities;     // Solutions
 #else

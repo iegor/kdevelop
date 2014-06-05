@@ -57,7 +57,8 @@ namespace VStudio {
 
   VSPart::VSPart(QObject *parent, const char *name, const QStringList &/*args*/)
     : KDevBuildTool(&data, parent, name ? name : "VSPart")
-    , m_active_sln(0) {
+    , active_sln(0)
+    , selected_sln(0) {
     setInstance(VSFactory::instance());
     setXMLFile("kdevpart_vs.rc");
 
@@ -173,24 +174,28 @@ namespace VStudio {
                                         VSPART_ACTION_CONFIGURATION_CFGNAME, true);
     connect(actConfigName->view(), SIGNAL(activated(QListViewItem*)), this, SLOT(slotSelectCfgName(QListViewItem*)));
     // actConfigName->view()->setEditable(false);
+    actConfigName->view()->setDuplicatesEnabled(false);
+    actConfigName->view()->setAutoCompletion(false);
     // connect(actConfigName->view(), SIGNAL(focusGranted()), navigator, SLOT(functionNavFocused()));
     // connect(actConfigName->view(), SIGNAL(focusLost()), navigator, SLOT(functionNavUnFocused()));
     actConfigName->setToolTip(i18n(VSPART_ACTION_CONFIGURATION_CFGNAME_TIP));
     actConfigName->setWhatsThis(i18n(VSPART_ACTION_CONFIGURATION_CFGNAME_WIT));
     actConfigName->setGroup(VSPART_ACTION_TOOLS_GROUP);
-    actConfigName->view()->setCurrentText(QString("test"));
-    actConfigName->view()->setDefaultText(QString("test: default text"));
+    // actConfigName->view()->setCurrentText(QString("test"));
+    // actConfigName->view()->setDefaultText(QString("test: default text"));
 
     // Configuration platform action
     actConfigPlatform = new KListViewAction(new KComboView(false, 100, 0, "actConfigPlatform"),
                                             i18n("Configuration platform"), 0, 0, 0, actionCollection(),
                                                 VSPART_ACTION_CONFIGURATION_CFGPLATFORM, true);
     connect(actConfigPlatform->view(), SIGNAL(activated(QListViewItem*)), this, SLOT(slotSelectCfgPlatform(QListViewItem*)));
+    actConfigPlatform->view()->setDuplicatesEnabled(false);
+    actConfigPlatform->view()->setAutoCompletion(false);
     actConfigPlatform->setToolTip(i18n(VSPART_ACTION_CONFIGURATION_CFGPLATFORM_TIP));
     actConfigPlatform->setWhatsThis(i18n(VSPART_ACTION_CONFIGURATION_CFGPLATFORM_WIT));
     actConfigPlatform->setGroup(VSPART_ACTION_TOOLS_GROUP);
-    actConfigPlatform->view()->setCurrentText(QString("test"));
-    actConfigPlatform->view()->setDefaultText(QString("test: default text"));
+    // actConfigPlatform->view()->setCurrentText(QString("test"));
+    // actConfigPlatform->view()->setDefaultText(QString("test: default text"));
 
     // connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
     // connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
@@ -199,6 +204,9 @@ namespace VStudio {
   }
 
   VSPart::~VSPart() {
+    selected_sln = 0;
+    active_sln = 0;
+
 #ifdef USE_BOOST
     for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
 #else
@@ -232,7 +240,13 @@ namespace VStudio {
     DomUtil::PairList::ConstIterator it;
     for(it = vsitems.begin(); it != vsitems.end(); ++it) {
       if(!loadVsSolution((*it).first, (*it).second)) {
-        continue; } }
+        continue;
+      }
+    }
+
+    // Set active solution
+    QString activesln = DomUtil::readEntry(dom, "kdevvstudioproject/general/active_sln");
+    kddbg << "Activate: " << activesln << endl;
 
     KDevProject::openProject(dirName, projectName);
   }
@@ -686,11 +700,6 @@ namespace VStudio {
     if(!sln->updateDependencies()) {
       kddbg << "Error! Failed to update dependencies.\n";
     }
-    //Set latest configuration
-    //NOTE: That is for now only
-    //TODO: Make configuration selection depend on saved settings
-    //  NOTE: Part of meta-information for solutions and projects
-    //sln->setConfiguration(QString::null);
     // Create UI representation
     return sln->populateUI();
     // return true;
@@ -745,31 +754,90 @@ namespace VStudio {
     return 0;
   }
 
-  bool VSPart::setActiveSolution(vss_p s) {
+  bool VSPart::selectSln(vss_p s) {
     if(s != 0) {
-      m_active_sln = s;
+      selected_sln = s;
 #ifdef DEBUG
       kddbg << "Setting active solution with: " << type2String(s->getType()) << " object\n";
 #endif
       // Update configuration selection combos
       actConfigName->view()->clear();
+      actConfigPlatform->view()->clear();
 #ifdef USE_BOOST
-      for(vcfg_ci it=m_active_sln->vcfg()->begin(); it!=m_active_sln->vcfg()->end(); ++it) {
+      pv_QString names;
+      pv_QString plfms;
 #else
-#error "VStudio: Boost support is no enabled"
-      //TODO: Implement this
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
-        QListViewItem *i = new QListViewItem(actConfigName->view()->listView(), (*it)->toString());
-        actConfigName->view()->addItem(i);
+
+      // Setup configurations for active solution
+#ifdef USE_BOOST
+      for(vcfg_ci it=selected_sln->vcfg()->begin(); it!=selected_sln->vcfg()->end(); ++it) {
+#else
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
+#endif
+
+        // Parse through configuration names and insert new one, if it isn't there
+#ifdef USE_BOOST
+        qstr_ci ciit=names.begin();
+        for(; ciit!=names.end(); ++ciit) {
+#else
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
+#endif
+          if((*ciit) == (*it)->getName()) { break; }
+        }
+        if(ciit == names.end()) {
+          names.push_back((*it)->getName());
+          QListViewItem *i = new QListViewItem(actConfigName->view()->listView(), (*it)->getName());
+          i->setPixmap(0, SmallIcon("gear"));
+          actConfigName->view()->addItem(i);
+        }
+
+        // Parse through platforms and insert new one, if it isn't there yet
+#ifdef USE_BOOST
+        qstr_ci pciit=plfms.begin();
+        for(; pciit!=plfms.end(); ++pciit) {
+#else
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
+#endif
+          if((*pciit) == platform2String((*it)->platform())) { break; }
+        }
+        if(pciit == plfms.end()) {
+          plfms.push_back(platform2String((*it)->platform()));
+          QListViewItem *i = new QListViewItem(actConfigPlatform->view()->listView(), platform2String((*it)->platform()));
+          i->setPixmap(0, SmallIcon("gear"));
+          actConfigPlatform->view()->addItem(i);
+        }
       }
+      //Set latest configuration
+      //NOTE: That is for now only
+      //TODO: Make configuration selection depend on saved settings
+      //  NOTE: Part of meta-information for solutions and projects
+      actConfigName->view()->setCurrentText(names[0]);
+      actConfigPlatform->view()->setCurrentText(plfms[0]);
+      selected_sln->setConfiguration(names[0], plfms[0]);
       return true;
     }
 
     return false;
   }
 
-  /*inline*/ vss_p VSPart::getActiveSolution() const {
-    return m_active_sln;
+  /*inline*/ vss_p VSPart::getSelectedSln() const {
+               return selected_sln;
+  }
+
+  bool VSPart::activateSln(vss_p s) {
+    if(s != 0) {
+      if(active_sln != 0) {
+        static_cast<uivss_p>(active_sln->getUI())->setActive(false);
+      }
+      active_sln = s;
+      static_cast<uivss_p>(active_sln->getUI())->setActive(true);
+    }
+  }
+
+  /*inline*/ vss_p VSPart::getActiveSln() const {
+    return active_sln;
   }
 
   bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {
@@ -871,10 +939,12 @@ namespace VStudio {
     kddbg << "slotCleanFilter test" << endl;
   }
 
-  void VSPart::slotSelectCfgName(QListViewItem *item) {
+  void VSPart::slotSelectCfgName(QListViewItem *i) {
+    selected_sln->setConfiguration(i->text(0), actConfigPlatform->view()->currentText());
   }
 
-  void VSPart::slotSelectCfgPlatform(QListViewItem *item) {
+  void VSPart::slotSelectCfgPlatform(QListViewItem *i) {
+    selected_sln->setConfiguration(actConfigName->view()->currentText(), i->text(0));
   }
   //END // Slot methods
 };

@@ -126,8 +126,8 @@ namespace VStudio {
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType getType() { return typ; }
     QString getName() { return name; }
-    // virtual const vse_p getModelRepresentation() const = 0;
-    virtual vse_p getModelRepresentation() const = 0;
+    // virtual const vse_p getModel() const = 0;
+    virtual vse_p getModel() const = 0;
     virtual QUuid uidGet() const = 0;
 
   protected:
@@ -144,13 +144,16 @@ namespace VStudio {
     virtual ~VSSlnNode();
 
     // VSExplorerEntity interface
-    // virtual const vss_p getModelRepresentation() const { return sln; }
-    virtual vss_p getModelRepresentation() const { return sln; }
-    virtual QUuid uidGet() const { return sln->uidGet(); }
+    // virtual const vss_p getModel() const { return sln; }
+    virtual vse_p getModel() const;
+    virtual QUuid uidGet() const;
 
     // VSSlnNode interface
+    bool isActive() const;
+    void setActive(bool active);
   private:
     vss_p sln;
+    bool active;
 #ifdef USE_BOOST
     boost::container::vector<uivsp_p> projects;
     boost::container::vector<uivsf_p> filters;
@@ -168,9 +171,9 @@ namespace VStudio {
     virtual ~VSPrjNode();
 
     // VSExplorerEntity interface
-    // virtual const vsp_p getModelRepresentation() const { return prj; }
-    virtual vsp_p getModelRepresentation() const { return prj; }
-    virtual QUuid uidGet() const { return prj->uidGet(); }
+    // virtual const vsp_p getModel() const { return prj; }
+    virtual vse_p getModel() const;
+    virtual QUuid uidGet() const;
 
     // VSPrjNode interface
     uivss_p getSolution() const { return sln; }
@@ -194,9 +197,9 @@ namespace VStudio {
     virtual ~VSFltNode();
 
     // VSExplorerEntity interface
-    // virtual const vse_p getModelRepresentation() const { return 0; }
-    virtual vse_p getModelRepresentation() const { return 0; }
-    virtual QUuid uidGet() const { return filter->uidGet(); }
+    // virtual const vse_p getModel() const { return 0; }
+    virtual vse_p getModel() const;
+    virtual QUuid uidGet() const;
 
     // VSFltNode interface
     uivse_p getParent() const { return parent; }
@@ -219,12 +222,12 @@ namespace VStudio {
     virtual ~VSFilNode();
 
     // VSExplorerEntity interface
-    // virtual const vsfl_p getModelRepresentation() const { return file; }
-    virtual vsfl_p getModelRepresentation() const { return file; }
-    virtual QUuid uidGet() const { return file->uidGet(); }
+    // virtual const vsfl_p getModel() const { return file; }
+    virtual vse_p getModel() const;
+    virtual QUuid uidGet() const;
 
     // VSFilNode interface
-    uivsp_p getProject() const { return prj; }
+    uivsp_p getProject() const;
 
   private:
     uivsp_p prj; // Parent project

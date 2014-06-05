@@ -111,7 +111,7 @@ namespace VStudio {
 
     switch(ent->getType()) {
       case vs_solution: {
-        m_part->setActiveSolution(static_cast<vss_p>(ent->getModelRepresentation()));
+        m_part->selectSln(static_cast<vss_p>(ent->getModel()));
       break; }
       case vs_project: {
       break; }
@@ -123,18 +123,43 @@ namespace VStudio {
   }
 
   void VSExplorer::slotContextMenu(KListView */*lv*/, QListViewItem *item, const QPoint &p) {
-    if(!item) {
-      kddbg << "Error! no item" << endl;
-      return;
+    if(item != 0) {
+      KPopupMenu menu(this);
+      uivse_p i = static_cast<uivse_p>(item);
+      switch(i->getType()) {
+        case vs_solution: {
+          menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(i->getModel()->getName()));
+          actSetEntityRltPath->plug(&menu);
+          actRenameEntity->plug(&menu);
+          menu.insertSeparator();
+          actCfgEntity->plug(&menu);
+          break; }
+        case vs_project: {
+          menu.insertTitle(*i->pixmap(0), i18n("Project: \"%1\"").arg(i->getModel()->getName()));
+          actRenameEntity->plug(&menu);
+          menu.insertSeparator();
+          actCfgEntity->plug(&menu);
+          break; }
+        case vs_filter: {
+          menu.insertTitle(*i->pixmap(0), i18n("Filter: \"%1\"").arg(i->getModel()->getName()));
+          actRenameEntity->plug(&menu);
+          menu.insertSeparator();
+          actCfgEntity->plug(&menu);
+          break; }
+        case vs_file: {
+          menu.insertTitle(*i->pixmap(0), i18n("File: \"%1\"").arg(i->getModel()->getName()));
+          actRenameEntity->plug(&menu);
+          menu.insertSeparator();
+          actCfgEntity->plug(&menu);
+          break; }
+        default: {
+          kddbg << "Warning! unsupported item type [" << type2String(i->getType())
+              << "] cant generate context menu.\n";
+          break; }
+      }
+      menu.exec(p);
     }
-
-    VSExplorerEntity *i = (VSExplorerEntity*)item;
-    KPopupMenu menu(this);
-    menu.insertTitle(*i->pixmap(0), i18n("Solution \"%1\"").arg(i->getModelRepresentation()->getName()));
-    actSetEntityRltPath->plug(&menu);
-    actCfgEntity->plug(&menu);
-    actRenameEntity->plug(&menu);
-    menu.exec(p);
+    kddbg << "Warning! no item for context menu.\n";
   }
 
   void VSExplorer::slotEntityRenamed(QListViewItem *item, const QString &name, int /*col*/) {
@@ -143,7 +168,7 @@ namespace VStudio {
       return;
     }
     kddbg << "Entity is renamed to: " << name << endl;
-    ((VSExplorerEntity*)(item))->getModelRepresentation()->setName(name);
+    ((VSExplorerEntity*)(item))->getModel()->setName(name);
   }
 
   void VSExplorer::slotProjectOpened() {
@@ -153,10 +178,10 @@ namespace VStudio {
   }
 
   void VSExplorer::slotSetEntityRltPath() {
-    // ((VSExplorerEntity*)item)->getModelRepresentation()->setRelativePath("");
+    // ((VSExplorerEntity*)item)->getModel()->setRelativePath("");
     /*
-    kddbg << "\"" << ((VSExplorerEntity*)item)->getModelRepresentation()->getName() <<
-        "\" is set to \"" << ((VSExplorerEntity*)item)->getModelRepresentation()->getRelativePath()
+    kddbg << "\"" << ((VSExplorerEntity*)item)->getModel()->getName() <<
+        "\" is set to \"" << ((VSExplorerEntity*)item)->getModel()->getRelativePath()
         << "\"\n";
     */
   }
@@ -167,7 +192,7 @@ namespace VStudio {
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
       if(ent->getType() == vs_solution) {
-        m_part->saveVsSolution((vss_p)ent->getModelRepresentation());
+        m_part->saveVsSolution((vss_p)ent->getModel());
       }
     }
   }
@@ -182,7 +207,7 @@ namespace VStudio {
     QPtrList<QListViewItem> items = m_listView->selectedItems();
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
-      kddbg << "remaning item: " << ent->getModelRepresentation()->getName() << endl;
+      kddbg << "remaning item: " << ent->getModel()->getName() << endl;
       m_listView->rename((*it), 0);
     }
   }
@@ -299,9 +324,11 @@ namespace VStudio {
 
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
     if(getType() == vs_solution) {
-      QFont font(p->font());
-      font.setBold(true);
-      p->setFont(font);
+      if(static_cast<uivss_p>(this)->isActive()) {
+        QFont font(p->font());
+        font.setBold(true);
+        p->setFont(font);
+      }
     }
     QListViewItem::paintCell(p, cg, column, width, alignment);
   }
@@ -311,7 +338,8 @@ namespace VStudio {
   //===========================================================================
   VSSlnNode::VSSlnNode(QListView *lv, vss_p s)
   : VSExplorerEntity(vs_solution, lv, s->getName())
-  , sln(s) {
+  , sln(s)
+  , active(false) {
     name = s->getName();
     setPixmap(0, SmallIcon("home"));
     // item->setText(1, name);
@@ -319,6 +347,22 @@ namespace VStudio {
   }
 
   VSSlnNode::~VSSlnNode() {
+  }
+
+  /*inline*/ vse_p VSSlnNode::getModel() const {
+    return sln;
+  }
+
+  /*inline*/ QUuid VSSlnNode::uidGet() const {
+    return sln->uidGet();
+  }
+
+  /*inline*/ bool VSSlnNode::isActive() const {
+    return active;
+  }
+
+  /*inline*/ void VSSlnNode::setActive(bool a) {
+    active = a;
   }
 
   //===========================================================================
@@ -332,6 +376,14 @@ namespace VStudio {
   }
 
   VSPrjNode::~VSPrjNode() {
+  }
+
+  /*inline*/ vse_p VSPrjNode::getModel() const {
+    return prj;
+  }
+
+  /*inline*/ QUuid VSPrjNode::uidGet() const {
+    return prj->uidGet();
   }
 
   //===========================================================================
@@ -348,6 +400,14 @@ namespace VStudio {
   VSFltNode::~VSFltNode() {
   }
 
+  /*inline*/ vse_p VSFltNode::getModel() const {
+    return filter;
+  }
+
+  /*inline*/ QUuid VSFltNode::uidGet() const {
+    return filter->uidGet();
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity file class methods
   //===========================================================================
@@ -359,6 +419,18 @@ namespace VStudio {
   }
 
   VSFilNode::~VSFilNode() {
+  }
+
+  /*inline*/ vse_p VSFilNode::getModel() const {
+    return file;
+  }
+
+  /*inline*/ QUuid VSFilNode::uidGet() const {
+    return file->uidGet();
+  }
+
+  /*inline*/ uivsp_p VSFilNode::getProject() const {
+    return prj;
   }
 };
 #include "vs_explorer.moc"

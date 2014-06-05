@@ -402,12 +402,21 @@ namespace VStudio {
 #error "VStudio: Boost support is no enabled"
       //TODO: Implement this
 #endif
-        VSConfig &cfg(*(*it));
+        // VSConfig &cfg(*(*it));
         if((*it)->toString() == c) {
-          kddbg << (*it)->toString() << " = " << c << endl;
+          config = (*it);
+          break;
         }
       }
+      if(config == 0) {
+        kddbg << "Error! Current config is 0.\n";
+        return false;
+      }
+      kddbg << "Applying config: " << config->toString() << endl;
+    } else if(n == QString::null || p == QString::null) {
+      kddbg << "Warning! either name of platform is undefined.\n";
     }
+    return true;
   }
 
   /*inline*/ const pv_VSConfig* VSSolution::vcfg() const {
