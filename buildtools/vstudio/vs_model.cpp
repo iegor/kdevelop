@@ -94,13 +94,15 @@ namespace VStudio {
   VSSolution::VSSolution(const QString &nm, const QString &path)
   : VSEntity(vs_solution, nm)
   , path_rlt(path)
-  , uisln(0) {
+  , uisln(0)
+  , config(0) {
   }
 
   VSSolution::VSSolution(const QString &nm, const QUuid &uid, const QString &path)
   : VSEntity(vs_solution, nm, uid)
   , path_rlt(path)
-  , uisln(0) {
+  , uisln(0)
+  , config(0) {
   }
 
   VSSolution::~VSSolution() {
@@ -110,6 +112,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
+#error "VStudio: Boost support is no enabled"
       //TODO: Implement this
 #endif
       if((*it) != 0) {
@@ -119,11 +122,22 @@ namespace VStudio {
       }
     }
 
+    // Delete all configurations
+    setConfiguration(QString::null);
+#ifdef USE_BOOST
+    for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
+#else
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement this
+#endif
+    }
+
     // Delete all projects
 #ifdef USE_BOOST
     for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
-      //TODO: Implement this
+#error "VStudio: Boost support is no enabled"
+    //TODO: Implement this
 #endif
       if((*it) != 0) {
         if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
@@ -341,10 +355,15 @@ namespace VStudio {
   }
 
   bool VSSolution::addConfiguration(const QString &c) {
-    QString name, platform;
-    name = c.left(c.find('|'));
-    platform = c.mid(c.find('|')+1);
-    vcfg_p pc = new VSConfig(name, platform);
+    return addConfiguration(c.left(c.find('|')), c.mid(c.find('|')+1));
+  }
+
+  bool VSSolution::addConfiguration(const QString &n, e_VSPlatform p) {
+    return addConfiguration(n, platform2String(p));
+  }
+
+  bool VSSolution::addConfiguration(const QString &n, const QString &p) {
+    vcfg_p pc = new VSConfig(n, p);
     if(pc != 0) {
 #ifdef USE_BOOST
       cfgs.push_back(pc);
@@ -352,13 +371,47 @@ namespace VStudio {
 #error "VStudio: Boost support is no enabled"
       //TODO: Implement this
 #endif
-      kddbg << type2String(pc->getType()) << " \"" << pc->getName() <<
+           kddbg << type2String(pc->getType()) << " \"" << pc->getName() <<
            "\" [" << platform2String(pc->platform()) << "] added.\n";
     } else {
       kddbg << "Error! Can't create vs config, low mem.\n";
       return false;
     }
     return true;
+  }
+
+  bool VSSolution::setConfiguration(const QString &c) {
+    if(c != QString::null) {
+      return setConfiguration(c.left(c.find('|')), c.mid(c.find('|')+1));
+    } else {
+      return setConfiguration(QString::null, QString::null);
+    }
+  }
+
+  bool VSSolution::setConfiguration(const QString &n, e_VSPlatform p) {
+    return setConfiguration(n, platform2String(p));
+  }
+
+  bool VSSolution::setConfiguration(const QString &n, const QString &p) {
+    if(n != QString::null && p != QString::null) {
+      QString c(n);
+      c.append('|').append(p);
+#ifdef USE_BOOST
+      for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
+#else
+#error "VStudio: Boost support is no enabled"
+      //TODO: Implement this
+#endif
+        VSConfig &cfg(*(*it));
+        if((*it)->toString() == c) {
+          kddbg << (*it)->toString() << " = " << c << endl;
+        }
+      }
+    }
+  }
+
+  /*inline*/ const pv_VSConfig* VSSolution::vcfg() const {
+    return &cfgs;
   }
 
   void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
@@ -1110,6 +1163,16 @@ namespace VStudio {
   uivse_p VSConfig::getUI() const {
     //TODO: Implement UI for VS configuration
     return 0;
+  }
+
+  bool VSConfig::operator ==(const VSConfig &c) const {
+    return ((name == c.getName()) && (vspl.name() == c.platform()));
+  }
+
+  QString VSConfig::toString() {
+    QString config;
+    config.append(name).append('|').append(platform2String(vspl.name()));
+    return config;
   }
   //END VS build entities
 };

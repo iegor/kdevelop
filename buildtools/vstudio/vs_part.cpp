@@ -44,6 +44,8 @@
 #include <kdevplugininfo.h>
 #include <urlutil.h>
 
+#include <kcomboview.h>
+
 #include "vs_part.h"
 #include "vs_model.h"
 
@@ -54,7 +56,8 @@ namespace VStudio {
   K_EXPORT_COMPONENT_FACTORY(libkdevvs, VSFactory(data))
 
   VSPart::VSPart(QObject *parent, const char *name, const QStringList &/*args*/)
-    : KDevBuildTool(&data, parent, name ? name : "VSPart") {
+    : KDevBuildTool(&data, parent, name ? name : "VSPart")
+    , m_active_sln(0) {
     setInstance(VSFactory::instance());
     setXMLFile("kdevpart_vs.rc");
 
@@ -163,6 +166,31 @@ namespace VStudio {
     actCleanFilter->setToolTip(VSPART_ACTION_CLEAN_FILTER_TIP);
     actCleanFilter->setWhatsThis(VSPART_ACTION_CLEAN_FILTER_WIT);
     actCleanFilter->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
+    // Configuration name action
+    actConfigName = new KListViewAction(new KComboView(false, 250, 0, "actConfigName"),
+                                        i18n("Configuration name"), 0, 0, 0, actionCollection(),
+                                        VSPART_ACTION_CONFIGURATION_CFGNAME, true);
+    connect(actConfigName->view(), SIGNAL(activated(QListViewItem*)), this, SLOT(slotSelectCfgName(QListViewItem*)));
+    // actConfigName->view()->setEditable(false);
+    // connect(actConfigName->view(), SIGNAL(focusGranted()), navigator, SLOT(functionNavFocused()));
+    // connect(actConfigName->view(), SIGNAL(focusLost()), navigator, SLOT(functionNavUnFocused()));
+    actConfigName->setToolTip(i18n(VSPART_ACTION_CONFIGURATION_CFGNAME_TIP));
+    actConfigName->setWhatsThis(i18n(VSPART_ACTION_CONFIGURATION_CFGNAME_WIT));
+    actConfigName->setGroup(VSPART_ACTION_TOOLS_GROUP);
+    actConfigName->view()->setCurrentText(QString("test"));
+    actConfigName->view()->setDefaultText(QString("test: default text"));
+
+    // Configuration platform action
+    actConfigPlatform = new KListViewAction(new KComboView(false, 100, 0, "actConfigPlatform"),
+                                            i18n("Configuration platform"), 0, 0, 0, actionCollection(),
+                                                VSPART_ACTION_CONFIGURATION_CFGPLATFORM, true);
+    connect(actConfigPlatform->view(), SIGNAL(activated(QListViewItem*)), this, SLOT(slotSelectCfgPlatform(QListViewItem*)));
+    actConfigPlatform->setToolTip(i18n(VSPART_ACTION_CONFIGURATION_CFGPLATFORM_TIP));
+    actConfigPlatform->setWhatsThis(i18n(VSPART_ACTION_CONFIGURATION_CFGPLATFORM_WIT));
+    actConfigPlatform->setGroup(VSPART_ACTION_TOOLS_GROUP);
+    actConfigPlatform->view()->setCurrentText(QString("test"));
+    actConfigPlatform->view()->setDefaultText(QString("test: default text"));
 
     // connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
     // connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
@@ -658,6 +686,11 @@ namespace VStudio {
     if(!sln->updateDependencies()) {
       kddbg << "Error! Failed to update dependencies.\n";
     }
+    //Set latest configuration
+    //NOTE: That is for now only
+    //TODO: Make configuration selection depend on saved settings
+    //  NOTE: Part of meta-information for solutions and projects
+    //sln->setConfiguration(QString::null);
     // Create UI representation
     return sln->populateUI();
     // return true;
@@ -710,6 +743,33 @@ namespace VStudio {
       }
     }
     return 0;
+  }
+
+  bool VSPart::setActiveSolution(vss_p s) {
+    if(s != 0) {
+      m_active_sln = s;
+#ifdef DEBUG
+      kddbg << "Setting active solution with: " << type2String(s->getType()) << " object\n";
+#endif
+      // Update configuration selection combos
+      actConfigName->view()->clear();
+#ifdef USE_BOOST
+      for(vcfg_ci it=m_active_sln->vcfg()->begin(); it!=m_active_sln->vcfg()->end(); ++it) {
+#else
+#error "VStudio: Boost support is no enabled"
+      //TODO: Implement this
+#endif
+        QListViewItem *i = new QListViewItem(actConfigName->view()->listView(), (*it)->toString());
+        actConfigName->view()->addItem(i);
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  /*inline*/ vss_p VSPart::getActiveSolution() const {
+    return m_active_sln;
   }
 
   bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {
@@ -809,6 +869,12 @@ namespace VStudio {
 
   void VSPart::slotCleanFilter() {
     kddbg << "slotCleanFilter test" << endl;
+  }
+
+  void VSPart::slotSelectCfgName(QListViewItem *item) {
+  }
+
+  void VSPart::slotSelectCfgPlatform(QListViewItem *item) {
   }
   //END // Slot methods
 };

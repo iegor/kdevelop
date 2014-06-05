@@ -45,11 +45,13 @@ namespace VStudio {
 
   class VSExplorer : public VsExplorerWidget {
     Q_OBJECT
+
   public:
     typedef QPtrList<QListViewItem*>::const_iterator pitems_ci;
     typedef QPtrList<QListViewItem*>::iterator pitems_i;
     typedef QPtrList<QListViewItem>::const_iterator items_ci;
     typedef QPtrList<QListViewItem>::iterator items_i;
+
   public:
     VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
     virtual ~VSExplorer();
@@ -60,11 +62,13 @@ namespace VStudio {
     uivsfl_p addFileNode(uivse_p parent, vsfl_p file);
 
     uivse_p getByUID(const QUuid &uid);
+
   protected:
     void contentsContextMenuEvent(QContextMenuEvent*);
     void maybeTip(QPoint const &);
 
   private slots:
+    void slotSelectItem(QListViewItem *item);
     void slotContextMenu(KListView *lv, QListViewItem *item, const QPoint &p);
     void slotEntityRenamed(QListViewItem *item, const QString &str, int col);
     void slotProjectOpened();
@@ -94,15 +98,19 @@ namespace VStudio {
   */
   class SetPathWidget : public QWidget {
     Q_OBJECT
+
   public:
     SetPathWidget(QWidget *parent = 0, const char *name = 0, WFlags fl = 0);
     virtual ~SetPathWidget();
 
     QPushButton* btn_change;
+
   public slots:
     virtual void widgetDestroyed(QObject*);
+
   protected:
     QGridLayout* layout;
+
   protected slots:
     virtual void languageChange();
   };
@@ -121,6 +129,7 @@ namespace VStudio {
     // virtual const vse_p getModelRepresentation() const = 0;
     virtual vse_p getModelRepresentation() const = 0;
     virtual QUuid uidGet() const = 0;
+
   protected:
     e_VSEntityType typ;
     QString name;
@@ -165,6 +174,7 @@ namespace VStudio {
 
     // VSPrjNode interface
     uivss_p getSolution() const { return sln; }
+
   private:
     vsp_p prj;
     uivss_p sln; // Parent solution
@@ -190,6 +200,7 @@ namespace VStudio {
 
     // VSFltNode interface
     uivse_p getParent() const { return parent; }
+
   private:
     vsf_p filter;
     uivse_p parent; // Parent solution or project
@@ -214,6 +225,7 @@ namespace VStudio {
 
     // VSFilNode interface
     uivsp_p getProject() const { return prj; }
+
   private:
     uivsp_p prj; // Parent project
     vsfl_p file;

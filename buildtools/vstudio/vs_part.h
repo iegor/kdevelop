@@ -20,6 +20,7 @@
 #include <qdatetime.h>
 #include <qdir.h>
 #include <kdevgenericfactory.h>
+#include <klistviewaction.h>
 #include "kdevbuildtool.h"
 #include "vs_common.h"
 #include "vs_explorer.h"  // VS Explorer widget
@@ -92,6 +93,9 @@ namespace VStudio {
     vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
     VSExplorer* explorerWidget() const { return m_explorer_widget; }
 
+    bool setActiveSolution(vss_p sln);
+    vss_p getActiveSolution() const;
+
   private:
     bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
     bool parseGUID(QTextIStream &stream, QChar &control_char, QUuid &uid);
@@ -112,6 +116,9 @@ namespace VStudio {
     void slotBuildFilter();
     void slotCleanFilter();
 
+    void slotSelectCfgName(QListViewItem *item);
+    void slotSelectCfgPlatform(QListViewItem *item);
+
   private:
     KAction *actAddSolution;
     KAction *actBuildSolution;
@@ -128,13 +135,17 @@ namespace VStudio {
     KAction *actBuildFilter;
     KAction *actCleanFilter;
 
+    KListViewAction *actConfigName;
+    KListViewAction *actConfigPlatform;
+
     QGuardedPtr<VSExplorer> m_explorer_widget;
     QString m_projectName;
     QString m_projectPath;
     QMap<QString, QDateTime> m_timestamp;
-    // Solutions
+
+    vss_p m_active_sln; // Active solution
 #ifdef USE_BOOST
-    boost::container::vector<vse_p> m_entities;
+    pv_VSEntity m_entities;     // Solutions
 #else
     QPtrList<vse_p> m_entities;
 #endif

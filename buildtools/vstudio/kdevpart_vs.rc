@@ -20,9 +20,17 @@
         <Action name="build_cleanfilter" />
     </Menu>
 </MenuBar>
-<ToolBar name="VSToolBar" noMerge="1">
+<ToolBar name="build" noMerge="1">
+    <text>VS:Build Toolbar</text>
     <Action name="build_buildsolution" group="vstools" />
     <Action name="build_buildproject" group="vstools" />
+</ToolBar>
+<ToolBar name="config">
+    <text>VS:Config Toolbar</text>
+    <Separator/>
+    <Action name="build_cleansolution" />
+    <Action name="config_cfgname" />
+    <Action name="config_cfgplatform" />
 </ToolBar>
 </kpartgui>
 

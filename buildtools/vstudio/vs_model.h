@@ -120,9 +120,16 @@ namespace VStudio {
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
       bool addConfiguration(const QString &config);
+      bool addConfiguration(const QString &name, const QString &platform);
+      bool addConfiguration(const QString &name, e_VSPlatform platform);
+      bool setConfiguration(const QString &config);
+      bool setConfiguration(const QString &name, const QString &platform);
+      bool setConfiguration(const QString &name, e_VSPlatform platform);
+      const pv_VSConfig* vcfg() const;
     private:
       QString path_rlt;
       uivss_p uisln;  // UI representation
+      vcfg_p config; // Active configuration selected for this solution
 #ifdef USE_BOOST
       pv_VSProject projects;
       pv_VSFilter filters;
@@ -346,7 +353,10 @@ namespace VStudio {
       virtual uivse_p getUI() const;
 
     // VS Config interface methods:
-      e_VSPlatform platform() { return vspl.name(); }
+      e_VSPlatform platform() const { return vspl.name(); }
+      QString toString();
+
+      bool operator ==(const VSConfig &config) const;
     private:
       const VSPlatform &vspl;
   };

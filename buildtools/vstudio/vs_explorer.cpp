@@ -87,9 +87,11 @@ namespace VStudio {
     actRenameEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
     connect(m_listView, SIGNAL(contextMenu(KListView*, QListViewItem*, const QPoint&)),
-        this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&)));
+            this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&)));
     connect(m_listView, SIGNAL(itemRenamed(QListViewItem*, const QString&, int)),
-        this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int)));
+            this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int)));
+    connect(m_listView, SIGNAL(selectionChanged(QListViewItem*)),
+            this, SLOT(slotSelectItem(QListViewItem*)));
   }
 
   VSExplorer::~VSExplorer() {
@@ -100,6 +102,24 @@ namespace VStudio {
   //   config->sync();
     delete actions;
     actions = 0;
+  }
+
+  void VSExplorer::slotSelectItem(QListViewItem *item) {
+    uivse_p ent = static_cast<uivse_p>(item);
+    kddbg << "[" << type2String(ent->getType()) << "] "
+        << ent->getName() << " is selected\n";
+
+    switch(ent->getType()) {
+      case vs_solution: {
+        m_part->setActiveSolution(static_cast<vss_p>(ent->getModelRepresentation()));
+      break; }
+      case vs_project: {
+      break; }
+      case vs_filter: {
+      break; }
+      case vs_file: {
+      break; }
+    }
   }
 
   void VSExplorer::slotContextMenu(KListView */*lv*/, QListViewItem *item, const QPoint &p) {

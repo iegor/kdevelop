@@ -139,6 +139,14 @@ Environment variables and make arguments can be specified in the project setting
 #define VSPART_ACTION_RENAME_ENTITY_WIT_LONG \
 "<qt><b>Rename entity</b><p>Change internal name of selected entity.</p></qt>"
 
+#define VSPART_ACTION_CONFIGURATION_CFGNAME "config_cfgname"
+#define VSPART_ACTION_CONFIGURATION_CFGNAME_TIP "Configuration name"
+#define VSPART_ACTION_CONFIGURATION_CFGNAME_WIT "Select the name for configuration to build"
+
+#define VSPART_ACTION_CONFIGURATION_CFGPLATFORM "config_cfgplatform"
+#define VSPART_ACTION_CONFIGURATION_CFGPLATFORM_TIP "Configuration platform"
+#define VSPART_ACTION_CONFIGURATION_CFGPLATFORM_WIT "Select the platform for current configuration"
+
 //Widget data
 #define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
 
