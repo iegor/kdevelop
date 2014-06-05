@@ -20,6 +20,8 @@
 
 #ifdef USE_BOOST
 #include <boost/container/vector.hpp>
+#include <boost/range/algorithm/find.hpp>
+// #include <boost/range/algorithm/find_first_of.hpp>
 #else
 #endif
 
@@ -280,6 +282,16 @@ namespace VStudio {
   e_VSBuildTool string2Tool(const QString &vstl);
 
   typedef bool (*entityFunctor)(vse_p entity);
+
+#ifdef USE_BOOST
+  typedef boost::container::vector<QString> pv_QString;
+  typedef boost::container::vector<QString>::const_iterator qstr_ci;
+  typedef boost::container::vector<QString>::iterator qstr_i;
+  typedef boost::container::vector<QUuid> pv_QUuid;
+  typedef boost::container::vector<QUuid>::const_iterator quid_ci;
+  typedef boost::container::vector<QUuid>::iterator quid_i;
+#else
+#endif
 };
 //END // VStudio namespace
 #endif
