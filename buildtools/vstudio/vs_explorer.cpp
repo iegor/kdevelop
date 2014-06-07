@@ -106,8 +106,10 @@ namespace VStudio {
 
   void VSExplorer::slotSelectItem(QListViewItem *item) {
     uivse_p ent = static_cast<uivse_p>(item);
+#ifdef DEBUG
     kddbg << "[" << type2String(ent->getType()) << "] "
         << ent->getName() << " is selected\n";
+#endif
 
     switch(ent->getType()) {
       case vs_solution: {
@@ -168,13 +170,14 @@ namespace VStudio {
           actCfgEntity->plug(&menu);
           break; }
         default: {
-          kddbg << "Warning! unsupported item type [" << type2String(i->getType())
-              << "] cant generate context menu.\n";
+          kddbg << g_wrn_unsupportedtyp.arg(type2String(i->getType()));
           break; }
       }
       menu.exec(p);
     }
+#ifdef DEBUG
     kddbg << "Warning! no item for context menu.\n";
+#endif
   }
 
   void VSExplorer::slotEntityRenamed(QListViewItem *item, const QString &name, int /*col*/) {
