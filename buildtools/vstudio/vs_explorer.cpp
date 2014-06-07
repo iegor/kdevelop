@@ -112,13 +112,27 @@ namespace VStudio {
     switch(ent->getType()) {
       case vs_solution: {
         m_part->selectSln(static_cast<vss_p>(ent->getModel()));
-      break; }
+        break; }
       case vs_project: {
-      break; }
+        break; }
       case vs_filter: {
-      break; }
+        break; }
       case vs_file: {
-      break; }
+        break; }
+    }
+
+    // Upon selection of project|file|filter select parent solution
+    switch(ent->getType()) {
+      case vs_project:
+      case vs_filter:
+      case vs_file: {
+        vss_p sln = getParentSln(ent->getModel());
+        if(sln != 0) {
+          if(m_part->getSelectedSln() != sln) {
+            m_part->selectSln(sln);
+          }
+        }
+        break; }
     }
   }
 
