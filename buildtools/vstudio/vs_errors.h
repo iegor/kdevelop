@@ -19,11 +19,20 @@
 #define VSPART_WARNING "Warning!!! "
 #endif /* DEBUG */
 
+namespace VStudio {
+#define VSPART_ERR_ENTITYLIST_CORRUPTED VSPART_ERROR \
+  "Part's entities list is corrupted.\n"
+#define VSPART_WRN_CONFIG_NAMEORPLATFORM_UNDEFINED \
+  "Warning! either name of platform is undefined.\n"
+
 #ifdef DEBUG
-#define VSPART_ERROR_ENTITYLIST_CORRUPTED VSPART_ERROR "Part's entities list is corrupted.\n"
 extern const QString g_err_ent_notfound;
+extern const QString g_msg_configapply;
 #endif /* DEBUG */
 
 extern const QString g_err_slnactivate;
+extern const QString g_err_unsupportedtyp;
+extern const QString g_wrn_unsupportedtyp;
+}; /* VStudio namespace */
 
 #endif /* __KDEVPART_VSTUDIOPART_ERRORS_H__ */

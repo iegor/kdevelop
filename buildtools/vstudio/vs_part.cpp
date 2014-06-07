@@ -750,7 +750,7 @@ namespace VStudio {
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
       if((*it)==0) {
-        kddbg << VSPART_ERROR_ENTITYLIST_CORRUPTED;
+        kddbg << VSPART_ERR_ENTITYLIST_CORRUPTED;
         return 0;
       }
       if((*it)->uidGet() == uid) {
@@ -775,7 +775,7 @@ namespace VStudio {
           }
         } else {
 #ifdef DEBUG
-          kddbg << VSPART_ERROR_ENTITYLIST_CORRUPTED;
+          kddbg << VSPART_ERR_ENTITYLIST_CORRUPTED;
 #endif
         }
       }
@@ -867,6 +867,9 @@ namespace VStudio {
       static_cast<uivss_p>(active_sln->getUI())->setActive(true);
       return true;
     }
+#ifdef DEBUG
+    kddbg << g_err_slnactivate.arg("0 ptr");
+#endif
     return false;
   }
 

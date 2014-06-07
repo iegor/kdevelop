@@ -167,9 +167,15 @@ namespace VStudio {
     else if(s == VSTOOL_MIDL) return vstl_midl;
     else return vstl_unknown;
   }
-};
 
+  //===========================================================================
+  // VS Part error message strings:
+  //===========================================================================
 #ifdef DEBUG
-const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found.\n");
-const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");
+  const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found.\n");
+  const QString g_msg_configapply("Applying config: [%1] in {%2}.\n");
 #endif /* DEBUG */
+  const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");
+  const QString g_err_unsupportedtyp(VSPART_ERROR"Type [%1] is unsupported for {%2}.\n");
+  const QString g_wrn_unsupportedtyp(VSPART_WARNING"Type [%1] is unsupported.\n");
+};
