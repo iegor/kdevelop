@@ -168,3 +168,8 @@ namespace VStudio {
     else return vstl_unknown;
   }
 };
+
+#ifdef DEBUG
+const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found.\n");
+const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");
+#endif /* DEBUG */

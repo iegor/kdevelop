@@ -6,7 +6,7 @@ INCLUDES = -I$(top_srcdir)/buildtools/lib -I$(top_srcdir)/buildtools/lib/base \
 	-I$(top_builddir)/buildtools/lib/widgets
 
 noinst_HEADERS = vs_common.h vs_explorer.h vs_explorer_widget.h vs_model.h \
-	vs_part.h
+	vs_part.h vs_errors.h
 kde_module_LTLIBRARIES = libkdevvs.la
 libkdevvs_la_SOURCES = vs_common.cpp vs_explorer.cpp vs_explorer_widget.ui \
 	vs_model.cpp vs_part.cpp

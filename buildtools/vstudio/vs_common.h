@@ -18,6 +18,8 @@
 #include <qtextstream.h>
 #include <quuid.h>
 
+#include "vs_errors.h"
+
 #ifdef USE_BOOST
 #include <boost/container/vector.hpp>
 #include <boost/range/algorithm/find.hpp>
