@@ -74,6 +74,10 @@ namespace VStudio {
     name = nm;
   }
 
+  /*inline*/ const QString& VSEntity::getName() const {
+    return name;
+  }
+
   void VSEntity::setParent(vse_p pnt) {
     /* kddbg << type2String(getType()) << " \"" << getName() << "\" is parented by "
         << type2String(pnt->getType()) << " \"" << pnt->getName() << "\"\n";
@@ -1000,6 +1004,10 @@ namespace VStudio {
     kddbg << "Error! It is impossible to change the name of a build tool.\n"
         << "\tPlease remove call to this method from your code.\n";
 #endif
+  }
+
+  /*inline*/ const QString& VSTool::getName() const {
+    return name;
   }
 
   bool VSTool::setRelativePath(const QString &/*s*/) {

@@ -42,7 +42,7 @@ namespace VStudio {
       inline VSPart* part() const { return sys_part; }
 
       virtual void setName(const QString &name);
-      virtual QString getName() const { return name; }
+      virtual const QString& getName() const;
       virtual void setParent(vse_p parent);
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
@@ -280,7 +280,7 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void setName(const QString &name);
-      virtual QString getName() const { return name; }
+      virtual const QString& getName() const;
 
       virtual QString getRelativePath() const = 0;
       virtual bool setRelativePath(const QString &path) = 0;
