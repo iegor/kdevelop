@@ -194,6 +194,10 @@ namespace VStudio {
     VSEntity::setParent(pnt);
   }
 
+  vse_p VSSolution::getParent() const {
+    return 0;
+  }
+
   bool VSSolution::setRelativePath(const QString &p) {
     if(p.isEmpty()) {
       kddbg << "Can't set empty path" << endl;
@@ -416,9 +420,11 @@ namespace VStudio {
         kddbg << "Error! Current config is 0.\n";
         return false;
       }
-      kddbg << "Applying config: " << config->toString() << endl;
+#ifdef DEBUG
+      kddbg << g_msg_configapply.arg(config->toString());
+#endif
     } else if(n == QString::null || p == QString::null) {
-      kddbg << "Warning! either name of platform is undefined.\n";
+      kddbg << VSPART_WRN_CONFIG_NAMEORPLATFORM_UNDEFINED;
     }
     return true;
   }
@@ -533,6 +539,10 @@ namespace VStudio {
 #endif
       VSEntity::setParent(pnt); //NOTE: increases refcount
     }
+  }
+
+  vse_p VSProject::getParent() const {
+    return sln;
   }
 
   bool VSProject::setRelativePath(const QString &p) {
@@ -834,6 +844,10 @@ namespace VStudio {
     VSEntity::setParent(pnt); //NOTE: increases refcount
   }
 
+  vse_p VSFilter::getParent() const {
+    return parent;
+  }
+
   QString VSFilter::getRelativePath() const {
     return ""; //TODO: make it return path relative to entity it's in
   }
@@ -928,6 +942,10 @@ namespace VStudio {
     //TODO: Implement this
 #endif
     VSEntity::setParent(pnt); //NOTE: increases refcount
+  }
+
+  vse_p VSFile::getParent() const {
+    return parent;
   }
 
   QString VSFile::getRelativePath() const {
@@ -1045,6 +1063,10 @@ namespace VStudio {
     return 0;
   }
 
+  vse_p VSToolCompilerMSVC::getParent() const {
+    return 0;
+  }
+
   //===========================================================================
   // Visual studio "MSVC linker" build tool methods
   //===========================================================================
@@ -1064,6 +1086,10 @@ namespace VStudio {
     return 0;
   }
 
+  vse_p VSToolLinkerMSVC::getParent() const {
+    return 0;
+  }
+
   //===========================================================================
   // Visual studio "MSVC linker" build tool methods
   //===========================================================================
@@ -1080,6 +1106,10 @@ namespace VStudio {
 
   uivse_p VSToolCompilerMSMidl::getUI() const {
     //TODO: Implement UI for MS midl compiler build tool
+    return 0;
+  }
+
+  vse_p VSToolCompilerMSMidl::getParent() const {
     return 0;
   }
 
@@ -1182,6 +1212,10 @@ namespace VStudio {
     return 0;
   }
 
+  vse_p VSConfig::getParent() const {
+    return 0;
+  }
+
   bool VSConfig::operator ==(const VSConfig &c) const {
     return ((name == c.getName()) && (vspl.name() == c.platform()));
   }
@@ -1192,4 +1226,39 @@ namespace VStudio {
     return config;
   }
   //END VS build entities
+
+  vss_p getParentSln(vse_p e) {
+    vss_p sln = 0;
+    if(e != 0) {
+      switch(e->getType()) {
+        case vs_project: {
+          sln = static_cast<vss_p>(e->getParent());
+          break; }
+          case vs_filter: {
+            switch(e->getParent()->getType()) {
+              case vs_solution: {
+                sln = static_cast<vss_p>(e->getParent());
+                break; }
+                case vs_project: {
+                  sln = static_cast<vss_p>(e->getParent()->getParent());
+                  break; }
+            }
+            break; }
+            case vs_file: {
+              switch(e->getParent()->getType()) {
+                case vs_project: {
+                  sln = static_cast<vss_p>(e->getParent());
+                  break; }
+                  case vs_filter: {
+                    sln = static_cast<vss_p>(e->getParent()->getParent());
+                    break; }
+              }
+              break; }
+              default: {
+                kddbg << g_err_unsupportedtyp.arg(type2String(e->getType()));
+              }
+      }
+    }
+    return sln;
+  }
 };

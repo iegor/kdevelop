@@ -51,6 +51,7 @@ namespace VStudio {
       virtual bool setRelativePath(const QString &path) = 0;
       virtual vse_p getByUID(const QUuid &uid) const = 0;
       virtual uivse_p getUI() const = 0;
+      virtual vse_p getParent() const = 0;
     protected:
       QString name;
       QUuid uuid;
@@ -104,12 +105,13 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
+      virtual bool createUI();
       virtual void setParent(vse_p parent);
       virtual QString getRelativePath() const { return path_rlt; }
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const; // This will return project ptr, to reuse code
       virtual uivse_p getUI() const { return (uivse_p)uisln; }
-      virtual bool createUI();
+      virtual vse_p getParent() const;
 
     // VS Solution methods:
       bool dumpLayout(QTextOStream &layout);
@@ -156,12 +158,13 @@ namespace VStudio {
 
     // VS Entity methods:
       virtual void insert(vse_p item);
+      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent);
       virtual QString getRelativePath() const { return path_rlt; }
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const; // This will get file in project
       virtual uivse_p getUI() const { return (uivse_p)uiprj; }
-      virtual bool createUI(uivse_p parent_ui);
+      virtual vse_p getParent() const;
 
     // VS Project methods:
       bool dumpLayout(QTextOStream &layout);
@@ -199,12 +202,13 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
+      virtual bool createUI();
       virtual void setParent(vse_p parent); //NOTE: Inserts this filter into parent's filters
       virtual QString getRelativePath() const;
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uiflt; }
-      virtual bool createUI();
+      virtual vse_p getParent() const;
 
     // VS Filter methods:
       e_VSEntityType getParentType() {
@@ -232,12 +236,13 @@ namespace VStudio {
       virtual ~VSFile();
 
     // VS Entity interface methods:
+      virtual bool createUI(uivse_p ui_parent);
       virtual void setParent(vsp_p parent_prj);
       virtual QString getRelativePath() const;
       virtual bool setRelativePath(const QString &path);
       virtual vsp_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uifl; }
-      virtual bool createUI(uivse_p ui_parent);
+      virtual vse_p getParent() const;
 
     // VS File methods:
     private:
@@ -286,6 +291,7 @@ namespace VStudio {
       virtual bool setRelativePath(const QString &path) = 0;
       virtual vse_p getByUID(const QUuid &uid) const = 0;
       virtual uivse_p getUI() const = 0;
+      virtual vse_p getParent() const = 0;
 
     // VS Tool interface methods:
     protected:
@@ -300,6 +306,7 @@ namespace VStudio {
     // VS Entity interface methods:
       virtual QString getRelativePath() const;
       virtual uivse_p getUI() const;
+      virtual vse_p getParent() const;
     private:
   };
 
@@ -311,6 +318,7 @@ namespace VStudio {
     // VS Entity interface methods:
       virtual QString getRelativePath() const;
       virtual uivse_p getUI() const;
+      virtual vse_p getParent() const;
     private:
   };
 
@@ -322,6 +330,7 @@ namespace VStudio {
     // VS Entity interface methods:
       virtual QString getRelativePath() const;
       virtual uivse_p getUI() const;
+      virtual vse_p getParent() const;
     private:
   };
 
@@ -351,6 +360,7 @@ namespace VStudio {
       virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+      virtual vse_p getParent() const;
 
     // VS Config interface methods:
       e_VSPlatform platform() const { return vspl.name(); }
@@ -362,6 +372,8 @@ namespace VStudio {
   };
   //END VS build entities
   //===========================================================================
+
+  vss_p getParentSln(vse_p entity);
 };
 //END // VStudio namespace
 #endif /*__KDEVPART_VSTUDIOPART_SOLUTION_H__ */
