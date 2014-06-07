@@ -230,16 +230,15 @@ namespace VStudio {
   void VSExplorer::slotActivateEntity() {
     uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
     if(sel != 0) {
-      switch(sel->getType()) {
-        case vs_solution: {
-          m_part->activateSln(static_cast<vss_p>(sel->getModel()));
-          break; }
-        case vs_project: {
-          break; }
-        default: {
-          kddbg << "Warning! Unsupported type [" << type2String(sel->getType())
-              << "] for activation.\n";
-          break; }
+      if(sel->getType() == vs_solution) {
+        // uivss_p prevsln = static_cast<uivss_p>(m_part->getActiveSln()->getUI());
+        m_part->activateSln(static_cast<vss_p>(sel->getModel()));
+        // m_listView->repaintItem(prevsln);
+        // m_listView->repaintItem(sel);
+        //NOTE: Maybe a bit expensive, needs thorough investigation
+        m_listView->triggerUpdate();
+      } else {
+        kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType()));
       }
     }
   }
