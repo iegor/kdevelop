@@ -246,7 +246,13 @@ namespace VStudio {
 
     // Set active solution
     QString activesln = DomUtil::readEntry(dom, "kdevvstudioproject/general/active_sln");
-    kddbg << "Activate: " << activesln << endl;
+    vss_p sln = static_cast<vss_p>(getSlnByName(activesln));
+    if(sln == 0) {
+      kddbg << g_err_slnactivate.arg(activesln);
+    } else {
+      activateSln(sln);
+      selectSln(sln);
+    }
 
     KDevProject::openProject(dirName, projectName);
   }
@@ -381,9 +387,9 @@ namespace VStudio {
     vss_p sln = new VSSolution(internal_name, abspath);
     if(sln == 0) { kddbg << "Can't parse solution file" << endl; return false; }
 #ifdef USE_BOOST
-    m_entities.push_back((vse_p)&sln);
+    m_entities.push_back(sln);
 #else
-    m_entities.append((vse_p)&sln);
+    m_entities.append(sln);
 #endif
 
     while(!str.atEnd()) {
@@ -741,15 +747,41 @@ namespace VStudio {
 #ifdef USE_BOOST
     for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
 #else
-      //TODO: Implement this
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
       if((*it)==0) {
-        kddbg << "Error!!! entity list corrupted" << endl;
+        kddbg << VSPART_ERROR_ENTITYLIST_CORRUPTED;
         return 0;
       }
       if((*it)->uidGet() == uid) {
         return (*it);
       }
+    }
+    return 0;
+  }
+
+  vse_p VSPart::getSlnByName(const QString &n) {
+    if(n != QString::null) {
+#ifdef USE_BOOST
+      for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
+#else
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
+#endif
+        if((*it)!=0) {
+          if((*it)->getName() == n) {
+            if((*it)->getType() == vs_solution) {
+              return (*it);
+            }
+          }
+        } else {
+#ifdef DEBUG
+          kddbg << VSPART_ERROR_ENTITYLIST_CORRUPTED;
+#endif
+        }
+      }
+#ifdef DEBUG
+      kddbg << g_err_ent_notfound.arg(type2String(vs_solution)).arg(n);
+#endif
     }
     return 0;
   }
@@ -833,7 +865,9 @@ namespace VStudio {
       }
       active_sln = s;
       static_cast<uivss_p>(active_sln->getUI())->setActive(true);
+      return true;
     }
+    return false;
   }
 
   /*inline*/ vss_p VSPart::getActiveSln() const {

@@ -91,6 +91,7 @@ namespace VStudio {
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);
     vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
+    vse_p getSlnByName(const QString &name);
     VSExplorer* explorerWidget() const { return m_explorer_widget; }
 
     bool selectSln(vss_p sln);
