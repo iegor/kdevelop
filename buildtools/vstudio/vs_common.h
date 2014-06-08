@@ -30,6 +30,11 @@
 // Debug messaging
 #define kddbg kdDebug(9000) << "[ VSPART ] "
 
+// VStudio XML data layout
+#define VSPART_XML_SECTION "kdevvstudioproject"
+#define VSPART_XML_SECTION_GENERAL VSPART_XML_SECTION"/general"
+#define VSPART_XML_SECTION_ACTIVESLN VSPART_XML_SECTION_GENERAL"/active_sln"
+
 // VStudio basic type names
 #define VSSOLUTION_VERSION 10
 #define VSPART_TOOL "vs_tool"
