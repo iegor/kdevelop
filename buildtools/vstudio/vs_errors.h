@@ -28,9 +28,15 @@ namespace VStudio {
 #ifdef DEBUG
 extern const QString g_err_ent_notfound;
 extern const QString g_msg_configapply;
+extern const QString g_msg_slnselect;
+extern const QString g_msg_entselected;
 #endif /* DEBUG */
 
+extern const QString g_err_list_corrupted;
+extern const QString g_err_nullptr;
 extern const QString g_err_slnactivate;
+extern const QString g_err_slnload;
+extern const QString g_err_prjload;
 extern const QString g_err_unsupportedtyp;
 extern const QString g_wrn_unsupportedtyp;
 }; /* VStudio namespace */
