@@ -128,10 +128,17 @@ namespace VStudio {
       bool setConfiguration(const QString &name, const QString &platform);
       bool setConfiguration(const QString &name, e_VSPlatform platform);
       const pv_VSConfig* vcfg() const;
+      void setActive(bool active=true);
+      bool isActive() const;
+      bool setActivePrj(vsp_p project);
+      bool setActivePrj(const QString &int_name);
+      vsp_p getActivePrj() const;
+      vsp_p getProject(const QString &int_name) const;
     private:
       QString path_rlt;
       uivss_p uisln;  // UI representation
       vcfg_p config; // Active configuration selected for this solution
+      vsp_p actprj; // Active project for this solution
 #ifdef USE_BOOST
       pv_VSProject projects;
       pv_VSFilter filters;
@@ -148,6 +155,7 @@ namespace VStudio {
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
+      bool active;
   };
 
   class VSProject : public VSEntity {
@@ -177,8 +185,10 @@ namespace VStudio {
       bool addRequirement(const QUuid &uid);
       bool populateUI();
       void setLanguage(e_VSPrjLangType lang);
-
       e_VSPrjLangType getLang() { return lang; }
+      void setActive(bool active=true);
+      bool isActive() const;
+
     private:
       e_VSPrjLangType lang; // Project choosen language
       QString path_rlt;
@@ -192,6 +202,7 @@ namespace VStudio {
       boost::container::vector<vsfl_p> files;
 #else
 #endif
+      bool active;
   };
 
   class VSFilter : public VSEntity {

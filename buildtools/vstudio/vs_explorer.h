@@ -150,11 +150,9 @@ namespace VStudio {
     virtual QUuid uidGet() const;
 
     // VSSlnNode interface
-    bool isActive() const;
-    void setActive(bool active);
+
   private:
     vss_p sln;
-    bool active;
 #ifdef USE_BOOST
     boost::container::vector<uivsp_p> projects;
     boost::container::vector<uivsf_p> filters;

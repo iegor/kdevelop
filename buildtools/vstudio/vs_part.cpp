@@ -231,21 +231,29 @@ namespace VStudio {
     m_prjname = projectName;
 
     QDomDocument &dom = *projectDom();
-  //     QStringList vsitms;
-  //     vsitms = DomUtil::readEntry(dom, "kdevvstudioproject/general");
 
     // Read all solutions and projects parse and setup them
-    DomUtil::PairList vsitems = DomUtil::readPairListEntry(dom,
-        "kdevvstudioproject/general", VSPART_SOLUTION, "name", "path");
-    DomUtil::PairList::ConstIterator it;
-    for(it = vsitems.begin(); it != vsitems.end(); ++it) {
-      if(!loadVsSolution((*it).first, (*it).second)) {
-        continue;
+    QDomElement el = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
+    QDomElement subEl = el.firstChild().toElement();
+    while(!subEl.isNull()) {
+      if(subEl.tagName() == VSPART_SOLUTION) {
+        QString sln_iname = subEl.attribute("name");
+        QString sln_path = subEl.attribute("path");
+        QString active_prj = subEl.attribute("active");
+        if(loadVsSolution(sln_iname, sln_path)) {
+          vss_p sln = static_cast<vss_p>(getSlnByName(sln_iname));
+          sln->setActivePrj(active_prj);
+        } else {
+          kddbg << g_err_slnload.arg(sln_iname);
+          subEl = subEl.nextSibling().toElement();
+          continue;
+        }
       }
+      subEl = subEl.nextSibling().toElement();
     }
 
     // Set active solution
-    QString activesln = DomUtil::readEntry(dom, "kdevvstudioproject/general/active_sln");
+    QString activesln = DomUtil::readEntry(dom, VSPART_XML_SECTION_ACTIVESLN);
     vss_p sln = static_cast<vss_p>(getSlnByName(activesln));
     if(sln == 0) {
       kddbg << g_err_slnactivate.arg(activesln);
@@ -787,10 +795,10 @@ namespace VStudio {
   }
 
   bool VSPart::selectSln(vss_p s) {
-    if(s != 0) {
+    if(s != 0 && s->getType() == vs_solution) {
       selected_sln = s;
 #ifdef DEBUG
-      kddbg << "Setting active solution with: " << type2String(s->getType()) << " object\n";
+      kddbg << g_msg_slnselect.arg(s->getName());
 #endif
       // Update configuration selection combos
       actConfigName->view()->clear();
@@ -855,26 +863,56 @@ namespace VStudio {
   }
 
   /*inline*/ vss_p VSPart::getSelectedSln() const {
-               return selected_sln;
+    return selected_sln;
   }
 
   bool VSPart::activateSln(vss_p s) {
     if(s != 0) {
-      if(active_sln != 0) {
-        static_cast<uivss_p>(active_sln->getUI())->setActive(false);
+      if(active_sln != s) {
+        if(active_sln != 0) {
+          active_sln->setActive(false);
+        }
+        active_sln = s;
+        active_sln->setActive(true);
       }
-      active_sln = s;
-      static_cast<uivss_p>(active_sln->getUI())->setActive(true);
       return true;
     }
 #ifdef DEBUG
-    kddbg << g_err_slnactivate.arg("0 ptr");
+    else { kddbg << g_err_nullptr.arg("VSPart::activateSln"); }
 #endif
     return false;
   }
 
   /*inline*/ vss_p VSPart::getActiveSln() const {
     return active_sln;
+  }
+
+  bool VSPart::activatePrj(vsp_p p) {
+    if(p != 0) {
+      vss_p sln = static_cast<vss_p>(p->getParent());
+      // Signal parent sln to activate project p and remember the choise
+      if(active_prj != p) {
+        active_prj = p;
+        sln->setActivePrj(active_prj);
+      }
+      // Activate parent sln for active project if not active
+      if(sln != active_sln) {
+        if(activateSln(sln)) {
+          return true;
+        } else {
+          kddbg << VSPART_WARNING"Failed to activate parent sln.\n";
+        }
+      }
+      return true;
+    }
+#ifdef DEBUG
+    else { kddbg << g_err_nullptr.arg("VSPart::activatePrj"); }
+#endif
+    return false;
+  }
+
+  /*inline*/ vsp_p VSPart::getActivePrj() const {
+    return active_prj;
   }
 
   bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {

@@ -99,17 +99,22 @@ namespace VStudio {
   : VSEntity(vs_solution, nm)
   , path_rlt(path)
   , uisln(0)
-  , config(0) {
+  , config(0)
+  , actprj(0)
+  , active(false) {
   }
 
   VSSolution::VSSolution(const QString &nm, const QUuid &uid, const QString &path)
   : VSEntity(vs_solution, nm, uid)
   , path_rlt(path)
   , uisln(0)
-  , config(0) {
+  , config(0)
+  , actprj(0)
+  , active(false) {
   }
 
   VSSolution::~VSSolution() {
+    actprj = 0;
     // Delete UI representation
     if(uisln!=0) { delete uisln; uisln=0; }
     // Delete all filters
@@ -433,12 +438,66 @@ namespace VStudio {
     return &cfgs;
   }
 
+  void VSSolution::setActive(bool a) {
+    active = a;
+  }
+
+  /*inline*/ bool VSSolution::isActive() const {
+    return active;
+  }
+
+  bool VSSolution::setActivePrj(vsp_p p) {
+    if(p != 0) {
+      if(actprj != 0) {
+        actprj->setActive(false);
+      }
+      actprj = p;
+      actprj->setActive();
+    }
+    return false;
+  }
+
+  bool VSSolution::setActivePrj(const QString &n) {
+    if(n != QString::null) {
+      vsp_p prj = getProject(n);
+      if(prj != 0) {
+        kddbg << "Setting active prj: " << prj->getName() << " cval: "
+            << n << endl;
+        return setActivePrj(prj);
+      }
+    }
+    return false;
+  }
+
+  /*inline*/ vsp_p VSSolution::getActivePrj() const {
+    return actprj;
+  }
+
+  /*inline*/ vsp_p VSSolution::getProject(const QString &n) const {
+    if(n != QString::null) {
+#ifdef USE_BOOST
+      for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
+        if((*it) != 0) {
+          if((*it)->getName() == n) {
+            return (*it);
+          }
+        } else {
+          kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg(name);
+          return 0;
+        }
+      }
+    }
+    return 0;
+  }
+
   void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
 #ifdef USE_BOOST
     for(boost::container::vector<QUuid>::const_iterator uidc=deps.begin(); uidc!=deps.end(); ++uidc) {
 #else
-#error "VStudio: Boost support is no enabled"
-    //TODO: Implement later
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
       prj->addRequirement((*uidc));
     }
@@ -448,8 +507,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     deps.clear();
 #else
-#error "VStudio: Boost support is no enabled"
-    //TODO: Implement later
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
     //TODO: Not sure if this method is needed at all
     // For not I'll leave it just cleaning the meta-deps tree
@@ -463,7 +521,8 @@ namespace VStudio {
   , lang(ltype)
   , path_rlt(path)
   , sln(0)
-  , uiprj(0) {
+  , uiprj(0)
+  , active(false) {
   }
 
   VSProject::VSProject(e_VSPrjLangType ltype, const QString &nm, const QUuid &uid, const QString &path)
@@ -471,7 +530,8 @@ namespace VStudio {
   , lang(ltype)
   , path_rlt(path)
   , sln(0)
-  , uiprj(0) {
+  , uiprj(0)
+  , active(false) {
   }
 
   VSProject::~VSProject() {
@@ -780,6 +840,14 @@ namespace VStudio {
       return;
     }
     lang = lng;
+  }
+
+  void VSProject::setActive(bool a) {
+    active = a;
+  }
+
+  /*inline*/ bool VSProject::isActive() const {
+               return active;
   }
 
   //===========================================================================

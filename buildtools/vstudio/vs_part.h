@@ -99,6 +99,9 @@ namespace VStudio {
     bool activateSln(vss_p sln);
     vss_p getActiveSln() const;
 
+    bool activatePrj(vsp_p prj);
+    vsp_p getActivePrj() const;
+
   private:
     bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
     bool parseGUID(QTextIStream &stream, QChar &control_char, QUuid &uid);
@@ -150,6 +153,7 @@ namespace VStudio {
 
     vss_p selected_sln;
     vss_p active_sln;
+    vsp_p active_prj;
 #ifdef USE_BOOST
     pv_VSEntity m_entities;     // Solutions
 #else

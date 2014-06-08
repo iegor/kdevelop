@@ -107,8 +107,7 @@ namespace VStudio {
   void VSExplorer::slotSelectItem(QListViewItem *item) {
     uivse_p ent = static_cast<uivse_p>(item);
 #ifdef DEBUG
-    kddbg << "[" << type2String(ent->getType()) << "] "
-        << ent->getName() << " is selected\n";
+    kddbg << g_msg_entselected.arg(type2String(ent->getType())).arg(ent->getName());
 #endif
 
     switch(ent->getType()) {
@@ -147,13 +146,15 @@ namespace VStudio {
           menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(i->getModel()->getName()));
           actSetEntityRltPath->plug(&menu);
           actRenameEntity->plug(&menu);
-          menu.insertItem("Activate", this, SLOT(slotActivateEntity()));
+          menu.insertItem("Set active", this, SLOT(slotActivateEntity()));
           menu.insertSeparator();
           actCfgEntity->plug(&menu);
           break; }
         case vs_project: {
           menu.insertTitle(*i->pixmap(0), i18n("Project: \"%1\"").arg(i->getModel()->getName()));
           actRenameEntity->plug(&menu);
+          menu.insertSeparator();
+          menu.insertItem("Set active", this, SLOT(slotActivateEntity()));
           menu.insertSeparator();
           actCfgEntity->plug(&menu);
           break; }
@@ -233,15 +234,22 @@ namespace VStudio {
   void VSExplorer::slotActivateEntity() {
     uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
     if(sel != 0) {
-      if(sel->getType() == vs_solution) {
-        // uivss_p prevsln = static_cast<uivss_p>(m_part->getActiveSln()->getUI());
-        m_part->activateSln(static_cast<vss_p>(sel->getModel()));
-        // m_listView->repaintItem(prevsln);
-        // m_listView->repaintItem(sel);
-        //NOTE: Maybe a bit expensive, needs thorough investigation
-        m_listView->triggerUpdate();
-      } else {
-        kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType()));
+      switch(sel->getType()) {
+        case vs_solution: {
+          // uivss_p prevsln = static_cast<uivss_p>(m_part->getActiveSln()->getUI());
+          m_part->activateSln(static_cast<vss_p>(sel->getModel()));
+          // m_listView->repaintItem(prevsln);
+          // m_listView->repaintItem(sel);
+          //NOTE: Maybe a bit expensive, needs thorough investigation
+          m_listView->triggerUpdate();
+          break; }
+        case vs_project: {
+          m_part->activatePrj(static_cast<vsp_p>(sel->getModel()));
+          m_listView->triggerUpdate();
+          break; }
+        default: {
+          kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType()));
+          break; }
       }
     }
   }
@@ -357,12 +365,23 @@ namespace VStudio {
   }
 
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
-    if(getType() == vs_solution) {
-      if(static_cast<uivss_p>(this)->isActive()) {
-        QFont font(p->font());
-        font.setBold(true);
-        p->setFont(font);
-      }
+    switch(getType()) {
+      case vs_project: {
+        if(static_cast<vsp_p>(this->getModel())->isActive()) {
+          QFont font(p->font());
+          font.setBold(true);
+          p->setFont(font);
+        }
+        break; }
+      case vs_solution: {
+        if(static_cast<vss_p>(this->getModel())->isActive()) {
+          QFont font(p->font());
+          font.setBold(true);
+          p->setFont(font);
+        }
+        break; }
+      default: {
+        break; }
     }
     QListViewItem::paintCell(p, cg, column, width, alignment);
   }
@@ -372,8 +391,7 @@ namespace VStudio {
   //===========================================================================
   VSSlnNode::VSSlnNode(QListView *lv, vss_p s)
   : VSExplorerEntity(vs_solution, lv, s->getName())
-  , sln(s)
-  , active(false) {
+  , sln(s) {
     name = s->getName();
     setPixmap(0, SmallIcon("home"));
     // item->setText(1, name);
@@ -389,14 +407,6 @@ namespace VStudio {
 
   /*inline*/ QUuid VSSlnNode::uidGet() const {
     return sln->uidGet();
-  }
-
-  /*inline*/ bool VSSlnNode::isActive() const {
-    return active;
-  }
-
-  /*inline*/ void VSSlnNode::setActive(bool a) {
-    active = a;
   }
 
   //===========================================================================
