@@ -87,20 +87,19 @@ namespace VStudio {
     //===========================================================================
     bool loadVsSolution(const QString &sln_name, const QString &sln_path);
     bool unloadVsSolution(const QString &sln_path);
-    bool saveVsSolution(vss_p sln);
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);
     vse_p getByUID(const QUuid &uid) const; //TODO: decide if I need this ?
     vse_p getSlnByName(const QString &name);
     VSExplorer* explorerWidget() const { return m_explorer_widget; }
-
     bool selectSln(vss_p sln);
     vss_p getSelectedSln() const;
     bool activateSln(vss_p sln);
     vss_p getActiveSln() const;
-
     bool activatePrj(vsp_p prj);
     vsp_p getActivePrj() const;
+    bool saveSln(vss_p sln);
+    bool saveSlnAs(vss_p sln, const QString& new_path);
 
   private:
     bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);

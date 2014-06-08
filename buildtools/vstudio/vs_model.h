@@ -114,7 +114,7 @@ namespace VStudio {
       virtual vse_p getParent() const;
 
     // VS Solution methods:
-      bool dumpLayout(QTextOStream &layout);
+      bool dumpLayout(QTextStream &layout);
       vsf_p getFltByUID(const QUuid &uid) const;
       void forEachProj(entityFunctor functor);
       void forEachFilter(entityFunctor functor);
@@ -175,7 +175,7 @@ namespace VStudio {
       virtual vse_p getParent() const;
 
     // VS Project methods:
-      bool dumpLayout(QTextOStream &layout);
+      bool dumpLayout(QTextStream &layout);
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
       vsf_p getFltByUID(const QUuid &uid) const;
@@ -222,6 +222,7 @@ namespace VStudio {
       virtual vse_p getParent() const;
 
     // VS Filter methods:
+      bool dumpLayout(QTextStream &layout);
       e_VSEntityType getParentType() {
         return parent->getType();
       }

@@ -77,6 +77,8 @@ namespace VStudio {
     void slotConfigureEntity();
     void slotRenameEntity();
     void slotActivateEntity();
+    void slotSaveEntity();
+    void slotSaveEntityAs();
 
   private:
     VSPart *m_part;

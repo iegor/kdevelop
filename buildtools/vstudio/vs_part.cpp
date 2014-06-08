@@ -57,8 +57,9 @@ namespace VStudio {
 
   VSPart::VSPart(QObject *parent, const char *name, const QStringList &/*args*/)
     : KDevBuildTool(&data, parent, name ? name : "VSPart")
+    , selected_sln(0)
     , active_sln(0)
-    , selected_sln(0) {
+    , active_prj(0) {
     setInstance(VSFactory::instance());
     setXMLFile("kdevpart_vs.rc");
 
@@ -328,9 +329,11 @@ namespace VStudio {
   }
 
   void VSPart::restorePartialProjectSession(const QDomElement* /*el*/) {
+    kddbg << VSPART_WARNING"Restore session partially.\n";
   }
 
   void VSPart::savePartialProjectSession(QDomElement* /*el*/) {
+    kddbg << VSPART_WARNING"Saving session partially.\n";
   }
 
   bool VSPart::loadVsSolution(const QString &internal_name, const QString &path) {
@@ -723,26 +726,6 @@ namespace VStudio {
     return true;
   }
 
-  bool VSPart::saveVsSolution(vss_p sln) {
-    kddbg << "<<<<<< Saving: " << sln->getName() << " >>>>>>" << endl;
-    QString abspath = m_prjpath+"/"+sln->getRelativePath();
-    QString str;
-    QTextOStream s(&str);
-    // QFile sln_f;
-
-    // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
-    // sln_f.setName(abspath);
-    // if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
-    // if(!sln_f.isWritable()) { kddbg << "is not writable" << endl; return false; }
-
-    sln->dumpLayout(s);
-
-    printf("%s\n", str.ascii()); //TEST: only stdout
-
-    kddbg << "<<<<<<" << sln->getName() << " saved >>>>>>" << endl;
-    return true;
-  }
-
   bool VSPart::loadVsProject(const QString &/*prj_path*/) {
     return true;
   }
@@ -913,6 +896,44 @@ namespace VStudio {
 
   /*inline*/ vsp_p VSPart::getActivePrj() const {
     return active_prj;
+  }
+
+  bool VSPart::saveSln(vss_p sln) {
+    if(sln != 0) {
+      QString abspath = sln->getRelativePath();
+      abspath.append(".test");
+      QString str;
+      QFile sln_f(abspath);
+      // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
+      sln_f.setName(abspath);
+      if(!sln_f.open(IO_WriteOnly|IO_Raw)) {
+        kddbg << "can't open solution file: " << abspath << "\n";
+        return false;
+      }
+      if(!sln_f.isWritable()) {
+        kddbg << "is not writable" << endl;
+        return false;
+      }
+
+      QTextStream s(&sln_f);
+      kddbg << "<<<<<< Saving: " << sln->getName() << " >>>>>>" << endl;
+
+      sln->dumpLayout(s);
+
+      sln_f.flush();
+      sln_f.close();
+
+      // printf("%s\n", str.ascii()); //TEST: only stdout
+
+      kddbg << "<<<<<<" << sln->getName() << " saved >>>>>>" << endl;
+      return true;
+    }
+    return false;
+  }
+
+  bool VSPart::saveSlnAs(vss_p s, const QString& path) {
+    kddbg << "SLOT: VSPart::slotSaveSlnAs \"" << path << "\".\n";
+    return false;
   }
 
   bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {

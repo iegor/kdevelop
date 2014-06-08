@@ -144,6 +144,8 @@ namespace VStudio {
       switch(i->getType()) {
         case vs_solution: {
           menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(i->getModel()->getName()));
+          menu.insertItem("Save", this, SLOT(slotSaveEntity()));
+          menu.insertSeparator();
           actSetEntityRltPath->plug(&menu);
           actRenameEntity->plug(&menu);
           menu.insertItem("Set active", this, SLOT(slotActivateEntity()));
@@ -152,6 +154,8 @@ namespace VStudio {
           break; }
         case vs_project: {
           menu.insertTitle(*i->pixmap(0), i18n("Project: \"%1\"").arg(i->getModel()->getName()));
+          menu.insertItem("Save", this, SLOT(slotSaveEntity()));
+          menu.insertSeparator();
           actRenameEntity->plug(&menu);
           menu.insertSeparator();
           menu.insertItem("Set active", this, SLOT(slotActivateEntity()));
@@ -166,6 +170,8 @@ namespace VStudio {
           break; }
         case vs_file: {
           menu.insertTitle(*i->pixmap(0), i18n("File: \"%1\"").arg(i->getModel()->getName()));
+          menu.insertItem("Save", this, SLOT(slotSaveEntity()));
+          menu.insertSeparator();
           actRenameEntity->plug(&menu);
           menu.insertSeparator();
           actCfgEntity->plug(&menu);
@@ -210,9 +216,6 @@ namespace VStudio {
     QPtrList<QListViewItem> items = m_listView->selectedItems();
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
-      // if(ent->getType() == vs_solution) {
-      //   m_part->saveVsSolution((vss_p)ent->getModel());
-      // }
     }
   }
 
@@ -252,6 +255,26 @@ namespace VStudio {
           break; }
       }
     }
+  }
+
+  void VSExplorer::slotSaveEntity() {
+    uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
+    switch(sel->getType()) {
+      case vs_solution: {
+        m_part->saveSln(static_cast<vss_p>(sel->getModel()));
+        break; }
+      case vs_project: {
+        break; }
+      case vs_file: {
+        break; }
+      default: {
+        kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType())).arg("VSExplorer::slotSaveEntity");
+        break; }
+    }
+  }
+
+  void VSExplorer::slotSaveEntityAs() {
+    m_part->saveSlnAs(0, QString::null);
   }
 
   uivss_p VSExplorer::addSolutionNode(vss_p sln) {

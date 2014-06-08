@@ -159,8 +159,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     for(vsmd_ci mdci=mdeps.begin(); mdci!=mdeps.end(); ++mdci) {
 #else
-#error "VStudio: Boost support is no enabled"
-    //TODO: Implement later
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
       if((*mdci) != 0) {
          delete (*mdci);
@@ -177,14 +176,14 @@ namespace VStudio {
 #ifdef USE_BOOST
         projects.push_back(static_cast<vsp_p>(item));
 #else
-        //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
         break;
       case vs_filter:
 #ifdef USE_BOOST
         filters.push_back(static_cast<vsf_p>(item));
 #else
-        //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
         break;
       default:
@@ -216,7 +215,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
-      //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
       if((*it)!=0) {
         if((*it)->uidGet() == uid) { return (*it); }
@@ -237,20 +236,67 @@ namespace VStudio {
     return true;
   }
 
-  bool VSSolution::dumpLayout(QTextOStream &s) {
+  bool VSSolution::dumpLayout(QTextStream &s) {
     // Dump version data
     s << "Microsoft Visual Studio Solution File, Format Version 10.00\n";
     s << "# Visual Studio 2008\n";
 
-    // Save project layout data
-    for(vp_i it=projects.begin(); it!=projects.end(); ++it) {
+    // Save projects layout
+#ifdef USE_BOOST
+    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
       if((*it) == 0) {
-        kddbg << "Error!!! corrupted projects list in solution: \"" << name << "\"\n";
+         kddbg << g_err_list_corrupted.arg("projects").arg("VSSolution::dumpLayout");
         return false;
       }
       (*it)->dumpLayout(s);
     }
+
+    // Save filters layout
+#ifdef USE_BOOST
+    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
+      if((*it) == 0) {
+        kddbg << g_err_list_corrupted.arg("filters").arg("VSSolution::dumpLayout");
+        return false;
+      }
+      (*it)->dumpLayout(s);
+    }
+
     //BEGIN // Save solution sections data
+    s << "Global" << endl;
+    const QString section_header("\tGlobalSection(%1) = %2\n");
+    const QString section_footer("\tEndGlobalSection\n");
+
+    // Save solution's configurations
+    s << section_header.arg(VSPART_SLNSECTION_SCFG_PLATFORMS).arg("preSolution");
+#ifdef USE_BOOST
+    for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
+      s << "\t\t" << (*it)->toString() << " = " << (*it)->toString() << endl;
+    }
+    s << section_footer;
+
+    // Save solution's project configuration platforms
+    s << section_header.arg(VSPART_SLNSECTION_PCFG_PLATFORMS).arg("postSolution");
+    s << section_footer;
+
+    // Save solution's properties
+    s << section_header.arg(VSPART_SLNSECTION_SPROPS).arg("preSolution");
+    s << "\t\tHideSolutionNode = FALSE\n"; //TODO: Work on solution's properties
+    s << section_footer;
+
+    // Save solution's nesting info
+    s << section_header.arg(VSPART_SLNSECTION_NESTEDPRJ).arg("preSolution");
+    s << section_footer;
+
+    s << "EndGlobal" << endl;
     //END //Save solution sections data
     return true;
   }
@@ -259,7 +305,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
-      //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
       if((*it)!=0) {
         if((*it)->uidGet() == uid) { return (*it); }
@@ -639,7 +685,7 @@ namespace VStudio {
     return true;
   }
 
-  bool VSProject::dumpLayout(QTextOStream &s) {
+  bool VSProject::dumpLayout(QTextStream &s) {
     // Write project header
     s << "Project(\"";
     switch(lang) {
@@ -654,7 +700,7 @@ namespace VStudio {
             << "\" is not handled\n";
         return false;
     }
-    s << "\" = \"" << getName() << "\", \"" << getRelativePath() << "\", \"";
+    s << "\") = \"" << getName() << "\", \"" << getRelativePath() << "\", \"";
     s << guid2String(uidGet()) << "\"\n";
 
     // Write project requirements
@@ -949,6 +995,13 @@ namespace VStudio {
       if(uiflt==0) { kddbg << "failed to add filter UI node" << endl; return false; }
       // kddbg << "Flt: " << name << " in " << parent->getName() << endl;
     }
+    return true;
+  }
+
+  bool VSFilter::dumpLayout(QTextStream &s) {
+    s << "Project(\"" << guid2String(uid_vs9filter) << "\") = \""
+        << getName() << "\", \"" << getRelativePath() << "\", \""
+        << guid2String(uidGet()) << "\"\n" << "EndProject\n";
     return true;
   }
 
@@ -1302,29 +1355,33 @@ namespace VStudio {
         case vs_project: {
           sln = static_cast<vss_p>(e->getParent());
           break; }
-          case vs_filter: {
-            switch(e->getParent()->getType()) {
-              case vs_solution: {
-                sln = static_cast<vss_p>(e->getParent());
-                break; }
-                case vs_project: {
-                  sln = static_cast<vss_p>(e->getParent()->getParent());
-                  break; }
-            }
-            break; }
-            case vs_file: {
-              switch(e->getParent()->getType()) {
-                case vs_project: {
-                  sln = static_cast<vss_p>(e->getParent());
-                  break; }
-                  case vs_filter: {
-                    sln = static_cast<vss_p>(e->getParent()->getParent());
-                    break; }
-              }
+        case vs_filter: {
+          switch(e->getParent()->getType()) {
+            case vs_solution: {
+              sln = static_cast<vss_p>(e->getParent());
               break; }
-              default: {
-                kddbg << g_err_unsupportedtyp.arg(type2String(e->getType()));
-              }
+            case vs_project: {
+              sln = static_cast<vss_p>(e->getParent()->getParent());
+              break; }
+            default: {
+              break; }
+          }
+          break; }
+        case vs_file: {
+          switch(e->getParent()->getType()) {
+            case vs_project: {
+              sln = static_cast<vss_p>(e->getParent());
+              break; }
+            case vs_filter: {
+              sln = static_cast<vss_p>(e->getParent()->getParent());
+              break; }
+            default: {
+              break; }
+          }
+          break; }
+        default: {
+          kddbg << g_err_unsupportedtyp.arg(type2String(e->getType()));
+          break; }
       }
     }
     return sln;
