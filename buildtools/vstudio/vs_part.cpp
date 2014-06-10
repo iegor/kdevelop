@@ -208,13 +208,14 @@ namespace VStudio {
     selected_sln = 0;
     active_sln = 0;
 
+    // Delete all entities
 #ifdef USE_BOOST
     for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
 #else
-    //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
       if((*it)!=0) {
-        if((*it)->release()) { delete (*it); /*(*it)=0;*/ }
+        delete (*it); /*(*it)=0;*/
       } else {
         kddbg << "Error! vspart's entities list corrupted.\n";
       }
@@ -452,7 +453,7 @@ namespace VStudio {
                   }
                   // kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
                   // prj_active->addDependency((vsp_p)sln->getByUID(uuid2));
-                  VSSolution::vsmd_p mdp = sln->metaDependency(prj_active->uidGet());
+                  VSSolution::vsmd_p mdp = sln->metaDependency(prj_active->getUID());
                   if(mdp != 0) {
                     mdp->addDependency(uuid2);
                   }
@@ -675,25 +676,30 @@ namespace VStudio {
                     }
                   }
                   //Get filer and project model representation
-                  vsf_p cnt = sln->getFltByUID(uid2); // get container
                   vse_p ent = sln->getByUID(uid1); // get entity
-                  if(cnt == 0) {
-                    kddbg << " >>>> Failed to obtain container for " << uid2.toString() << endl;
-                    ln = str.readLine();
-                    continue;
-                  }
                   if(ent == 0) {
                     ent = sln->getFltByUID(uid1);
                     if(ent == 0) {
+#ifdef DEBUG
                       kddbg << " >>>> Failed to obtain entity for " << uid1.toString() << endl;
+#endif
                       ln = str.readLine();
                       continue;
                     }
                   }
+                  vsf_p cnt = sln->getFltByUID(uid2); // get container
+                  if(cnt == 0) {
+#ifdef DEBUG
+                    kddbg << " >>>> Failed to obtain container for " << uid2.toString() << endl;
+#endif
+                    ln = str.readLine();
+                    continue;
+                  }
+#ifdef DEBUG
                   /* kddbg << type2String(cnt->getType()) << " \"" << cnt->getName()
                       << "\" <<< " << type2String(ent->getType()) << " \""
-                      << ent->getName() << "\"\n";
-                  */
+                      << ent->getName() << "\"\n"; */
+#endif
                   cnt->insert(ent);
                   ln = str.readLine();
                 }
@@ -735,43 +741,51 @@ namespace VStudio {
   }
 
   vse_p VSPart::getByUID(const QUuid &uid) const {
+    /*
 #ifdef USE_BOOST
     for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
-      if((*it)==0) {
+      if((*it)!=0) {
+         if((*it)->getUID() == uid) { return (*it); }
+      } else {
         kddbg << VSPART_ERR_ENTITYLIST_CORRUPTED;
         return 0;
       }
-      if((*it)->uidGet() == uid) {
-        return (*it);
-      }
     }
+    return 0;
+    */
     return 0;
   }
 
-  vse_p VSPart::getSlnByName(const QString &n) {
+  vss_p VSPart::getSlnByName(const QString &n) {
     if(n != QString::null) {
 #ifdef USE_BOOST
-      for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
+      ve_ci it=m_entities.begin();
+      for(; it!=m_entities.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
-        if((*it)!=0) {
-          if((*it)->getName() == n) {
-            if((*it)->getType() == vs_solution) {
-              return (*it);
-            }
+        if((*it) != 0) {
+          if((*it)->getType() == vs_solution) {
+            vss_p sln = static_cast<vss_p>(*it);
+            if(sln->getName() == n) { break; }
           }
         } else {
 #ifdef DEBUG
           kddbg << VSPART_ERR_ENTITYLIST_CORRUPTED;
 #endif
+          return 0;
         }
       }
+#ifdef USE_BOOST
+      if(it!=m_entities.end()) { return static_cast<vss_p>(*it); }
+#else
+#error "VStudio: Boost support is no enabled" //TODO: Implement this
+#endif
 #ifdef DEBUG
-      kddbg << g_err_ent_notfound.arg(type2String(vs_solution)).arg(n);
+      else { kddbg << g_err_ent_notfound.arg(type2String(vs_solution)).arg(n); }
 #endif
     }
     return 0;
@@ -795,7 +809,7 @@ namespace VStudio {
 
       // Setup configurations for active solution
 #ifdef USE_BOOST
-      for(vcfg_ci it=selected_sln->vcfg()->begin(); it!=selected_sln->vcfg()->end(); ++it) {
+      for(vcfg_ci it=selected_sln->vcfg().begin(); it!=selected_sln->vcfg().end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
@@ -900,7 +914,7 @@ namespace VStudio {
 
   bool VSPart::saveSln(vss_p sln) {
     if(sln != 0) {
-      QString abspath = sln->getRelativePath();
+      QString abspath = sln->getRelPath();
       abspath.append(".test");
       QString str;
       QFile sln_f(abspath);

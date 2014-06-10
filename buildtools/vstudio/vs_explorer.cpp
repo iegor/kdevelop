@@ -120,6 +120,8 @@ namespace VStudio {
         break; }
       case vs_file: {
         break; }
+      default: {
+        break; }
     }
 
     // Upon selection of project|file|filter select parent solution
@@ -134,6 +136,8 @@ namespace VStudio {
           }
         }
         break; }
+      default: {
+        break; }
     }
   }
 
@@ -143,7 +147,8 @@ namespace VStudio {
       uivse_p i = static_cast<uivse_p>(item);
       switch(i->getType()) {
         case vs_solution: {
-          menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(i->getModel()->getName()));
+          vss_p sln = static_cast<vss_p>(i->getModel());
+          menu.insertTitle(*i->pixmap(0), i18n("Solution: \"%1\"").arg(sln->getName()));
           menu.insertItem("Save", this, SLOT(slotSaveEntity()));
           menu.insertSeparator();
           actSetEntityRltPath->plug(&menu);
@@ -153,7 +158,8 @@ namespace VStudio {
           actCfgEntity->plug(&menu);
           break; }
         case vs_project: {
-          menu.insertTitle(*i->pixmap(0), i18n("Project: \"%1\"").arg(i->getModel()->getName()));
+          vsp_p prj = static_cast<vsp_p>(i->getModel());
+          menu.insertTitle(*i->pixmap(0), i18n("Project: \"%1\"").arg(prj->getName()));
           menu.insertItem("Save", this, SLOT(slotSaveEntity()));
           menu.insertSeparator();
           actRenameEntity->plug(&menu);
@@ -163,13 +169,15 @@ namespace VStudio {
           actCfgEntity->plug(&menu);
           break; }
         case vs_filter: {
-          menu.insertTitle(*i->pixmap(0), i18n("Filter: \"%1\"").arg(i->getModel()->getName()));
+          vsf_p flt = static_cast<vsf_p>(i->getModel());
+          menu.insertTitle(*i->pixmap(0), i18n("Filter: \"%1\"").arg(flt->getName()));
           actRenameEntity->plug(&menu);
           menu.insertSeparator();
           actCfgEntity->plug(&menu);
           break; }
         case vs_file: {
-          menu.insertTitle(*i->pixmap(0), i18n("File: \"%1\"").arg(i->getModel()->getName()));
+          vsfl_p fl = static_cast<vsfl_p>(i->getModel());
+          menu.insertTitle(*i->pixmap(0), i18n("File: \"%1\"").arg(fl->getName()));
           menu.insertItem("Save", this, SLOT(slotSaveEntity()));
           menu.insertSeparator();
           actRenameEntity->plug(&menu);
@@ -188,12 +196,13 @@ namespace VStudio {
   }
 
   void VSExplorer::slotEntityRenamed(QListViewItem *item, const QString &name, int /*col*/) {
-    if(!item) {
+    if(item != 0) {
+      uivse_p ent = static_cast<uivse_p>(item);
+      ent->setName(name);
+      kddbg << "Entity is renamed to: " << name << endl;
+    } else {
       kddbg << "Error! no item" << endl;
-      return;
     }
-    kddbg << "Entity is renamed to: " << name << endl;
-    ((VSExplorerEntity*)(item))->getModel()->setName(name);
   }
 
   void VSExplorer::slotProjectOpened() {
@@ -228,9 +237,12 @@ namespace VStudio {
 
     QPtrList<QListViewItem> items = m_listView->selectedItems();
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
-      VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
-      kddbg << "remaning item: " << ent->getModel()->getName() << endl;
-      m_listView->rename((*it), 0);
+      uivse_p ent = static_cast<uivse_p>(*it);
+      if(ent != 0) {
+        kddbg << "remaning item: " << ent->getName() << endl;
+        m_listView->rename((*it), 0);
+        ent->setName(ent->text(0));
+      }
     }
   }
 
@@ -334,13 +346,24 @@ namespace VStudio {
 
   uivse_p VSExplorer::getByUID(const QUuid &uid) {
 #ifdef USE_BOOST
-    for(uive_ci it=uients.begin(); it!=uients.end(); ++it) {
+    uive_ci it=uients.begin();
+    for(; it!=uients.end(); ++it) {
 #else
-    //TODO: Implement this
+#error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
-      if((*it)->uidGet() == uid) {
-        return (*it);
+      uivse_p ent = static_cast<uivse_p>(*it);
+      if(ent != 0) {
+        if(ent->getUID() == uid) { break; }
       }
+    }
+#ifdef USE_BOOST
+    if(it!=uients.end()) { return (*it); }
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement this
+#endif
+    else {
+      kddbg << "Can't find ui entity: " << guid2String(uid) << "\"\n";
+      return 0;
     }
     return 0;
   }
@@ -424,12 +447,20 @@ namespace VStudio {
   VSSlnNode::~VSSlnNode() {
   }
 
+  /*inline*/ const QString& VSSlnNode::getName() const {
+    return sln->getName();
+  }
+
+  void VSSlnNode::setName(const QString& name) {
+    sln->setName(name);
+  }
+
   /*inline*/ vse_p VSSlnNode::getModel() const {
     return sln;
   }
 
-  /*inline*/ QUuid VSSlnNode::uidGet() const {
-    return sln->uidGet();
+  /*inline*/ const QUuid& VSSlnNode::getUID() const {
+    return uid_null;
   }
 
   //===========================================================================
@@ -445,12 +476,20 @@ namespace VStudio {
   VSPrjNode::~VSPrjNode() {
   }
 
+  /*inline*/ const QString& VSPrjNode::getName() const {
+    return prj->getName();
+  }
+
+  void VSPrjNode::setName(const QString& name) {
+    prj->setName(name);
+  }
+
   /*inline*/ vse_p VSPrjNode::getModel() const {
     return prj;
   }
 
-  /*inline*/ QUuid VSPrjNode::uidGet() const {
-    return prj->uidGet();
+  /*inline*/ const QUuid& VSPrjNode::getUID() const {
+    return prj->getUID();
   }
 
   //===========================================================================
@@ -467,12 +506,20 @@ namespace VStudio {
   VSFltNode::~VSFltNode() {
   }
 
+  /*inline*/ const QString& VSFltNode::getName() const {
+    return filter->getName();
+  }
+
+  void VSFltNode::setName(const QString& name) {
+    filter->setName(name);
+  }
+
   /*inline*/ vse_p VSFltNode::getModel() const {
     return filter;
   }
 
-  /*inline*/ QUuid VSFltNode::uidGet() const {
-    return filter->uidGet();
+  /*inline*/ const QUuid& VSFltNode::getUID() const {
+    return filter->getUID();
   }
 
   //===========================================================================
@@ -480,20 +527,28 @@ namespace VStudio {
   //===========================================================================
   VSFilNode::VSFilNode(uivse_p pnt, vsfl_p fl)
   : VSExplorerEntity(vs_file, pnt, fl->getName())
-  , prj((uivsp_p)pnt)
-  , file(fl) {
+  , file(fl)
+  , prj((uivsp_p)pnt) {
     setPixmap(0, SmallIcon("file"));
   }
 
   VSFilNode::~VSFilNode() {
   }
 
+  /*inline*/ const QString& VSFilNode::getName() const {
+    return file->getName();
+  }
+
+  void VSFilNode::setName(const QString& name) {
+    file->setName(name);
+  }
+
   /*inline*/ vse_p VSFilNode::getModel() const {
     return file;
   }
 
-  /*inline*/ QUuid VSFilNode::uidGet() const {
-    return file->uidGet();
+  /*inline*/ const QUuid& VSFilNode::getUID() const {
+    return file->getUID();
   }
 
   /*inline*/ uivsp_p VSFilNode::getProject() const {

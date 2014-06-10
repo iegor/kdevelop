@@ -26,50 +26,96 @@
 namespace VStudio {
   //===========================================================================
   //BEGIN VS basic entities
+  class VSRefcountable {
+    public:
+      VSRefcountable();
+      virtual ~VSRefcountable();
+
+      bool acquire(const vse_p parent);
+      vsr_r release(const vse_p parent);
+      uint refs() const;
+      bool isfree() const;
+      const pv_VSEntity& parents() const;
+
+    protected:
+      //TODO: ATTENTION !
+      // This must be done via boost's or Qt's guarded ptr.
+      uint rfc;
+#ifdef USE_BOOST
+      pv_VSEntity pnts; // Parents
+#else
+#endif
+  };
+
+  class VSNameable {
+    public:
+      VSNameable(const QString& name);
+      virtual ~VSNameable();
+
+      virtual const QString& getName() const;
+      virtual void setName(const QString& name);
+
+    protected:
+      QString name;
+  };
+
+  class VSIndexable {
+    public:
+      VSIndexable(const QUuid& uid);
+      virtual ~VSIndexable();
+
+      const QUuid& getUID() const;
+      void setUID(const QUuid& uid);
+
+    protected:
+      QUuid uid;
+  };
+
+  class VSFSStored {
+    public:
+      VSFSStored();
+      virtual ~VSFSStored();
+
+      const QString& getRelPath() const;
+      void setRelPath(const QString& rel_path);
+      const QString& getAbsPath() const;
+      void setAbsPath(const QString& abs_path);
+
+    protected:
+      QString path_rlt;
+      QString path_abs;
+  };
+
   class VSEntity {
     public:
-      VSEntity(e_VSEntityType typ, const QString &name);
-      VSEntity(e_VSEntityType typ, const QString &name, const QUuid &uid);
+      VSEntity(e_VSEntityType typ);
       virtual ~VSEntity();
 
-      void uidSet(const QUuid &uid) { uuid = uid; }
-      QUuid uidGet() const { return uuid; }
       e_VSEntityType getType() const { return type; }
-      bool release();
-      void acquire();
-
       static void setPart(VSPart* part);
       inline VSPart* part() const { return sys_part; }
 
-      virtual void setName(const QString &name);
-      virtual const QString& getName() const;
-      virtual void setParent(vse_p parent);
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
 
-      virtual QString getRelativePath() const = 0;
-      virtual bool setRelativePath(const QString &path) = 0;
       virtual vse_p getByUID(const QUuid &uid) const = 0;
       virtual uivse_p getUI() const = 0;
+      virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
+
     protected:
-      QString name;
-      QUuid uuid;
       e_VSEntityType type;
-
-      //TODO: ATTENTION !
-      // This must be done via boost's or Qt's guarded ptr.
-      int refs;
-
-      // UI data
       uivse_p uient;  // UI entity
+
     private:
       static VSPart *sys_part; // System part
   };
 
-  class VSSolution : public VSEntity {
+  class VSSolution : public VSEntity,
+  public VSNameable,
+  public VSFSStored {
     public:
-      predeclare_vs_typ(VSMetaDependency, vsmd_p, vsmd_ci, vsmd_i);
+      predeclare_vs_typ(VSMetaDependency, vsmd_p, vsmd_r, vsmd_ci, vsmd_i);
       class VSMetaDependency {
         public:
           VSMetaDependency(const QUuid &uuid) {
@@ -88,6 +134,7 @@ namespace VStudio {
 
           void syncToPrj(vsp_p prj);
           void syncFromPrj(vsp_p prj);
+
         public:
           QUuid uid;
 #ifdef USE_BOOST
@@ -100,18 +147,19 @@ namespace VStudio {
 
     public:
       VSSolution(const QString &name, const QString &path_rlt);
-      VSSolution(const QString &name, const QUuid &uid, const QString &path_rlt);
       virtual ~VSSolution();
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
       virtual bool createUI();
-      virtual void setParent(vse_p parent);
-      virtual QString getRelativePath() const { return path_rlt; }
-      virtual bool setRelativePath(const QString &path);
-      virtual vse_p getByUID(const QUuid &uid) const; // This will return project ptr, to reuse code
+      /**
+       * @param uid
+       * @return project ptr
+       */
+      virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uisln; }
       virtual vse_p getParent() const;
+      virtual void setParent(vse_p parent);
 
     // VS Solution methods:
       bool dumpLayout(QTextStream &layout);
@@ -127,15 +175,15 @@ namespace VStudio {
       bool setConfiguration(const QString &config);
       bool setConfiguration(const QString &name, const QString &platform);
       bool setConfiguration(const QString &name, e_VSPlatform platform);
-      const pv_VSConfig* vcfg() const;
+      const pv_VSConfig& vcfg() const;
       void setActive(bool active=true);
       bool isActive() const;
       bool setActivePrj(vsp_p project);
       bool setActivePrj(const QString &int_name);
       vsp_p getActivePrj() const;
       vsp_p getProject(const QString &int_name) const;
+
     private:
-      QString path_rlt;
       uivss_p uisln;  // UI representation
       vcfg_p config; // Active configuration selected for this solution
       vsp_p actprj; // Active project for this solution
@@ -158,9 +206,12 @@ namespace VStudio {
       bool active;
   };
 
-  class VSProject : public VSEntity {
+  class VSProject : public VSEntity,
+  public VSRefcountable,
+  public VSNameable,
+  public VSIndexable,
+  public VSFSStored {
     public:
-      VSProject(e_VSPrjLangType ltype, const QString &name, const QString &path_rlt);
       VSProject(e_VSPrjLangType ltype, const QString &name, const QUuid &uid, const QString &path_rlt);
       virtual ~VSProject();
 
@@ -168,9 +219,11 @@ namespace VStudio {
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent);
-      virtual QString getRelativePath() const { return path_rlt; }
-      virtual bool setRelativePath(const QString &path);
-      virtual vse_p getByUID(const QUuid &uid) const; // This will get file in project
+      /**
+       * @param uid uid of lookup file
+       * @return file in project
+       */
+      virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uiprj; }
       virtual vse_p getParent() const;
 
@@ -191,23 +244,22 @@ namespace VStudio {
 
     private:
       e_VSPrjLangType lang; // Project choosen language
-      QString path_rlt;
       vss_p sln;  // Parent solution
       uivsp_p uiprj; // UI representation
 #ifdef USE_BOOST
-      boost::container::vector<vss_p> pnts; // Parent solutions
-      boost::container::vector<vsp_p> deps; // Projects dependant on this one
-      boost::container::vector<vsp_p> reqs; // Projects required to build this one, i.e. dependencies
-      boost::container::vector<vsf_p> filters;
-      boost::container::vector<vsfl_p> files;
+      pv_VSProject deps; // Projects dependant on this one
+      pv_VSProject reqs; // Projects required to build this one, i.e. dependencies
+      pv_VSFilter filters;
+      pv_VSFile files;
 #else
 #endif
       bool active;
   };
 
-  class VSFilter : public VSEntity {
+  class VSFilter : public VSEntity,
+  public VSNameable,
+  public VSIndexable {
     public:
-      VSFilter(const QString &name);
       VSFilter(const QString &name, const QUuid &uid);
       virtual ~VSFilter();
 
@@ -215,61 +267,58 @@ namespace VStudio {
       virtual void insert(vse_p item);
       virtual bool createUI();
       virtual void setParent(vse_p parent); //NOTE: Inserts this filter into parent's filters
-      virtual QString getRelativePath() const;
-      virtual bool setRelativePath(const QString &path);
+      // virtual QString getRelativePath() const;
+      // virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uiflt; }
       virtual vse_p getParent() const;
 
     // VS Filter methods:
       bool dumpLayout(QTextStream &layout);
-      e_VSEntityType getParentType() {
-        return parent->getType();
-      }
-
-      QUuid getParentUID() {
-        return parent->uidGet();
-      }
-
+      e_VSEntityType getParentType() const { return parent->getType(); }
+      bool getParentUID(QUuid* uid) const;
       bool populateUI();
+
     private:
-      vse_p parent; // Parent filter or project
+      vse_p parent; // Parent solution|filter|project
       uivsf_p uiflt; // UI representation
 #ifdef USE_BOOST
-      boost::container::vector<vse_p> chld; // Children
+      pv_VSEntity chld; // Children
 #else
 #endif
   };
 
-  class VSFile : public VSEntity {
+  /** VS File model representation
+   * Used to hold almost all (if not all) logic for VS file.
+   * NOTE:
+   * Since file is a refcountable entity, list of parent projects
+   * used to store every parent project that uses current file
+   * to detect usage of sources, to maybe then optimize the
+   * archtecture of projects is in VSRefcountable::pnts
+  */
+  class VSFile : public VSEntity,
+  public VSRefcountable,
+  public VSNameable,
+  public VSIndexable,
+  public VSFSStored {
     public:
-      VSFile(const QString &name, vsp_p parent);
       VSFile(const QString &name, const QUuid &uid, vsp_p parent);
       virtual ~VSFile();
 
     // VS Entity interface methods:
       virtual bool createUI(uivse_p ui_parent);
       virtual void setParent(vsp_p parent_prj);
-      virtual QString getRelativePath() const;
-      virtual bool setRelativePath(const QString &path);
+      // virtual QString getRelativePath() const;
+      // virtual bool setRelativePath(const QString &path);
       virtual vsp_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uifl; }
       virtual vse_p getParent() const;
 
     // VS File methods:
+
     private:
       vsp_p parent; // Current parent project
       uivsfl_p uifl; // UI representation
-      /**
-      * List of parent projects
-      * used to store every parent project that uses current file
-      * to detect usage of sources, to maybe then optimize the
-      * archtecture of projects
-      */
-#ifdef USE_BOOST
-      boost::container::vector<vsp_p> pnts;
-#else
-#endif
   };
   //END VS basic entities
   //===========================================================================
@@ -278,7 +327,6 @@ namespace VStudio {
   //BEGIN VS derived entities
   class VSProject_c : public VSProject {
     public:
-      VSProject_c(const QString &name, const QString &path_rlt);
       VSProject_c(const QString &name, const QUuid &uid, const QString &path_rlt);
       virtual ~VSProject_c();
 
@@ -290,22 +338,19 @@ namespace VStudio {
 
   //===========================================================================
   //BEGIN VS build entities
-  class VSTool : public VSEntity{
+  class VSTool : public VSEntity {
     public:
       VSTool(e_VSBuildTool vstl);
       virtual ~VSTool();
 
     // VS Entity interface methods:
-      virtual void setName(const QString &name);
-      virtual const QString& getName() const;
-
-      virtual QString getRelativePath() const = 0;
-      virtual bool setRelativePath(const QString &path) = 0;
       virtual vse_p getByUID(const QUuid &uid) const = 0;
       virtual uivse_p getUI() const = 0;
+      virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
 
     // VS Tool interface methods:
+
     protected:
       e_VSBuildTool vstl;
   };
@@ -316,9 +361,11 @@ namespace VStudio {
       virtual ~VSToolCompilerMSVC();
 
     // VS Entity interface methods:
-      virtual QString getRelativePath() const;
+      virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
+
     private:
   };
 
@@ -328,9 +375,11 @@ namespace VStudio {
       virtual ~VSToolLinkerMSVC();
 
     // VS Entity interface methods:
-      virtual QString getRelativePath() const;
+      virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
+
     private:
   };
 
@@ -340,27 +389,61 @@ namespace VStudio {
       virtual ~VSToolCompilerMSMidl();
 
     // VS Entity interface methods:
-      virtual QString getRelativePath() const;
+      virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
+
     private:
   };
 
-  class VSPlatform {
+  class VSPlatform : public VSEntity {
     public:
       VSPlatform(e_VSPlatform platform);
       virtual ~VSPlatform();
 
-      e_VSPlatform name() const { return vspl; }
+    // VS Entity interface methods:
+      virtual vse_p getByUID(const QUuid &uid) const = 0;
+      virtual uivse_p getUI() const = 0;
+      virtual void setParent(vse_p parent) = 0;
+      virtual vse_p getParent() const = 0;
 
+    // VS Platform interface methods:
+      e_VSPlatform platform() const { return vspl; }
       static const VSPlatform* getVSPlatform(e_VSPlatform vspl);
 
-      //TODO: methods that configure tools like linker or midl
+      //TODO: methods that configure tools like linker or midl upon action
+
     protected:
       e_VSPlatform vspl;
   };
 
-  class VSConfig : public VSEntity {
+  class VSPlWin32 : public VSPlatform {
+    public:
+      VSPlWin32();
+      virtual ~VSPlWin32();
+
+    // VS Entity interface methods:
+      virtual vse_p getByUID(const QUuid &uid) const;
+      virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+  };
+
+  class VSPlWin64 : public VSPlatform {
+    public:
+      VSPlWin64();
+      virtual ~VSPlWin64();
+
+    // VS Entity interface methods:
+      virtual vse_p getByUID(const QUuid &uid) const;
+      virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+  };
+
+  class VSConfig : public VSEntity
+  , public VSNameable {
     public:
       VSConfig(const QString &name, e_VSPlatform vspl);
       VSConfig(const QString &name, const QString &vspl);
@@ -368,20 +451,20 @@ namespace VStudio {
       virtual ~VSConfig();
 
     // VS Entity interface methods:
-      virtual QString getRelativePath() const;
-      virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
     // VS Config interface methods:
-      e_VSPlatform platform() const { return vspl.name(); }
+      e_VSPlatform platform() const { return vspl.platform(); }
       QString toString();
+      bool operator == (const VSConfig &config) const;
 
-      bool operator ==(const VSConfig &config) const;
     private:
       const VSPlatform &vspl;
   };
+
   //END VS build entities
   //===========================================================================
 

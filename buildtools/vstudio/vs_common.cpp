@@ -19,6 +19,7 @@
 #endif
 
 namespace VStudio {
+  // const QUuid uid_null();
   /*
   UUID::UUID() {
     memset(&m1, 0, 32);
@@ -78,7 +79,7 @@ namespace VStudio {
       case vs_project: return VSPART_PROJECT;
       case vs_filter: return VSPART_FILTER;
       case vs_file: return VSPART_FILE;
-      case vs_platform: return VSPART_PLATFORM:
+      case vs_platform: return VSPART_PLATFORM;
       default: return "unknown";
     }
   }
@@ -174,7 +175,6 @@ namespace VStudio {
   // VS Part error message strings:
   //===========================================================================
 #ifdef DEBUG
-  const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found.\n");
   const QString g_msg_configapply("Applying config: [%1] in {%2}.\n");
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
@@ -185,6 +185,7 @@ namespace VStudio {
   const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");
   const QString g_err_slnload(VSPART_ERROR"\"%1\" solution failed to load.\n");
   const QString g_err_prjload(VSPART_ERROR"\"%1\" project failed to load.\n");
+  const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found, in {%3}.\n");
   const QString g_err_unsupportedtyp(VSPART_ERROR"Type [%1] is unsupported, in {%2}.\n");
   const QString g_wrn_unsupportedtyp(VSPART_WARNING"Type [%1] is unsupported, in {%2}.\n");
 };

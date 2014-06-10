@@ -30,7 +30,6 @@ namespace VStudio {
     VSPART_ERROR"Can't increase ref counter, it warps around.\n"
 
 #ifdef DEBUG
-extern const QString g_err_ent_notfound;
 extern const QString g_msg_configapply;
 extern const QString g_msg_slnselect;
 extern const QString g_msg_entselected;
@@ -42,6 +41,7 @@ extern const QString g_err_nullptr;
 extern const QString g_err_slnactivate;
 extern const QString g_err_slnload;
 extern const QString g_err_prjload;
+extern const QString g_err_ent_notfound;
 extern const QString g_err_unsupportedtyp;
 extern const QString g_wrn_unsupportedtyp;
 }; /* VStudio namespace */

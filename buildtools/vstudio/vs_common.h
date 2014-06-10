@@ -215,10 +215,12 @@ namespace VStudio {
 
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
+  static const QUuid uid_null("00000000-0000-0000-0000-000000000000");
   static const QUuid uid_vs9project_c("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942");
   static const QUuid uid_vs9project_cs("FAE04EC0-301F-11D3-BF4B-00C04F79EFBC");
   static const QUuid uid_vs9filter("2150E333-8FDC-42A3-9474-1A3956D46DE8");
 #else
+  static const QUuid uid_null(0,0,0,0,0,0,0,0,0,0,0);
   static const QUuid uid_vs9project_c(0x8BC9CEB8, 0x8B4A, 0x11D0, 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42);
   static const QUuid uid_vs9project_cs(0xFAE04EC0, 0x301F, 0x11D3, 0xBF, 0x4B, 0x00, 0xC0, 0x4F, 0x79, 0xEF, 0xBC);
   static const QUuid uid_vs9filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
