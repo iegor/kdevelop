@@ -43,6 +43,7 @@
 #define VSPART_PROJECT "vs_project"
 #define VSPART_FILTER "vs_filter"
 #define VSPART_FILE "vs_file"
+#define VSPART_PLATFORM "vs_platform"
 
 // VS build tool names
 #define VSTOOL_COMPILER "vstl_compiler"
@@ -170,9 +171,10 @@ Environment variables and make arguments can be specified in the project setting
 #error "VStudio: Boost support is no enabled"
 #endif
 
-#define predeclare_vs_typ(cname, pname, citer, iter) \
+#define predeclare_vs_typ(cname, pname, refname, citer, iter) \
   class cname; \
   typedef cname* pname; \
+  typedef cname& refname; \
   predeclare_vs_tl_iters(pname, citer, iter); \
   predeclare_vs_tl_vector(cname);
 
@@ -185,30 +187,31 @@ namespace VStudio {
   //===========================================================================
   // VS model representation classes pre-declaration
   //===========================================================================
-  predeclare_vs_typ(VSEntity, vse_p, ve_ci, ve_i); // Pointer typedef for VS entity model representation
-  predeclare_vs_typ(VSSolution, vss_p, vs_ci, vs_i); // Pointer typedef for VS solution model representation
-  predeclare_vs_typ(VSProject, vsp_p, vp_ci, vp_i); // Pointer typedef for VS project model representation
-  predeclare_vs_typ(VSProject_c, vspc_p, vpc_ci, vpc_i); // Pointer typedef for VS project (C lang) model representation
-  predeclare_vs_typ(VSFilter, vsf_p, vf_ci, vf_i); // Pointer typedef for VS filter model representation
-  predeclare_vs_typ(VSFile, vsfl_p, vfl_ci, vfl_i); // Pointer typedef for VS file model representation
-  predeclare_vs_typ(VSConfig, vcfg_p, vcfg_ci, vcfg_i); //Pointer typedef for VS configuration model representation
+  predeclare_vs_typ(VSRefcountable, vsr_p, vsr_r, vsr_ci, vsr_i); // Predeclaration for VS Refcountable model representation
+  predeclare_vs_typ(VSEntity, vse_p, vse_r, ve_ci, ve_i); // Predeclaration for VS entity model representation
+  predeclare_vs_typ(VSSolution, vss_p, vss_r, vs_ci, vs_i); // Predeclaration for VS solution model representation
+  predeclare_vs_typ(VSProject, vsp_p, vsp_r, vp_ci, vp_i); // Predeclaration for VS project model representation
+  predeclare_vs_typ(VSProject_c, vspc_p, vspc_r, vpc_ci, vpc_i); // Predeclaration for VS project (C lang) model representation
+  predeclare_vs_typ(VSFilter, vsf_p, vsf_r, vf_ci, vf_i); // Predeclaration for VS filter model representation
+  predeclare_vs_typ(VSFile, vsfl_p, vsfl_r, vfl_ci, vfl_i); // Predeclaration for VS file model representation
+  predeclare_vs_typ(VSConfig, vcfg_p, vcfg_r, vcfg_ci, vcfg_i); //Predeclaration for VS configuration model representation
 
   //===========================================================================
   // Visual studio UI representation classes
   //===========================================================================
   class VSExplorer;
-  predeclare_vs_typ(VSExplorerEntity, uivse_p, uive_ci, uive_i); // Pointer typedef for VS entity UI representation
-  predeclare_vs_typ(VSSlnNode, uivss_p, uivs_ci, uivs_i); // Pointer typedef for VS solution UI representation
-  predeclare_vs_typ(VSPrjNode, uivsp_p, uivp_ci, uivp_i); // Pointer typedef for VS project UI representation
-  predeclare_vs_typ(VSFltNode, uivsf_p, uivf_ci, uivf_i); // Pointer typedef for VS filter UI representation
-  predeclare_vs_typ(VSFilNode, uivsfl_p, uivfl_ci, uivfl_i); // Pointer typedef for VS file UI representation
+  predeclare_vs_typ(VSExplorerEntity, uivse_p, uivse_r, uive_ci, uive_i); // Predeclaration for VS entity UI representation
+  predeclare_vs_typ(VSSlnNode, uivss_p, uivss_r, uivs_ci, uivs_i); // Predeclaration for VS solution UI representation
+  predeclare_vs_typ(VSPrjNode, uivsp_p, uivsp_r, uivp_ci, uivp_i); // Predeclaration for VS project UI representation
+  predeclare_vs_typ(VSFltNode, uivsf_p, uivsf_r, uivf_ci, uivf_i); // Predeclaration for VS filter UI representation
+  predeclare_vs_typ(VSFilNode, uivsfl_p, uivsfl_r, uivfl_ci, uivfl_i); // Predeclaration for VS file UI representation
 
   //===========================================================================
   // VS build system classes
   //===========================================================================
-  predeclare_vs_typ(VSConfig, vscf_p, vscf_ci, vscf_i); // VS Configuration
-  predeclare_vs_typ(VSPlatform, vspl_p, vspl_ci, vspl_i); // VS Platform
-  predeclare_vs_typ(VSTool, vstl_p, vstl_ci, vstl_i); // VS Build tool
+  predeclare_vs_typ(VSConfig, vscf_p, vscf_r, vscf_ci, vscf_i); //Predeclaration of VS Configuration
+  predeclare_vs_typ(VSPlatform, vspl_p, vspl_r, vspl_ci, vspl_i); //Predeclaration of VS Platform
+  predeclare_vs_typ(VSTool, vstl_p, vstl_r, vstl_ci, vstl_i); //Predeclaration of VS Build tool
 
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
@@ -229,6 +232,7 @@ namespace VStudio {
     vs_solution,
     vs_config,
     vs_tool,
+    vs_platform,
   };
 
   enum e_VSPrjLangType {

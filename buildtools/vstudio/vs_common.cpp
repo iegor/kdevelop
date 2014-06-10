@@ -78,6 +78,7 @@ namespace VStudio {
       case vs_project: return VSPART_PROJECT;
       case vs_filter: return VSPART_FILTER;
       case vs_file: return VSPART_FILE;
+      case vs_platform: return VSPART_PLATFORM:
       default: return "unknown";
     }
   }
@@ -89,6 +90,7 @@ namespace VStudio {
     else if(typ == VSPART_PROJECT) return vs_project;
     else if(typ == VSPART_FILTER) return vs_filter;
     else if(typ == VSPART_FILE) return vs_file;
+    else if(typ == VSPART_PLATFORM) return vs_platform;
     else return vs_unknown;
   }
 
@@ -177,6 +179,7 @@ namespace VStudio {
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */
+  // const QString g_err_refcount_nonzeroremoval(VSPART_ERROR"Destructing referenced object.\n");
   const QString g_err_list_corrupted(VSPART_ERROR"a [%1] list is corrupted, in {%2}.\n");
   const QString g_err_nullptr(VSPART_ERROR"Null pointer at {%1}.\n");
   const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");

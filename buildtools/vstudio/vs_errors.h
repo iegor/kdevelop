@@ -20,10 +20,14 @@
 #endif /* DEBUG */
 
 namespace VStudio {
-#define VSPART_ERR_ENTITYLIST_CORRUPTED VSPART_ERROR \
-  "Part's entities list is corrupted.\n"
+#define VSPART_ERR_ENTITYLIST_CORRUPTED \
+    VSPART_ERROR"Part's entities list is corrupted.\n"
 #define VSPART_WRN_CONFIG_NAMEORPLATFORM_UNDEFINED \
-  "Warning! either name of platform is undefined.\n"
+    VSPART_WARNING"either name of platform is undefined.\n"
+#define VSPART_ERR_REFCOUNT_NONZERODELETE \
+    VSPART_ERROR"Destructing referenced object.\n"
+#define VSPART_ERR_REFCOUNT_WARPAROUND \
+    VSPART_ERROR"Can't increase ref counter, it warps around.\n"
 
 #ifdef DEBUG
 extern const QString g_err_ent_notfound;
@@ -32,6 +36,7 @@ extern const QString g_msg_slnselect;
 extern const QString g_msg_entselected;
 #endif /* DEBUG */
 
+// extern const QString g_err_refcount_nonzeroremoval;
 extern const QString g_err_list_corrupted;
 extern const QString g_err_nullptr;
 extern const QString g_err_slnactivate;
