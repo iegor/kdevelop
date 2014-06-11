@@ -643,6 +643,24 @@ namespace VStudio {
               case slns_prj_cfgplatforms: {
                 while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
                   // kddbg << sname << ": " << ln << endl;
+                  /**
+                   * There is two parts that are responsible for enabling project
+                   * to be built in the solution
+                   * - Active configuration string
+                   *  Tells what project configuration will be used for build.
+                   * - Build "marker"
+                   *  Tells if the project is enabled to be build under
+                   *  specified solution configuration
+                   *
+                   * ActiveCfg:
+                   *   GUID.sln_config_name.ActiveCfg = prj_config_name
+                   * Build "marker"
+                   *   GUID.sln_config_name.Build.0 = prj_config_name
+                   *
+                   * Build marker can be present or not
+                   * if not, that means that this project is not enabled in the
+                   * selected configuration
+                  */
                   ln = str.readLine();
                 }
                 break; }
