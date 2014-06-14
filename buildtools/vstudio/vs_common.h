@@ -175,6 +175,7 @@ Environment variables and make arguments can be specified in the project setting
 
 #define predeclare_vs_typ(cname, shortname) \
   class cname; \
+  typedef cname shortname; \
   typedef cname* glue(shortname,_p); \
   typedef cname& glue(shortname,_r); \
   predeclare_vs_tl_iters(glue(shortname,_p), glue(shortname,_ci), glue(shortname,_i)); \
