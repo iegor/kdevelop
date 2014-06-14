@@ -346,7 +346,7 @@ namespace VStudio {
 
   uivse_p VSExplorer::getByUID(const QUuid &uid) {
 #ifdef USE_BOOST
-    uive_ci it=uients.begin();
+    uivse_ci it=uients.begin();
     for(; it!=uients.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this

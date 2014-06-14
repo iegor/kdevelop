@@ -71,7 +71,7 @@ namespace VStudio {
       }
 #endif
 #ifdef USE_BOOST
-      ve_ci it=pnts.begin();
+      vse_ci it=pnts.begin();
       for(; it!=pnts.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
@@ -213,29 +213,29 @@ namespace VStudio {
   , VSNameable(nm)
   , VSFSStored()
   , uisln(0)
-  , config(0)
-  , actprj(0)
+  , active_bb(0)
+  , active_prj(0)
   , active(false) {
     setRelPath(path);
   }
 
   VSSolution::~VSSolution() {
-    actprj = 0;
+    active_prj = 0;
     // Delete UI representation
     if(uisln != 0) { delete uisln; uisln=0; }
 
     // Delete all configurations
-    setConfiguration(QString::null);
+    // setConfiguration(QString::null);
 #ifdef USE_BOOST
-    for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
+    // for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
-    }
+    // }
 
     // Delete all filters
 #ifdef USE_BOOST
-    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
@@ -248,7 +248,7 @@ namespace VStudio {
 
     // Delete all projects
 #ifdef USE_BOOST
-    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
@@ -312,7 +312,7 @@ namespace VStudio {
 
   vse_p VSSolution::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vp_ci it=projects.begin();
+    vsp_ci it=projects.begin();
     for(; it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
@@ -352,7 +352,7 @@ namespace VStudio {
 
     // Save projects layout
 #ifdef USE_BOOST
-    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
@@ -365,7 +365,7 @@ namespace VStudio {
 
     // Save filters layout
 #ifdef USE_BOOST
-    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
@@ -384,11 +384,16 @@ namespace VStudio {
     // Save solution's configurations
     s << section_header.arg(VSPART_SLNSECTION_SCFG_PLATFORMS).arg("preSolution");
 #ifdef USE_BOOST
-    for(vcfg_ci it=cfgs.begin(); it!=cfgs.end(); ++it) {
+    for(vsbb_ci it=bboxes.begin(); it!=bboxes.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
-      s << "\t\t" << (*it)->toString() << " = " << (*it)->toString() << endl;
+      vsbb_p bb = static_cast<vsbb_p>(*it);
+      if(bb != 0) {
+        s << "\t\t" << bb->config().toString() << " = " << bb->config().toString() << endl;
+      } else {
+        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::dumpLayout");
+      }
     }
     s << section_footer;
 
@@ -412,7 +417,7 @@ namespace VStudio {
 
   vsf_p VSSolution::getFltByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vf_ci it=filters.begin();
+    vsf_ci it=filters.begin();
     for(; it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
@@ -437,7 +442,7 @@ namespace VStudio {
 
   void VSSolution::forEachProj(entityFunctor fctr) {
 #ifdef USE_BOOST
-    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -450,7 +455,7 @@ namespace VStudio {
 
   void VSSolution::forEachFilter(entityFunctor fctr) {
 #ifdef USE_BOOST
-    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -470,7 +475,7 @@ namespace VStudio {
     }
     // Insert leve filters, if any
 #ifdef USE_BOOST
-    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -478,7 +483,7 @@ namespace VStudio {
       if(!(*it)->populateUI()) return false;
     }
 #ifdef USE_BOOST
-    for(vp_ci it=projects.begin(); it!=projects.end(); ++it) {
+    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -530,75 +535,107 @@ namespace VStudio {
     return true;
   }
 
-  bool VSSolution::addConfiguration(const QString &c) {
-    return addConfiguration(c.left(c.find('|')), c.mid(c.find('|')+1));
-  }
+  bool VSSolution::createCfg(const vcfg_p p, const vcfgcr_r pc) {
+    // Check if we already have a build box with this config as parent
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+      vsbb_p pbb = static_cast<vsbb_p>(*it);
+      if(pbb != 0) {
+        if(pbb->config() == pc) {
+          kddbg << VSPART_ERROR"Config [" << pbb->config().toString() << "] already exists in: " << name << "sln.\n";
+          return false;
+        }
+        //NOTE: We can't have two configs with same parent either, this will lead to ambiguity.
+        if(p != 0) {
+          if(pbb->belongs(p)) {
+            if(pbb->isEnabled()) {
+              // Substitute this config with new one that will be created
+              pbb->setEnabled(false);
+              continue;
+            }
+          }
+        }
+      }
+    }
 
-  bool VSSolution::addConfiguration(const QString &n, e_VSPlatform p) {
-    return addConfiguration(n, platform2String(p));
-  }
+    // Create new build box and make all necessary preparations
+    vsbb_p bb = new VSBuildBox(pc.name, pc.platform);
+    if(bb != 0) {
+      bb->setParent(p);
+      bb->setEnabled(true);
 
-  bool VSSolution::addConfiguration(const QString &n, const QString &p) {
-    vcfg_p pc = new VSConfig(n, p);
-    if(pc != 0) {
-#ifdef USE_BOOST
-      cfgs.push_back(pc);
-#else
-#error "VStudio: Boost support is no enabled"
-      //TODO: Implement this
+      // Create configs for nested projects if necessary
+      if(pc.sync_subs) {
+        BOOSTVEC_FOR(vsp_ci, it, projects) {
+          vsp_p prj = static_cast<vsp_p>(*it);
+          if(prj != 0) {
+            pc.sync_subs = false;
+            if(!prj->createCfg(&bb->config(), pc)) {
+              kddbg << VSPART_ERROR"Can't create config: " << pc.string() << " for project: "
+                    << prj->getName() << ".\n";
+              delete bb;
+              return false;
+            }
+          } else {
+            kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::createCfg");
+            delete bb;
+            return false;
+          }
+        }
+      }
+      BOOSTVEC_PUSHBACK(bboxes, bb);
+#ifdef DEBUG
+      kddbg << "Config created: " << bb->config().toString() << " within: " << getName() << " sln.\n";
 #endif
-           kddbg << type2String(pc->getType()) << " \"" << pc->getName() <<
-           "\" [" << platform2String(pc->platform()) << "] added.\n";
+      return true;
     } else {
-      kddbg << "Error! Can't create vs config, low mem.\n";
+      kddbg << g_err_notenoughmem.arg(VSPART_BUILDBOX).arg("VSSolution::selectCfg");
       return false;
     }
-    return true;
+    return false;
   }
 
-  bool VSSolution::setConfiguration(const QString &c) {
-    if(c != QString::null) {
-      return setConfiguration(c.left(c.find('|')), c.mid(c.find('|')+1));
-    } else {
-      return setConfiguration(QString::null, QString::null);
-    }
-  }
+  bool VSSolution::selectCfg(const vcfg_p p) {
+    vsbb_p bb = 0;
+    if(p != 0) {
+      bb = getBB(p); // Get bb that is for this configuration
 
-  bool VSSolution::setConfiguration(const QString &n, e_VSPlatform p) {
-    return setConfiguration(n, platform2String(p));
-  }
-
-  bool VSSolution::setConfiguration(const QString &n, const QString &p) {
-    if(n != QString::null && p != QString::null) {
-      QString c(n);
-      c.append('|').append(p);
-#ifdef USE_BOOST
-      vcfg_ci it=cfgs.begin();
-      for(; it!=cfgs.end(); ++it) { if((*it)->toString() == c) { break; } }
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
+      if(bb != 0) {
+        active_bb = bb;
+#ifdef DEBUG
+        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg("VSSolution::selectCfg");
 #endif
-#ifdef USE_BOOST
-      if(it!=cfgs.end()) { config = (*it); }
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
+
+        // Update active configurations for all projects
+        BOOSTVEC_FOR(vsp_ci, it, projects) {
+          vsp_p prj(*it);
+          if(prj != 0) {
+            if(!prj->selectCfg(&bb->config())) {
+#ifdef DEBUG
+              kddbg << VSPART_ERROR"Can't set config for project: \"" << prj->getName() << "\" in \""
+                  << getName() << "\", in {VSSolution::setCfg}\n";
 #endif
+            }
+          }
+          else {
+            kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::selectCfg");
+          }
+        }
+
+        // Update UI in VSExplorer
+        if(uisln != 0) {
+          //NOTE: TODO: This is temporary, untill I figure out how to design and implement a descent
+          //  GUI items for VSExplorer
+          uisln->setText(0, QString(name).append(" [%1]").arg(active_bb->config().toString()));
+        }
+        return true;
+      }
       else {
-        kddbg << "Can't find config [" << c << "].\n";
+        kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(p->toString()).arg("VSSolution::selectCfg");
         return false;
       }
-#ifdef DEBUG
-      kddbg << g_msg_configapply.arg(config->toString());
-#endif
-    } else if(n == QString::null || p == QString::null) {
-      kddbg << VSPART_WRN_CONFIG_NAMEORPLATFORM_UNDEFINED;
-      return false;
     }
-    return true;
-  }
-
-  /*inline*/ const pv_VSConfig& VSSolution::vcfg() const {
-    return cfgs;
+    else { kddbg << g_err_nullptr.arg("VSSolution::selectCfg"); return false; }
+    return false;
   }
 
   void VSSolution::setActive(bool a) {
@@ -611,11 +648,11 @@ namespace VStudio {
 
   bool VSSolution::setActivePrj(vsp_p p) {
     if(p != 0) {
-      if(actprj != 0) {
-        actprj->setActive(false);
+      if(active_prj != 0) {
+        active_prj->setActive(false);
       }
-      actprj = p;
-      actprj->setActive();
+      active_prj = p;
+      active_prj->setActive();
     }
     return false;
   }
@@ -633,13 +670,13 @@ namespace VStudio {
   }
 
   /*inline*/ vsp_p VSSolution::getActivePrj() const {
-    return actprj;
+    return active_prj;
   }
 
   /*inline*/ vsp_p VSSolution::getProject(const QString &n) const {
     if(n != QString::null) {
 #ifdef USE_BOOST
-      vp_ci it=projects.begin();
+      vsp_ci it=projects.begin();
       for(; it!=projects.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
@@ -665,12 +702,52 @@ namespace VStudio {
     return 0;
   }
 
-  void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
-#ifdef USE_BOOST
-    for(boost::container::vector<QUuid>::const_iterator uidc=deps.begin(); uidc!=deps.end(); ++uidc) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
+  vsbb_p VSSolution::getBB(const QString &c) const {
+    if(c != QString::null) {
+      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+        if((*it) != 0) {
+          if((*it)->config().toString() == c) { return (*it); }
+        }
+      }
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg("VSSolution::getBB");
+      return 0;
+    }
+#ifdef DEBUG
+    kddbg << VSPART_ERROR"Wrong param in {VSSolution::getBB}.\n";
 #endif
+    return 0;
+  }
+
+  vsbb_p VSSolution::getBB(const vcfg_p parent_cfg) const {
+#ifdef DEBUG
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+      if((*it) != 0) {
+        kddbg << "BBOX: {" << "pcfg: " << ( (*it)->parentConfig() ? (*it)->parentConfig()->toString() : "0" )
+            << " cfg: " << (*it)->config().toString() << " }.\n";
+      }
+    }
+#endif
+    if(parent_cfg != 0) {
+      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+        if((*it) != 0) {
+          if((*it)->parentConfig() != 0) {
+            if((*it)->belongs(parent_cfg)) { return (*it); }
+          }
+          else { kddbg << VSPART_ERROR"Parent cfg is 0 in: " << (*it)->config().toString() << endl; return 0; }
+        }
+        else {
+          kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::getBB");
+        }
+      }
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(parent_cfg->toString()).arg("VSSolution::getBB");
+      return 0;
+    }
+    kddbg << g_err_nullptr.arg("VSSolution::getBB");
+    return 0;
+  }
+
+  void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
+    BOOSTVEC_FOR(boost::container::vector<QUuid>::const_iterator, uidc, deps) {
       prj->addRequirement((*uidc));
     }
   }
@@ -682,7 +759,7 @@ namespace VStudio {
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
     //TODO: Not sure if this method is needed at all
-    // For not I'll leave it just cleaning the meta-deps tree
+    // For now I'll leave it just cleaning the meta-deps tree
   }
 
   //===========================================================================
@@ -697,7 +774,9 @@ namespace VStudio {
   , lang(ltype)
   , sln(0)
   , uiprj(0)
+  , active_bb(0)
   , active(false) {
+    setRelPath(path);
   }
 
   VSProject::~VSProject() {
@@ -705,7 +784,7 @@ namespace VStudio {
     // if(uiprj!=0) { delete uiprj; uiprj=0; }
     // Delete all filters
 #ifdef USE_BOOST
-    for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -719,7 +798,7 @@ namespace VStudio {
 
     // Free all files
 #ifdef USE_BOOST
-    for(vfl_ci it=files.begin(); it!=files.end(); ++it) {
+    for(vsfl_ci it=files.begin(); it!=files.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -781,7 +860,7 @@ namespace VStudio {
 
   vse_p VSProject::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vfl_ci it=files.begin();
+    vsfl_ci it=files.begin();
     for(; it!=files.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -836,7 +915,7 @@ namespace VStudio {
 #ifdef USE_BOOST
     if(!reqs.empty()) {
       s << "\tProjectSection(" << VSPART_PRJSECTION_DEPENDENCIES << ") = postProject\n";
-      for(vp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
+      for(vsp_ci it=reqs.begin(); it!=reqs.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -850,7 +929,7 @@ namespace VStudio {
 
   vsp_p VSProject::getReqByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vp_ci it=reqs.begin();
+    vsp_ci it=reqs.begin();
     for(; it!=reqs.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -876,7 +955,7 @@ namespace VStudio {
 
   vsp_p VSProject::getDepByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vp_ci it=deps.begin();
+    vsp_ci it=deps.begin();
     for(; it!=deps.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -902,7 +981,7 @@ namespace VStudio {
 
   vsf_p VSProject::getFltByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    vf_ci it=filters.begin();
+    vsf_ci it=filters.begin();
     for(; it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -931,7 +1010,7 @@ namespace VStudio {
       if(dp->getType() == vs_project) {
         // Scan for duplicates
 #ifdef USE_BOOST
-        vp_ci it=deps.begin();
+        vsp_ci it=deps.begin();
         for(; it!=deps.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -988,7 +1067,7 @@ namespace VStudio {
       if(rq->getType() == vs_project) {
         // Scan for duplicates
 #ifdef USE_BOOST
-        vp_ci it=reqs.begin();
+        vsp_ci it=reqs.begin();
         for(; it!=reqs.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -1043,7 +1122,7 @@ namespace VStudio {
   bool VSProject::populateUI() {
 #ifdef USE_BOOST
     if(!filters.empty()) {
-      for(vf_ci it=filters.begin(); it!=filters.end(); ++it) {
+      for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -1052,7 +1131,7 @@ namespace VStudio {
       }
     } else {
 #ifdef USE_BOOST
-      for(vfl_ci it=files.begin(); it!=files.end(); ++it) {
+      for(vsfl_ci it=files.begin(); it!=files.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -1083,6 +1162,81 @@ namespace VStudio {
 
   /*inline*/ bool VSProject::isActive() const {
     return active;
+  }
+
+  bool VSProject::createCfg(const vcfg_cp p, const vcfgcr_r cr) {
+    if(p != 0) {
+      // Check configs list for duplications and ambiguities
+      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+        vsbb_p pbb = static_cast<vsbb_p>(*it);
+        if(pbb != 0) {
+          if(pbb->config() == cr) {
+            kddbg << VSPART_ERROR"Config [" << pbb->config().toString() << "] already exists in: " << name << " prj.\n";
+            return false;
+          }
+          //NOTE: We can't have two configs with same parent either, this will lead to ambiguity.
+          else if(pbb->belongs(p)) {
+            if(pbb->isEnabled()) {
+              // Substitute this config with new one that will be created
+              pbb->setEnabled(false);
+              continue;
+            }
+          }
+        } else {
+          kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::createCfg");
+          return false;
+        }
+      }
+
+      // Create new buildbox and make all necessary preparations
+      vsbb_p bb = new VSBuildBox(cr.name, cr.platform);
+
+      if(bb != 0) {
+        bb->setParentCfg(p);
+        bb->setEnabled(true);
+        BOOSTVEC_PUSHBACK(bboxes, bb);
+#ifdef DEBUG
+        kddbg << "Config created: " << bb->config().toString() << " within: " << getName() << ".\n";
+#endif
+        return true;
+      } else {
+        kddbg << g_err_notenoughmem.arg("vsbb_p bb").arg("VSProject::createCfg");
+        return false;
+      }
+    }
+    else { kddbg << g_err_nullptr.arg("VSProject::createCfg"); return false; }
+    return false;
+  }
+
+  bool VSProject::selectCfg(const vcfg_cp p) {
+    if(p != 0) {
+      vsbb_p bb = getBB(p);
+      if(bb != 0) {
+        active_bb = bb;
+#ifdef DEBUG
+        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg("VSProject::selectCfg");
+#endif
+      }
+    }
+    else { kddbg << g_err_nullptr.arg("VSProject::selectCfg"); return false; }
+    return false;
+  }
+
+  vsbb_p VSProject::getBB(const vcfg_cp parent_cfg) const {
+    if(parent_cfg != 0) {
+      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+        if((*it) != 0) {
+          if((*it)->belongs(parent_cfg)) { return (*it); }
+        }
+        else { kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::getBB"); return 0; }
+      }
+#ifdef DEBUG
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(parent_cfg->toString()).arg("VSProject::getBB");
+#endif
+      return 0;
+    }
+    else { kddbg << g_err_nullptr.arg("VSProject::getBB"); return 0; }
+    return 0;
   }
 
   //===========================================================================
@@ -1158,7 +1312,7 @@ namespace VStudio {
 
   vse_p VSFilter::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    ve_ci it=chld.begin();
+    vse_ci it=chld.begin();
     for(; it!=chld.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -1247,7 +1401,7 @@ namespace VStudio {
 
   bool VSFilter::populateUI() {
 #ifdef USE_BOOST
-    for(ve_ci it=chld.begin(); it!=chld.end(); ++it) {
+    for(vse_ci it=chld.begin(); it!=chld.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
@@ -1322,7 +1476,7 @@ namespace VStudio {
 
   vsp_p VSFile::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
-    ve_ci it=pnts.begin();
+    vse_ci it=pnts.begin();
     for(; it!=pnts.end(); ++it) {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
@@ -1589,15 +1743,91 @@ namespace VStudio {
     return 0;
   }
 
-  bool VSConfig::operator == (const VSConfig &c) const {
+  bool VSConfig::operator == (const vcfg_cr c) const {
     return ((name == c.getName()) && (vspl.platform() == c.platform()));
   }
 
-  QString VSConfig::toString() {
-    QString config;
-    config.append(name).append('|').append(platform2String(vspl.platform()));
-    return config;
+  bool VSConfig::operator == (const vcfgcr_r cr) const {
+    return ((name == cr.name) && (vspl.platform() == cr.platform));
   }
+
+  const QString VSConfig::toString() const {
+    return QString(name).append("|%1").arg(platform2String(vspl.platform()));
+  }
+
+  //===========================================================================
+  // VS BuildBox::VSToolUnit methods
+  //===========================================================================
+  VSBuildBox::VSToolUnit::VSToolUnit()
+  : weight(0)
+  , tool(0) {
+  }
+
+  VSBuildBox::VSToolUnit::~VSToolUnit() {
+    if(tool != 0) { delete tool; tool = 0; }
+    else { kddbg << VSPART_ERROR"Tool was deleted prior the destruction.\n"; }
+  }
+
+  //===========================================================================
+  // VS BuildBox methods
+  //===========================================================================
+  VSBuildBox::VSBuildBox(const QString& n, e_VSPlatform p)
+  : VSEntity(vs_buildbox)
+  , cfg(n,p)
+  , pcfg(0)
+  , enabled(false) {
+  }
+
+  VSBuildBox::~VSBuildBox() {
+    pcfg = 0;
+  }
+
+  vse_p VSBuildBox::getByUID(const QUuid &/*uid*/) const {
+    return 0;
+  }
+
+  uivse_p VSBuildBox::getUI() const {
+    return 0; //TODO: Think about implementing UI for buildbox
+  }
+
+  void VSBuildBox::setParent(const vse_p /*p*/) {
+    kddbg << VSPART_ERROR"VSBuildBox::setParent is undefined.\n";
+  }
+
+  vse_p VSBuildBox::getParent() const {
+    return 0;
+  }
+
+  /*inline*/ bool VSBuildBox::isEnabled() const {
+    return enabled;
+  }
+
+  /*inline*/ void VSBuildBox::setEnabled(bool e/*=true*/) {
+    enabled = e;
+  }
+
+  /*inline*/ const vcfg_cp VSBuildBox::parentConfig() const {
+    return pcfg;
+  }
+
+  void VSBuildBox::setParentCfg(const vcfg_cp c) {
+    pcfg = c;
+#ifdef DEBUG
+    if(pcfg != 0) {
+      kddbg << "Config: " << pcfg->toString() << " is parent to: " << cfg.toString() << endl;
+    } else { kddbg << VSPART_ERROR"parent config is still 0.\n"; }
+#endif
+  }
+
+  /*inline*/ const vcfg_cr VSBuildBox::config() const {
+    return cfg;
+  }
+
+  bool VSBuildBox::belongs(const vcfg_cp parent_cfg) const {
+    if(parent_cfg == pcfg) { return true; }
+    return false;
+  }
+
   //END VS build entities
 
   vss_p getParentSln(vse_p e) {

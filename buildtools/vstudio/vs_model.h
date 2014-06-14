@@ -115,7 +115,7 @@ namespace VStudio {
   public VSNameable,
   public VSFSStored {
     public:
-      predeclare_vs_typ(VSMetaDependency, vsmd_p, vsmd_r, vsmd_ci, vsmd_i);
+      predeclare_vs_typ(VSMetaDependency, vsmd);
       class VSMetaDependency {
         public:
           VSMetaDependency(const QUuid &uuid) {
@@ -169,13 +169,22 @@ namespace VStudio {
       bool populateUI(); // This will populate/update UI items tree
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
-      bool addConfiguration(const QString &config);
-      bool addConfiguration(const QString &name, const QString &platform);
-      bool addConfiguration(const QString &name, e_VSPlatform platform);
-      bool setConfiguration(const QString &config);
-      bool setConfiguration(const QString &name, const QString &platform);
-      bool setConfiguration(const QString &name, e_VSPlatform platform);
-      const pv_VSConfig& vcfg() const;
+
+      /*!
+       * Will create a new config using \a parent_config as it's parent.
+       * - will not set new config as \a selected.
+       * - will check internally so that configs wouldn't doublicate.
+       * - if any config will have the same parent as the new one being created, it will be disabled for action and
+       *   new one will be enabled instead.
+       * @param parent_config configuration to use as \b parent
+       * @param pc is a pointer to \a VSConfig::VSConfigCreate struct containing params for config creation
+       * @return \b true if all work is done perfectly well
+       */
+      bool createCfg(const vcfg_p parent_config, const vcfgcr_r pc);
+      bool selectCfg(const vcfg_p parent_config);
+      vsbb_p getBB(const QString &config) const;
+      vsbb_p getBB(const vcfg_p parent_config) const;
+
       void setActive(bool active=true);
       bool isActive() const;
       bool setActivePrj(vsp_p project);
@@ -185,21 +194,21 @@ namespace VStudio {
 
     private:
       uivss_p uisln;  // UI representation
-      vcfg_p config; // Active configuration selected for this solution
-      vsp_p actprj; // Active project for this solution
+      vsbb_p active_bb; // Active buildbox selected for this solution
+      vsp_p active_prj; // Active project for this solution
 #ifdef USE_BOOST
       pv_VSProject projects;
       pv_VSFilter filters;
-      pv_VSConfig cfgs;  // Configurations
+      pv_VSBuildBox bboxes;  // build boxes, used to buil|clean, etc entire solution
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
-      /** Meta-dependencies tree
+      /*! Meta-dependencies tree
        * Used to contain raw dependencies for projects
        * Not filtered and allowed to have a cyclic dependencies
       */
 #ifdef USE_BOOST
-      boost::container::vector<vsmd_p> mdeps;
+      pv_VSMetaDependency mdeps;
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -242,15 +251,24 @@ namespace VStudio {
       void setActive(bool active=true);
       bool isActive() const;
 
+      // Configuraion works
+      bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
+      bool selectCfg(const vcfg_cp parent_config);
+
+    private:
+      vsbb_p getBB(const vcfg_cp parent_config) const;
+
     private:
       e_VSPrjLangType lang; // Project choosen language
       vss_p sln;  // Parent solution
       uivsp_p uiprj; // UI representation
+      vsbb_p active_bb; // Active buildbox
 #ifdef USE_BOOST
       pv_VSProject deps; // Projects dependant on this one
       pv_VSProject reqs; // Projects required to build this one, i.e. dependencies
       pv_VSFilter filters;
       pv_VSFile files;
+      pv_VSBuildBox bboxes;
 #else
 #endif
       bool active;
@@ -442,6 +460,36 @@ namespace VStudio {
       virtual vse_p getParent() const;
   };
 
+  /*!
+   * Used to send into vs entities that can act.
+   * @param name configuration name
+   * @param platform configuration platform
+   * @param sync_subs \b true if we must add coresponding config into each sub-node
+   * <a>\b e.g. into projects within solution upon adding new config</a>
+   */
+  class VSConfigCreate {
+    public:
+      VSConfigCreate()
+      : name(QString::null)
+      , platform(vspl_unknown)
+      , sync_subs(false) {
+      }
+
+      VSConfigCreate(const VSConfigCreate& cr)
+      : sync_subs(cr.sync_subs) {
+        name = cr.name;
+        platform = cr.platform;
+      }
+
+      const QString string() const {
+        return QString(name).append("|%1").arg(platform2String(platform));
+      }
+
+      QString name;
+      e_VSPlatform platform;
+      bool sync_subs;
+  };
+
   class VSConfig : public VSEntity
   , public VSNameable {
     public:
@@ -458,11 +506,52 @@ namespace VStudio {
 
     // VS Config interface methods:
       e_VSPlatform platform() const { return vspl.platform(); }
-      QString toString();
-      bool operator == (const VSConfig &config) const;
+      const QString toString() const;
+      bool operator == (const vcfg_cr config) const;
+      bool operator == (const vcfgcr_r cr) const;
 
     private:
       const VSPlatform &vspl;
+  };
+
+  class VSBuildBox : public VSEntity {
+    public:
+      class VSToolUnit {
+        public:
+          VSToolUnit();
+          ~VSToolUnit();
+
+          int weight; // Will determine order in the action, it is a "weight" of tool
+          vstl_p tool;
+      };
+    public:
+      /*!
+       * Will construct the build box
+       * @param name - name for config that will signify this bb when acting
+       * @param platform - platform part of \a VSConfig
+       * NOTE: That parent config can be changed, but not the config of bb
+       */
+      VSBuildBox(const QString &name, e_VSPlatform platform);
+      virtual ~VSBuildBox();
+
+    // VS Entity interface methods:
+      virtual vse_p getByUID(const QUuid &uid) const;
+      virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+
+    // VS BuildBox interface methods:
+      bool isEnabled() const;
+      void setEnabled(bool enabled=true);
+      const vcfg_cp parentConfig() const;
+      void setParentCfg(const vcfg_cp config);
+      const vcfg_cr config() const;
+      bool belongs(const vcfg_cp parent_cfg) const;
+
+    private:
+      const VSConfig cfg;
+      vcfg_cp pcfg; // Parent (higher order) configuration
+      bool enabled;
   };
 
   //END VS build entities

@@ -59,7 +59,8 @@ namespace VStudio {
     : KDevBuildTool(&data, parent, name ? name : "VSPart")
     , selected_sln(0)
     , active_sln(0)
-    , active_prj(0) {
+    , active_prj(0)
+    , active_cfg(0) {
     setInstance(VSFactory::instance());
     setXMLFile("kdevpart_vs.rc");
 
@@ -169,6 +170,13 @@ namespace VStudio {
     actCleanFilter->setWhatsThis(VSPART_ACTION_CLEAN_FILTER_WIT);
     actCleanFilter->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
+    // Create configuration action
+    actCreateConfig = new KAction(i18n("Create Configuration"), "gear", 0, this,
+                                 SLOT(slotCreateConfig()), actionCollection(), VSPART_ACTION_ADD_CONFIG);
+    actCreateConfig->setToolTip(VSPART_ACTION_ADD_CONFIG_TIP);
+    actCreateConfig->setWhatsThis(VSPART_ACTION_ADD_CONFIG_WIT);
+    actCreateConfig->setGroup(VSPART_ACTION_TOOLS_GROUP);
+
     // Configuration name action
     actConfigName = new KListViewAction(new KComboView(false, 250, 0, "actConfigName"),
                                         i18n("Configuration name"), 0, 0, 0, actionCollection(),
@@ -208,12 +216,13 @@ namespace VStudio {
     selected_sln = 0;
     active_sln = 0;
 
+    // Delete all configurations
+    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+      delete (*it); /*(*it)=0;*/
+    }
+
     // Delete all entities
-#ifdef USE_BOOST
-    for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+    BOOSTVEC_FOR(vse_ci, it, m_entities) {
       if((*it)!=0) {
         delete (*it); /*(*it)=0;*/
       } else {
@@ -233,18 +242,44 @@ namespace VStudio {
     m_prjname = projectName;
 
     QDomDocument &dom = *projectDom();
+    QDomElement general = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
+
+    // Read all project configs along with sln configs
+    QDomElement subEl = general.firstChild().toElement();
+    while(!subEl.isNull()) {
+      if(subEl.tagName() == VSPART_CONFIG) {
+        QString name = subEl.attribute("name");
+        QString platform = subEl.attribute("platform");
+
+        if(!verifyPlatform(platform)) {
+          kddbg << g_err_unsupportedplatform.arg(platform);
+          return;
+        }
+
+        if(createCfg(name, string2Platform(platform), false, false)) {
+          kddbg << "Config added: " << name << "|" << platform << endl;
+        }
+        else {
+          kddbg << VSPART_ERROR"Failed to add config: " << name << "|" << platform
+              << " into kdevelop project.\n";
+          return;
+        }
+      }
+      subEl = subEl.nextSibling().toElement();
+    }
 
     // Read all solutions and projects parse and setup them
-    QDomElement el = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
-    QDomElement subEl = el.firstChild().toElement();
+    subEl = general.firstChild().toElement();
     while(!subEl.isNull()) {
       if(subEl.tagName() == VSPART_SOLUTION) {
         QString sln_iname = subEl.attribute("name");
         QString sln_path = subEl.attribute("path");
         QString active_prj = subEl.attribute("active");
         if(loadVsSolution(sln_iname, sln_path)) {
+          /* TODO: Consider to mve this into VSSolution:: namespace
           vss_p sln = static_cast<vss_p>(getSlnByName(sln_iname));
           sln->setActivePrj(active_prj);
+          */
         } else {
           kddbg << g_err_slnload.arg(sln_iname);
           subEl = subEl.nextSibling().toElement();
@@ -254,20 +289,89 @@ namespace VStudio {
       subEl = subEl.nextSibling().toElement();
     }
 
+    // Re-read configurations for project and set parent configs for sln child configs
+    subEl = general.firstChild().toElement();
+    while(!subEl.isNull()) {
+      if(subEl.tagName() == VSPART_CONFIG) {
+        QString name = subEl.attribute("name");
+        QString platform = subEl.attribute("platform");
+
+        // Find project config <Name|Platform>
+        vcfg_p cfg = getCfg(QString(name).append("|%1").arg(platform));
+
+        if(cfg != 0) {
+          QDomElement sln_config = subEl.firstChild().toElement();
+          while(!sln_config.isNull()) {
+            if(sln_config.tagName() == VSPART_SOLUTION) {
+              QString sln_name = sln_config.attribute("name");
+              QString sln_cfg_name = sln_config.attribute("config");
+              QString sln_cfg_platform = sln_config.attribute("platform");
+              bool is_ok=false;
+              int is_enabled = sln_config.attribute("enabled").toInt(&is_ok, 10);
+
+              if(is_ok) {
+                vss_p sln = static_cast<vss_p>(getSlnByName(sln_name));
+                if(sln != 0) {
+                  vsbb_p slnbb = sln->getBB(QString(sln_cfg_name).append("|%1").arg(sln_cfg_platform));
+                  if(slnbb != 0) {
+                    slnbb->setParentCfg(cfg);
+                  }
+                }
+              } else {
+                kddbg << VSPART_ERROR"Can't read \"enabled\" param in configuration.\n";
+                return;
+              }
+            } else {
+              kddbg << g_wrn_unsupportedtyp.arg(sln_config.tagName()).arg("VSPart::openProject");
+              sln_config = sln_config.nextSibling().toElement();
+              continue;
+            }
+            sln_config = sln_config.nextSibling().toElement();
+          }
+        }
+        else {
+          kddbg << VSPART_ERROR"Can't find config: " << QString(name).append("|%1").arg(platform)
+              << " in kdevelop project.\n";
+          return;
+        }
+      }
+      subEl = subEl.nextSibling().toElement();
+    }
+
+    if(m_configs.empty()) {
+      kddbg << VSPART_ERROR"No configs found for project. quit.\n";
+      return;
+    }
+
     // Set active solution
     QString activesln = DomUtil::readEntry(dom, VSPART_XML_SECTION_ACTIVESLN);
     vss_p sln = static_cast<vss_p>(getSlnByName(activesln));
     if(sln == 0) {
       kddbg << g_err_slnactivate.arg(activesln);
+      return;
     } else {
       activateSln(sln);
       selectSln(sln);
+    }
+
+    // Set active configuration
+    QString activecfg = DomUtil::readEntry(dom, VSPART_XML_SECTION_ACTIVECFG);
+    vcfg_p acfg = getCfg(activecfg);
+    if(acfg != 0) {
+#ifdef DEBUG
+      kddbg << "Setting config: " << acfg->toString() << endl;
+#endif
+      if(!selectCfg(acfg)) {
+        kddbg << VSPART_ERROR"Failed to set config: " << acfg->toString() << endl;
+        return;
+      }
     }
 
     KDevProject::openProject(dirName, projectName);
   }
 
   void VSPart::closeProject() {
+    kddbg << VSPART_WARNING"Closing project file.\n";
   }
 
   QString VSPart::projectName() const {
@@ -313,16 +417,16 @@ namespace VStudio {
     return "";
   }
 
-  void VSPart::addFile(const QString &fileName) {
+  void VSPart::addFile(const QString &/*fileName*/) {
   }
 
-  void VSPart::addFiles(const QStringList& fileList) {
+  void VSPart::addFiles(const QStringList &/*fileList*/) {
   }
 
-  void VSPart::removeFile(const QString &fileName) {
+  void VSPart::removeFile(const QString &/*fileName*/) {
   }
 
-  void VSPart::removeFiles(const QStringList& fileList) {
+  void VSPart::removeFiles(const QStringList &/*fileList*/) {
   }
 
   KDevProject::Options VSPart::options() const {
@@ -397,7 +501,10 @@ namespace VStudio {
 
     // Create model::solution item
     vss_p sln = new VSSolution(internal_name, abspath);
-    if(sln == 0) { kddbg << "Can't parse solution file" << endl; return false; }
+    if(sln == 0) {
+      kddbg << g_err_notenoughmem.arg(VSPART_SOLUTION).arg("VSPart::loadVsSolution");
+      return false;
+    }
 #ifdef USE_BOOST
     m_entities.push_back(sln);
 #else
@@ -634,7 +741,16 @@ namespace VStudio {
                       << c_internal_name << endl;
 #endif
                   // Create and add configuration
-                  sln->addConfiguration(conf_name);
+                  VSConfigCreate cr;
+                  cr.name = conf_name.left(conf_name.find('|'));
+                  cr.platform = string2Platform(conf_name.mid(conf_name.find('|')+1));
+
+                  //TODO: Consider enabling VSSolution::createCfg to handle 0 as non-lethal case,
+                  //  for setting some tmp parent config that will be replaces upon loading of project
+                  if(!sln->createCfg(0, cr)) {
+                    kddbg << VSPART_ERROR"Config: " << conf_name << " can't be added.\n";
+                    return false;
+                  }
                   ln = str.readLine();
                 }
                 break; }
@@ -758,7 +874,7 @@ namespace VStudio {
     return true;
   }
 
-  vse_p VSPart::getByUID(const QUuid &uid) const {
+  vse_p VSPart::getByUID(const QUuid &/*uid*/) const {
     /*
 #ifdef USE_BOOST
     for(ve_ci it=m_entities.begin(); it!=m_entities.end(); ++it) {
@@ -780,7 +896,7 @@ namespace VStudio {
   vss_p VSPart::getSlnByName(const QString &n) {
     if(n != QString::null) {
 #ifdef USE_BOOST
-      ve_ci it=m_entities.begin();
+      vse_ci it=m_entities.begin();
       for(; it!=m_entities.end(); ++it) {
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
@@ -815,65 +931,9 @@ namespace VStudio {
 #ifdef DEBUG
       kddbg << g_msg_slnselect.arg(s->getName());
 #endif
-      // Update configuration selection combos
-      actConfigName->view()->clear();
-      actConfigPlatform->view()->clear();
-#ifdef USE_BOOST
-      pv_QString names;
-      pv_QString plfms;
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
-
-      // Setup configurations for active solution
-#ifdef USE_BOOST
-      for(vcfg_ci it=selected_sln->vcfg().begin(); it!=selected_sln->vcfg().end(); ++it) {
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
-
-        // Parse through configuration names and insert new one, if it isn't there
-#ifdef USE_BOOST
-        qstr_ci ciit=names.begin();
-        for(; ciit!=names.end(); ++ciit) {
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
-          if((*ciit) == (*it)->getName()) { break; }
-        }
-        if(ciit == names.end()) {
-          names.push_back((*it)->getName());
-          QListViewItem *i = new QListViewItem(actConfigName->view()->listView(), (*it)->getName());
-          i->setPixmap(0, SmallIcon("gear"));
-          actConfigName->view()->addItem(i);
-        }
-
-        // Parse through platforms and insert new one, if it isn't there yet
-#ifdef USE_BOOST
-        qstr_ci pciit=plfms.begin();
-        for(; pciit!=plfms.end(); ++pciit) {
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
-          if((*pciit) == platform2String((*it)->platform())) { break; }
-        }
-        if(pciit == plfms.end()) {
-          plfms.push_back(platform2String((*it)->platform()));
-          QListViewItem *i = new QListViewItem(actConfigPlatform->view()->listView(), platform2String((*it)->platform()));
-          i->setPixmap(0, SmallIcon("gear"));
-          actConfigPlatform->view()->addItem(i);
-        }
-      }
-      //Set latest configuration
-      //NOTE: That is for now only
-      //TODO: Make configuration selection depend on saved settings
-      //  NOTE: Part of meta-information for solutions and projects
-      actConfigName->view()->setCurrentText(names[0]);
-      actConfigPlatform->view()->setCurrentText(plfms[0]);
-      selected_sln->setConfiguration(names[0], plfms[0]);
       return true;
     }
-
+    kddbg << g_err_nullptr.arg("VSPart::selectSln");
     return false;
   }
 
@@ -963,9 +1023,147 @@ namespace VStudio {
     return false;
   }
 
-  bool VSPart::saveSlnAs(vss_p s, const QString& path) {
+  bool VSPart::saveSlnAs(vss_p s, const QString &path) {
     kddbg << "SLOT: VSPart::slotSaveSlnAs \"" << path << "\".\n";
     return false;
+  }
+
+  bool VSPart::createCfg(const QString &n, e_VSPlatform p, bool fix_sln/*=false*/, bool fix_prj/*=false*/) {
+    // Check if we already have configuration with the same parameters.
+    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+      vcfg_p cfg = static_cast<vcfg_p>(*it);
+      if(cfg != 0) {
+        if((cfg->getName() == n) && (cfg->platform() == p)) {
+          kddbg << "Duplicate configs are not allowed.\n";
+          return false;
+        }
+      } else {
+        kddbg << g_err_list_corrupted.arg(VSPART_CONFIG).arg("VSPart::createCfg");
+        return false;
+      }
+    }
+
+    // Create new configuration object
+    vcfg_p test_cfg = new VSConfig(n, p);
+
+    if(test_cfg != 0) {
+      if(fix_sln) { // Create new configs in child sln objects
+        vcfgcr cr;
+        cr.name = n;
+        cr.platform = p;
+        cr.sync_subs = fix_prj;
+        BOOSTVEC_FOR(vse_ci, it, m_entities) {
+          vss_p s = static_cast<vss_p>(*it);
+          if(s != 0) {
+            if(!s->createCfg(test_cfg, cr)) {
+              kddbg << VSPART_ERROR"Failed to add sln config: "<< cr.string() << " for \"" << s->getName()
+                  << "\", in {VSPart::setCfg}\n";
+              delete test_cfg;
+              return false;
+            }
+          } else {
+            kddbg << g_err_list_corrupted.arg(VSPART_SOLUTION).arg("VSPart::addCfg");
+            delete test_cfg;
+            return false;
+          }
+        }
+      }
+      m_configs.push_back(test_cfg);
+
+      // Update UI
+      // actConfigName->view()->clear();
+      // actConfigPlatform->view()->clear();
+      QListViewItem *cfgnm = actConfigName->view()->listView()->findItem(n, 0);
+      if(cfgnm == 0) {
+        cfgnm = new QListViewItem(actConfigName->view()->listView(), n);
+        cfgnm->setPixmap(0, SmallIcon("gear"));
+        actConfigName->view()->addItem(cfgnm);
+      }
+
+      QListViewItem *cfgpl = actConfigPlatform->view()->listView()->findItem(platform2String(p), 0);
+      if(cfgpl == 0) {
+        cfgpl = new QListViewItem(actConfigPlatform->view()->listView(), platform2String(p));
+        cfgpl->setPixmap(0, SmallIcon("gear"));
+        actConfigPlatform->view()->addItem(cfgpl);
+      }
+      return true;
+    }
+#ifdef DEBUG
+    else { kddbg << g_err_notenoughmem.arg(VSPART_CONFIG).arg("VSPart::addConfiguration"); }
+#endif
+    return false;
+  }
+
+  bool VSPart::selectCfg(const vcfgcr_r pc) {
+    const QString cs(pc.string());
+    vcfg_p pcfg = 0;
+    // Check if we have a configuration like that
+    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+      if((*it) != 0) {
+        if((*it)->toString() == cs) {
+          pcfg = (*it);
+          break;
+        }
+      }
+    }
+
+    if(pcfg != 0) {
+      return selectCfg(pcfg);
+    }
+    else {
+      kddbg << g_err_ent_notfound.arg(VSPART_CONFIG).arg(cs).arg("VSPart::setCfg");
+      return false;
+    }
+    return false;
+  }
+
+  bool VSPart::selectCfg(const vcfg_p cfg) {
+    if(cfg != 0) {
+      // Check if we have that config in our list
+      vcfg_ci it = m_configs.begin();
+      BOOSTVEC_OFOR(it, m_configs) {
+        if((*it) != 0) {
+          if((*it) == cfg) { break; }
+        }
+        else { kddbg << g_err_list_corrupted.arg(VSPART_CONFIG).arg("VSPart::selectCfg"); return false; }
+      }
+
+      if(it != m_configs.end()) {
+        active_cfg = cfg; // Set it as our active configuration
+
+        // Let all solutions know new configuration
+        BOOSTVEC_FOR(vse_ci, it, m_entities) {
+          vss_p s = static_cast<vss_p>(*it);
+          if(s != 0) {
+            if(!s->selectCfg(active_cfg)) {
+              kddbg << VSPART_ERROR"Failed to set sln config: " << cfg->toString() << " for \"" << s->getName()
+                  << "\", in {VSPart::setCfg}\n";
+              return false;
+            }
+          } else {
+            kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::selectCfg");
+            return false;
+          }
+        }
+
+        // Update UI
+        actConfigName->view()->setCurrentText(cfg->getName());
+        actConfigPlatform->view()->setCurrentText(platform2String(cfg->platform()));
+        return true;
+      }
+    }
+    else { kddbg << g_err_nullptr.arg("VSPart::selectCfg"); }
+    return false;
+  }
+
+  vcfg_p VSPart::getCfg(const QString& c) const {
+    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+      if((*it) != 0) {
+        if((*it)->toString() == c) { return (*it); }
+      }
+      else { kddbg << g_err_list_corrupted.arg(VSPART_CONFIG).arg("VSPart::getCfg"); }
+    }
+    return 0;
   }
 
   bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {
@@ -1067,12 +1265,31 @@ namespace VStudio {
     kddbg << "slotCleanFilter test" << endl;
   }
 
+  void VSPart::slotCreateConfig() {
+    kddbg << "SLOT: Create Config.\n";
+    // Ask user. What name and platform should be given to this configuration ?
+    QString test_name("test create config");
+    e_VSPlatform test_pl(vspl_win32);
+    bool create_sln_cfgs = true;
+    bool create_prj_cfgs = false;
+  }
+
   void VSPart::slotSelectCfgName(QListViewItem *i) {
-    selected_sln->setConfiguration(i->text(0), actConfigPlatform->view()->currentText());
+    vcfgcr cr;
+    cr.name = i->text(0);
+    cr.platform = string2Platform(actConfigPlatform->view()->currentText());
+    if(!selectCfg(cr)) {
+      kddbg << VSPART_ERROR"Failed to set project config: " << cr.string() << endl;
+    }
   }
 
   void VSPart::slotSelectCfgPlatform(QListViewItem *i) {
-    selected_sln->setConfiguration(actConfigName->view()->currentText(), i->text(0));
+    vcfgcr cr;
+    cr.name = actConfigName->view()->currentText();
+    cr.platform = string2Platform(i->text(0));
+    if(!selectCfg(cr)) {
+      kddbg << VSPART_ERROR"Failed to set project config: " << cr.string() << endl;
+    }
   }
   //END // Slot methods
 };

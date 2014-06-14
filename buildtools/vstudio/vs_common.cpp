@@ -80,6 +80,7 @@ namespace VStudio {
       case vs_filter: return VSPART_FILTER;
       case vs_file: return VSPART_FILE;
       case vs_platform: return VSPART_PLATFORM;
+      case vs_buildbox: return VSPART_BUILDBOX;
       default: return "unknown";
     }
   }
@@ -92,6 +93,7 @@ namespace VStudio {
     else if(typ == VSPART_FILTER) return vs_filter;
     else if(typ == VSPART_FILE) return vs_file;
     else if(typ == VSPART_PLATFORM) return vs_platform;
+    else if(typ == VSPART_BUILDBOX) return vs_buildbox;
     else return vs_unknown;
   }
 
@@ -155,6 +157,10 @@ namespace VStudio {
     else return vspl_unknown;
   }
 
+  bool verifyPlatform(const QString &p) {
+    return (string2Platform(p) != vspl_unknown);
+  }
+
   QString tool2String(e_VSBuildTool t) {
     switch(t) {
       case vstl_compiler: return VSTOOL_COMPILER;
@@ -179,6 +185,7 @@ namespace VStudio {
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */
+  const QString g_err_unsupportedplatform(VSPART_ERROR"Platform: %1 is not supported.\n");
   const QString g_err_notenoughmem(VSPART_ERROR"Not enough mem to alloc %1, in {%2}.\n");
   // const QString g_err_refcount_nonzeroremoval(VSPART_ERROR"Destructing referenced object.\n");
   const QString g_err_list_corrupted(VSPART_ERROR"a [%1] list is corrupted, in {%2}.\n");

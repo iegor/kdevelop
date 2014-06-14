@@ -99,7 +99,14 @@ namespace VStudio {
     bool activatePrj(vsp_p prj);
     vsp_p getActivePrj() const;
     bool saveSln(vss_p sln);
-    bool saveSlnAs(vss_p sln, const QString& new_path);
+    bool saveSlnAs(vss_p sln, const QString &new_path);
+
+    // Configurations works
+    bool createCfg(const QString &name, e_VSPlatform platform, bool fix_sln=false, bool fix_prj=false);
+    bool selectCfg(const vcfgcr_r pc);
+    bool selectCfg(const vcfg_p config);
+    bool createSlnCfg(vss_p sln);
+    vcfg_p getCfg(const QString& c) const;
 
   private:
     bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
@@ -121,10 +128,12 @@ namespace VStudio {
     void slotBuildFilter();
     void slotCleanFilter();
 
+    void slotCreateConfig();
     void slotSelectCfgName(QListViewItem *item);
     void slotSelectCfgPlatform(QListViewItem *item);
 
-    // void slot( const QString &);
+  public:
+    KAction *actCreateConfig;
 
   private:
     KAction *actAddSolution;
@@ -153,8 +162,10 @@ namespace VStudio {
     vss_p selected_sln;
     vss_p active_sln;
     vsp_p active_prj;
+    vcfg_p active_cfg; // Selected configuration
 #ifdef USE_BOOST
     pv_VSEntity m_entities;     // Solutions
+    pv_VSConfig m_configs;
 #else
     QPtrList<vse_p> m_entities;
 #endif

@@ -34,6 +34,7 @@
 #define VSPART_XML_SECTION "kdevvstudioproject"
 #define VSPART_XML_SECTION_GENERAL VSPART_XML_SECTION"/general"
 #define VSPART_XML_SECTION_ACTIVESLN VSPART_XML_SECTION_GENERAL"/active_sln"
+#define VSPART_XML_SECTION_ACTIVECFG VSPART_XML_SECTION_GENERAL"/active_cfg"
 
 // VStudio basic type names
 #define VSSOLUTION_VERSION 10
@@ -44,6 +45,7 @@
 #define VSPART_FILTER "vs_filter"
 #define VSPART_FILE "vs_file"
 #define VSPART_PLATFORM "vs_platform"
+#define VSPART_BUILDBOX "vs_buildbox"
 
 // VS build tool names
 #define VSTOOL_COMPILER "vstl_compiler"
@@ -149,6 +151,15 @@ Environment variables and make arguments can be specified in the project setting
 #define VSPART_ACTION_RENAME_ENTITY_WIT_LONG \
 "<qt><b>Rename entity</b><p>Change internal name of selected entity.</p></qt>"
 
+#define VSPART_ACTION_ADD_CONFIG "config_gcreate"
+#define VSPART_ACTION_ADD_CONFIG_TIP "Create kdevelop project configuration"
+#define VSPART_ACTION_ADD_CONFIG_WIT "Creates a configuration for kdevelop project"
+#define VSPART_ACTION_ADD_CONFIG_WIT_LONG \
+"<qt>Will create a configuration for top-level kdevelop project. Then if <b>fix_sln</b> is set to \b true it " \
+"create configs in all solutions that are inserted in this project, with the same name as parent config.\n" \
+"If \b fix_prj is set to \b true too, then it will create corresponding configs in all vs projects that are in all \n" \
+"vs solutions in this project.</qt>"
+
 #define VSPART_ACTION_CONFIGURATION_CFGNAME "config_cfgname"
 #define VSPART_ACTION_CONFIGURATION_CFGNAME_TIP "Configuration name"
 #define VSPART_ACTION_CONFIGURATION_CFGNAME_WIT "Select the name for configuration to build"
@@ -178,8 +189,31 @@ Environment variables and make arguments can be specified in the project setting
   typedef cname shortname; \
   typedef cname* glue(shortname,_p); \
   typedef cname& glue(shortname,_r); \
+  typedef cname const& glue(shortname,_cr); \
+  typedef cname const* glue(shortname,_cp); \
   predeclare_vs_tl_iters(glue(shortname,_p), glue(shortname,_ci), glue(shortname,_i)); \
   predeclare_vs_tl_vector(cname); \
+
+#ifdef USE_BOOST
+#define BOOSTVEC_FOR(ityp, i, v) \
+  for(ityp i=v.begin(); i!=v.end(); ++i)
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
+
+#ifdef USE_BOOST
+#define BOOSTVEC_OFOR(iter, v) \
+  for(; iter!=v.end(); ++iter)
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
+
+#ifdef USE_BOOST
+#define BOOSTVEC_PUSHBACK(vector, value) \
+  (vector).push_back((value));
+#else
+#error "VStudio: Boost support is not enabled" //TODO: Implement later
+#endif
 
 //BEGIN //VStudio namespace
 namespace VStudio {
@@ -198,6 +232,7 @@ namespace VStudio {
   predeclare_vs_typ(VSFilter, vsf); // Predeclaration for VS filter model representation
   predeclare_vs_typ(VSFile, vsfl); // Predeclaration for VS file model representation
   predeclare_vs_typ(VSConfig, vcfg); //Predeclaration for VS configuration model representation
+  predeclare_vs_typ(VSConfigCreate, vcfgcr); // Predeclaration for VS Config creating utility class
 
   //===========================================================================
   // Visual studio UI representation classes
@@ -215,6 +250,7 @@ namespace VStudio {
   predeclare_vs_typ(VSConfig, vcfg); // Predeclaration of VS Configuration
   predeclare_vs_typ(VSPlatform, vspl); // Predeclaration of VS Platform
   predeclare_vs_typ(VSTool, vstl); // Predeclaration of VS Build tool
+  predeclare_vs_typ(VSBuildBox, vsbb); // Predeclaration of VS BuildBox
 
   //some necessary GUIDs
 #ifndef QT_NO_QUUID_STRING
@@ -238,6 +274,7 @@ namespace VStudio {
     vs_config,
     vs_tool,
     vs_platform,
+    vs_buildbox,
   };
 
   enum e_VSPrjLangType {
@@ -293,6 +330,7 @@ namespace VStudio {
 
   QString platform2String(e_VSPlatform platform);
   e_VSPlatform string2Platform(const QString &platform);
+  bool verifyPlatform(const QString &platform);
 
   QString tool2String(e_VSBuildTool vstl);
   e_VSBuildTool string2Tool(const QString &vstl);
