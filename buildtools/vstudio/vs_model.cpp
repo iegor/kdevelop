@@ -1,5 +1,6 @@
 /*
 *kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
+* NOTE: 120 symbols is the limit for text line. it marked with '#' in this line                                        #
 *
 *  C/C++ Implementation: vs_model
 *
