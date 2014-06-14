@@ -36,6 +36,7 @@ extern const QString g_msg_entselected;
 #endif /* DEBUG */
 
 // extern const QString g_err_refcount_nonzeroremoval;
+extern const QString g_err_notenoughmem;
 extern const QString g_err_list_corrupted;
 extern const QString g_err_nullptr;
 extern const QString g_err_slnactivate;

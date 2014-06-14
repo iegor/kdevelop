@@ -179,6 +179,7 @@ namespace VStudio {
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */
+  const QString g_err_notenoughmem(VSPART_ERROR"Not enough mem to alloc %1, in {%2}.\n");
   // const QString g_err_refcount_nonzeroremoval(VSPART_ERROR"Destructing referenced object.\n");
   const QString g_err_list_corrupted(VSPART_ERROR"a [%1] list is corrupted, in {%2}.\n");
   const QString g_err_nullptr(VSPART_ERROR"Null pointer at {%1}.\n");
