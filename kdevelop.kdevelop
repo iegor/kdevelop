@@ -154,7 +154,8 @@
     </splitheadersource>
     <references>
       <pcs>kde_includes</pcs>
-      <pcs>qt3includes</pcs>
+      <pcs>boost</pcs>
+      <pcs>qt3trunk</pcs>
       <pcs>automatic_%2Fhome%2Frainman%2Fprojects%2Fkde%2Fkdevelop</pcs>
     </references>
   </kdevcppsupport>
@@ -202,8 +203,8 @@
         <ccompilerbinary/>
         <cxxcompilerbinary/>
         <f77compilerbinary/>
-        <cflags>-O0 -Wall -ggdb3 -ansi -pipe</cflags>
-        <cxxflags>-O0 -Wall -ggdb3 -ansi -pipe</cxxflags>
+        <cflags>-O0 -Wall -ggdb3 -ansi -pipe -DDEBUG</cflags>
+        <cxxflags>-O0 -Wall -ggdb3 -ansi -pipe -DDEBUG</cxxflags>
         <f77flags/>
       </debug_gcc_x86_64>
       <debug_gcc_i686>
@@ -258,7 +259,8 @@
     <customArguments/>
     <customTagfilePath>/home/rainman/projects/kde/kdevelop/tags</customTagfilePath>
     <activeTagsFiles>
-      <file>/usr/local/share/ctags/tags</file>
+      <file>/home/rainman/projects/boost.ctags</file>
+      <file>/home/rainman/projects/qt/dev.ctags</file>
     </activeTagsFiles>
   </ctagspart>
 </kdevelop>

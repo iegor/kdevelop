@@ -1,7 +1,7 @@
 <?xml version = '1.0' encoding = 'UTF-8'?>
 <!DOCTYPE KDevPrjSession>
 <KDevPrjSession>
- <DocsAndViews NumberOfDocuments="57" >
+ <DocsAndViews NumberOfDocuments="81" >
   <Doc0 NumberOfViews="1" URL="file:///usr/kde/git/include/kparts/componentfactory.h" >
    <View0 Encoding="" Type="Source" />
   </Doc0>
@@ -15,13 +15,13 @@
    <View0 Encoding="UTF-8" Type="Source" />
   </Doc3>
   <Doc4 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_model.cpp" >
-   <View0 Encoding="UTF-8" line="331" Type="Source" />
+   <View0 Encoding="UTF-8" line="695" Type="Source" />
   </Doc4>
   <Doc5 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_model.h" >
-   <View0 Encoding="UTF-8" line="348" Type="Source" />
+   <View0 Encoding="UTF-8" line="203" Type="Source" />
   </Doc5>
   <Doc6 NumberOfViews="1" URL="file:///usr/qt/3/include/qfile.h" >
-   <View0 Encoding="" line="0" Type="Source" />
+   <View0 Encoding="" Type="Source" />
   </Doc6>
   <Doc7 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_explorer.h" >
    <View0 Encoding="UTF-8" Type="Source" />
@@ -63,116 +63,188 @@
    <View0 Encoding="" Type="Source" />
   </Doc19>
   <Doc20 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_common.h" >
-   <View0 Encoding="UTF-8" line="150" Type="Source" />
+   <View0 Encoding="UTF-8" line="33" Type="Source" />
   </Doc20>
-  <Doc21 NumberOfViews="1" URL="file:///usr/qt/3/include/quuid.h" >
+  <Doc21 NumberOfViews="1" URL="file:///usr/qt/3/include/qstringlist.h" >
    <View0 Encoding="UTF-8" Type="Source" />
   </Doc21>
-  <Doc22 NumberOfViews="1" URL="file:///usr/qt/3/include/qstringlist.h" >
+  <Doc22 NumberOfViews="1" URL="file:///usr/qt/3/include/qvector.h" >
    <View0 Encoding="UTF-8" Type="Source" />
   </Doc22>
-  <Doc23 NumberOfViews="1" URL="file:///usr/qt/3/include/qvector.h" >
-   <View0 Encoding="UTF-8" Type="Source" />
+  <Doc23 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrvector.h" >
+   <View0 Encoding="" Type="Source" />
   </Doc23>
-  <Doc24 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrvector.h" >
+  <Doc24 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/Makefile.am" >
    <View0 Encoding="" Type="Source" />
   </Doc24>
-  <Doc25 NumberOfViews="1" URL="file:///usr/qt/3/include/qstring.h" >
-   <View0 Encoding="UTF-8" Type="Source" />
+  <Doc25 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/Makefile.am" >
+   <View0 Encoding="" Type="Source" />
   </Doc25>
-  <Doc26 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/Makefile.am" >
-   <View0 Encoding="" Type="Source" />
+  <Doc26 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_common.cpp" >
+   <View0 Encoding="UTF-8" line="186" Type="Source" />
   </Doc26>
-  <Doc27 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/Makefile.am" >
-   <View0 Encoding="" Type="Source" />
-  </Doc27>
-  <Doc28 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_common.cpp" >
-   <View0 Encoding="UTF-8" line="163" Type="Source" />
-  </Doc28>
-  <Doc29 NumberOfViews="1" URL="file:///home/rainman/projects/test_area/test_kdevelop_III_vstudio/testing_stuf/test.sln" >
+  <Doc27 NumberOfViews="1" URL="file:///home/rainman/projects/test_area/test_kdevelop_III_vstudio/testing_stuf/test.sln" >
    <View0 Encoding="UTF-8" Type="Source" />
+  </Doc27>
+  <Doc28 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autosubprojectview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc28>
+  <Doc29 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autotoolsaction.h" >
+   <View0 Encoding="" Type="Source" />
   </Doc29>
-  <Doc30 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autosubprojectview.h" >
+  <Doc30 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectpart.h" >
    <View0 Encoding="" Type="Source" />
   </Doc30>
-  <Doc31 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autotoolsaction.h" >
+  <Doc31 NumberOfViews="1" URL="file:///usr/kde/git/include/kpopupmenu.h" >
    <View0 Encoding="" Type="Source" />
   </Doc31>
-  <Doc32 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/autoprojectpart.h" >
+  <Doc32 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrlist.h" >
    <View0 Encoding="" Type="Source" />
   </Doc32>
-  <Doc33 NumberOfViews="1" URL="file:///usr/kde/git/include/kpopupmenu.h" >
+  <Doc33 NumberOfViews="1" URL="file:///usr/kde/git/include/kaction.h" >
    <View0 Encoding="" Type="Source" />
   </Doc33>
-  <Doc34 NumberOfViews="1" URL="file:///usr/qt/3/include/qptrlist.h" >
+  <Doc34 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/kdevpart_vs.rc" >
    <View0 Encoding="" Type="Source" />
   </Doc34>
-  <Doc35 NumberOfViews="1" URL="file:///usr/kde/git/include/kaction.h" >
+  <Doc35 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/kdevautoproject.rc" >
    <View0 Encoding="" Type="Source" />
   </Doc35>
-  <Doc36 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/kdevpart_vs.rc" >
+  <Doc36 NumberOfViews="1" URL="file:///usr/kde/git/include/kshortcut.h" >
    <View0 Encoding="" Type="Source" />
   </Doc36>
-  <Doc37 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/autotools/kdevautoproject.rc" >
+  <Doc37 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/kdevpart_vs.desktop" >
    <View0 Encoding="" Type="Source" />
   </Doc37>
-  <Doc38 NumberOfViews="1" URL="file:///usr/kde/git/include/kshortcut.h" >
-   <View0 Encoding="" Type="Source" />
+  <Doc38 NumberOfViews="1" URL="file:///usr/qt/3/include/qnamespace.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
   </Doc38>
-  <Doc39 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/kdevpart_vs.desktop" >
+  <Doc39 NumberOfViews="1" URL="file:///usr/qt/3/include/qkeysequence.h" >
    <View0 Encoding="" Type="Source" />
   </Doc39>
-  <Doc40 NumberOfViews="1" URL="file:///usr/qt/3/include/qnamespace.h" >
-   <View0 Encoding="UTF-8" Type="Source" />
+  <Doc40 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/grepview/grepdlg.cpp" >
+   <View0 Encoding="" Type="Source" />
   </Doc40>
-  <Doc41 NumberOfViews="1" URL="file:///usr/qt/3/include/qkeysequence.h" >
+  <Doc41 NumberOfViews="1" URL="file:///usr/qt/3/include/qlayout.h" >
    <View0 Encoding="" Type="Source" />
   </Doc41>
-  <Doc42 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/grepview/grepdlg.cpp" >
-   <View0 Encoding="" Type="Source" />
+  <Doc42 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.cpp" >
+   <View0 Encoding="UTF-8" line="389" Type="Source" />
   </Doc42>
-  <Doc43 NumberOfViews="1" URL="file:///usr/qt/3/include/qlayout.h" >
-   <View0 Encoding="" Type="Source" />
+  <Doc43 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.h" >
+   <View0 Encoding="UTF-8" line="163" Type="Source" />
   </Doc43>
-  <Doc44 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.cpp" >
-   <View0 Encoding="UTF-8" line="576" Type="Source" />
+  <Doc44 NumberOfViews="1" URL="file:///usr/qt/3/include/qguardedptr.h" >
+   <View0 Encoding="" Type="Source" />
   </Doc44>
-  <Doc45 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_part.h" >
-   <View0 Encoding="UTF-8" line="0" Type="Source" />
+  <Doc45 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppcodecompletion.h" >
+   <View0 Encoding="" Type="Source" />
   </Doc45>
-  <Doc46 NumberOfViews="1" URL="file:///usr/qt/3/include/qguardedptr.h" >
+  <Doc46 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppcodecompletion.cpp" >
    <View0 Encoding="" Type="Source" />
   </Doc46>
-  <Doc47 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppcodecompletion.h" >
-   <View0 Encoding="" Type="Source" />
+  <Doc47 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppevaluation.h" >
+   <View0 Encoding="" line="0" Type="Source" />
   </Doc47>
-  <Doc48 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppcodecompletion.cpp" >
+  <Doc48 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/safetycounter.h" >
    <View0 Encoding="" Type="Source" />
   </Doc48>
-  <Doc49 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/cppevaluation.h" >
+  <Doc49 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/completiondebug.h" >
    <View0 Encoding="" Type="Source" />
   </Doc49>
-  <Doc50 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/safetycounter.h" >
+  <Doc50 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/widgets/makeoptionswidget.h" >
    <View0 Encoding="" Type="Source" />
   </Doc50>
-  <Doc51 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/languages/cpp/completiondebug.h" >
+  <Doc51 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/base/kdevbuildtool.cpp" >
    <View0 Encoding="" Type="Source" />
   </Doc51>
-  <Doc52 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/widgets/makeoptionswidget.h" >
+  <Doc52 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/base/Makefile.am" >
    <View0 Encoding="" Type="Source" />
   </Doc52>
-  <Doc53 NumberOfViews="1" URL="file:///usr/include/boost/container/vector.hpp" >
+  <Doc53 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/src/kdevelopui.rc" >
    <View0 Encoding="" Type="Source" />
   </Doc53>
-  <Doc54 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/base/kdevbuildtool.h" >
+  <Doc54 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/classview/kdevclassview.rc" >
    <View0 Encoding="" Type="Source" />
   </Doc54>
-  <Doc55 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/base/kdevbuildtool.cpp" >
+  <Doc55 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/src/kdevassistantui.rc" >
    <View0 Encoding="" Type="Source" />
   </Doc55>
-  <Doc56 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/base/Makefile.am" >
-   <View0 Encoding="" line="16" Type="Source" />
+  <Doc56 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/classview/classviewpart.cpp" >
+   <View0 Encoding="" Type="Source" />
   </Doc56>
+  <Doc57 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/klistviewaction.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc57>
+  <Doc58 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/lib/widgets/Makefile.am" >
+   <View0 Encoding="" Type="Source" />
+  </Doc58>
+  <Doc59 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/Makefile.am" >
+   <View0 Encoding="" Type="Source" />
+  </Doc59>
+  <Doc60 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/classview/navigator.cpp" >
+   <View0 Encoding="" Type="Source" />
+  </Doc60>
+  <Doc61 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/classview/classviewpart.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc61>
+  <Doc62 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/parts/classview/navigator.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc62>
+  <Doc63 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/kcomboview.cpp" >
+   <View0 Encoding="" Type="Source" />
+  </Doc63>
+  <Doc64 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/kcomboview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc64>
+  <Doc65 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/klistviewaction.cpp" >
+   <View0 Encoding="" Type="Source" />
+  </Doc65>
+  <Doc66 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/widgets/qcomboview.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc66>
+  <Doc67 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/util/domutil.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc67>
+  <Doc68 NumberOfViews="1" URL="file:///usr/qt/3/include/qpopupmenu.h" >
+   <View0 Encoding="" line="0" Type="Source" />
+  </Doc68>
+  <Doc69 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/buildtools/vstudio/vs_errors.h" >
+   <View0 Encoding="UTF-8" Type="Source" />
+  </Doc69>
+  <Doc70 NumberOfViews="1" URL="file:///home/rainman/projects/kde/kdevelop/lib/util/domutil.cpp" >
+   <View0 Encoding="" line="195" Type="Source" />
+  </Doc70>
+  <Doc71 NumberOfViews="1" URL="file:///home/rainman/projects/qt/src/tools/qtextstream.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc71>
+  <Doc72 NumberOfViews="1" URL="file:///usr/qt/3/include/qstring.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc72>
+  <Doc73 NumberOfViews="1" URL="file:///usr/lib64/gcc/x86_64-pc-linux-gnu/4.7.3/include-fixed/limits.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc73>
+  <Doc74 NumberOfViews="1" URL="file:///usr/qt/3/include/quuid.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc74>
+  <Doc75 NumberOfViews="1" URL="file:///usr/qt/3/include/qcstring.h" >
+   <View0 Encoding="" Type="Source" />
+  </Doc75>
+  <Doc76 NumberOfViews="1" URL="file:///usr/include/boost/foreach.hpp" >
+   <View0 Encoding="" Type="Source" />
+  </Doc76>
+  <Doc77 NumberOfViews="1" URL="file:///usr/qt/3/doc/html/qcombobox.html" >
+   <View0 Type="Documentation" />
+  </Doc77>
+  <Doc78 NumberOfViews="1" URL="file:///usr/qt/3/doc/html/qdomelement.html" >
+   <View0 Type="Documentation" />
+  </Doc78>
+  <Doc79 NumberOfViews="1" URL="file:///usr/qt/3/doc/html/qdomnode.html" >
+   <View0 Type="Documentation" />
+  </Doc79>
+  <Doc80 NumberOfViews="1" URL="file:///usr/qt/3/doc/html/qdomnode.html#removeChild" >
+   <View0 Type="Documentation" />
+  </Doc80>
  </DocsAndViews>
  <pluginList>
   <kdevdebugger>
