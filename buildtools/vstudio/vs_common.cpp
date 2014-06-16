@@ -197,7 +197,7 @@ namespace VStudio {
   // VS Part error message strings:
   //===========================================================================
 #ifdef DEBUG
-  const QString g_msg_configapply("Applying config: [%1] in {%2}.\n");
+  const QString g_msg_configapply("Applying config: [%1] for [%2], in {%3}.\n");
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */

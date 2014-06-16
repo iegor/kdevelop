@@ -81,9 +81,15 @@ namespace VStudio {
       const QString& getAbsPath() const;
       void setAbsPath(const QString& abs_path);
 
+      virtual bool write(bool synchronize=true) = 0;
+      virtual bool write(QTextStream &stream, bool synchronize=true) = 0;
+      virtual bool read(bool synchronize=true) = 0;
+      virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
+
     protected:
       QString path_rlt;
       QString path_abs;
+      bool in_sync;
   };
 
   class VSEntity {
@@ -146,7 +152,7 @@ namespace VStudio {
       };
 
     public:
-      VSSolution(const QString &name, const QString &path_rlt);
+      VSSolution(const QString &name);
       virtual ~VSSolution();
 
     // VS Entity interface methods:
@@ -158,8 +164,14 @@ namespace VStudio {
        */
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uisln; }
-      virtual vse_p getParent() const;
       virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+
+    // VS FSStored interface methods:
+      virtual bool write(bool synchronize=true);
+      virtual bool write(QTextStream &stream, bool synchronize=true);
+      virtual bool read(bool synchronize=true);
+      virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS Solution methods:
       bool dumpLayout(QTextStream &layout);
@@ -191,6 +203,15 @@ namespace VStudio {
       bool setActivePrj(const QString &int_name);
       vsp_p getActivePrj() const;
       vsp_p getProject(const QString &int_name) const;
+      /**
+       * Tells if solution loading procedure succeded
+       * @return \b true if .sln file was found and parsed successfully upon read
+       */
+      bool isLoaded() const;
+
+    private:
+      bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
+      bool __read_parse_uid(QTextIStream &stream, QChar &control_chr, QUuid &uid);
 
     private:
       uivss_p uisln;  // UI representation
@@ -200,19 +221,19 @@ namespace VStudio {
       pv_VSProject projects;
       pv_VSFilter filters;
       pv_VSBuildBox bboxes;  // build boxes, used to buil|clean, etc entire solution
-#else
-#error "VStudio: Boost support is no enabled"
-#endif
+
       /*! Meta-dependencies tree
        * Used to contain raw dependencies for projects
        * Not filtered and allowed to have a cyclic dependencies
-      */
-#ifdef USE_BOOST
+       */
       pv_VSMetaDependency mdeps;
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
       bool active;
+      bool load_ok; // Solution file .sln is found and parsed successfully
+      e_VSSlnVersion version;
+      int fmt_version; // Format version (something VS internal for .sln)
   };
 
   class VSProject : public VSEntity,
@@ -236,8 +257,15 @@ namespace VStudio {
       virtual uivse_p getUI() const { return (uivse_p)uiprj; }
       virtual vse_p getParent() const;
 
+    // VS FSStored interface methods:
+      virtual bool write(bool synchronize=true);
+      virtual bool write(QTextStream &stream, bool synchronize=true);
+      virtual bool read(bool synchronize=true);
+      virtual bool read(QTextStream &stream, bool synchronize=true);
+
     // VS Project methods:
-      bool dumpLayout(QTextStream &layout);
+      bool dumpLayout(QTextStream &stream);
+      bool dumpConfigLayout(QTextStream &stream);
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
       vsf_p getFltByUID(const QUuid &uid) const;
@@ -331,6 +359,12 @@ namespace VStudio {
       virtual vsp_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uifl; }
       virtual vse_p getParent() const;
+
+    // VS FSStored interface methods:
+      virtual bool write(bool synchronize=true);
+      virtual bool write(QTextStream &stream, bool synchronize=true);
+      virtual bool read(bool synchronize=true);
+      virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS File methods:
 

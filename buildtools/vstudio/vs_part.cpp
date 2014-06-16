@@ -18,7 +18,6 @@
 #include <qpopupmenu.h>
 #include <qstringlist.h>
 #include <qwhatsthis.h>
-#include <qregexp.h>
 #include <qgroupbox.h>
 
 #include <kapplication.h>
@@ -226,7 +225,7 @@ namespace VStudio {
       if((*it)!=0) {
         delete (*it); /*(*it)=0;*/
       } else {
-        kddbg << "Error! vspart's entities list corrupted.\n";
+        kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::~VSPart");
       }
     }
     if(m_explorer_widget) {
@@ -275,15 +274,49 @@ namespace VStudio {
         QString sln_iname = subEl.attribute("name");
         QString sln_path = subEl.attribute("path");
         QString active_prj = subEl.attribute("active");
-        if(loadVsSolution(sln_iname, sln_path)) {
-          /* TODO: Consider to mve this into VSSolution:: namespace
-          vss_p sln = static_cast<vss_p>(getSlnByName(sln_iname));
-          sln->setActivePrj(active_prj);
-          */
+
+        // Check attributes
+        if(sln_iname.isEmpty()) { kddbg << VSPART_ERROR"Sln name is empty.\n"; return; }
+        if(sln_path.isEmpty()) { kddbg << VSPART_ERROR"Sln: " << sln_iname << " relative path is empty.\n"; return; }
+        if(active_prj.isEmpty()) { kddbg << VSPART_WARNING"Sln: " << sln_iname << " no active project.\n"; }
+
+        // Create model::solution item
+        vss_p sln = new VSSolution(sln_iname);
+        if(sln == 0) {
+          kddbg << g_err_notenoughmem.arg(VSPART_SOLUTION).arg("VSPart::openProject");
+          return;
+        }
+
+        sln->setAbsPath(QString(m_prjpath).append("/").append(sln_path));
+        sln->setRelPath(sln_path);
+
+        //NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
+        //  stored in .kdevelop file
+#ifdef USE_BOOST
+        m_entities.push_back(sln);
+#else
+        m_entities.append(sln);
+#endif
+
+        // Read and parse sln file
+        if(sln->read()) {
+          if(!sln->setActivePrj(active_prj)) {
+            kddbg << VSPART_ERROR"Can't activate a prj: " << active_prj << " in sln: " << sln->getName() << endl;
+          }
         } else {
           kddbg << g_err_slnload.arg(sln_iname);
-          subEl = subEl.nextSibling().toElement();
-          continue;
+          // subEl = subEl.nextSibling().toElement();
+          // continue;
+        }
+
+        // Generate dependencies  from meta-dependency information
+        if(!sln->updateDependencies()) {
+          kddbg << VSPART_ERROR"Can't gen dependencies from meta-dependencies.\n";
+        }
+
+        // Create UI representation
+        if(!sln->populateUI()) {
+          kddbg << VSPART_ERROR"Can't use sln. UI update failed.\n";
         }
       }
       subEl = subEl.nextSibling().toElement();
@@ -371,7 +404,109 @@ namespace VStudio {
   }
 
   void VSPart::closeProject() {
+#ifdef DEBUG
     kddbg << VSPART_WARNING"Closing project file.\n";
+#endif
+    QDomDocument &dom = *projectDom();
+    QDomElement project = DomUtil::elementByPath(dom, VSPART_XML_SECTION);
+    QDomElement general = dom.createElement("general");
+    QDomElement old_general = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
+    old_general.setTagName("general_backup");
+
+    if(project.isNull()) {
+      kddbg << VSPART_ERROR"Can't add project DOM node.\n";
+      return;
+    }
+
+    // Write included solutions
+    BOOSTVEC_FOR(vse_ci, it, m_entities) {
+      vss_p sln = static_cast<vss_p>(*it);
+      if(sln != 0) {
+        QDomElement vssln = dom.createElement(VSPART_SOLUTION);
+        vssln.setAttribute("path", sln->getRelPath());
+        vssln.setAttribute("name", sln->getName());
+        QString active_prj = (sln->isLoaded()) ? sln->getActivePrj()->getName() : QString("");
+        vssln.setAttribute("active", active_prj);
+
+        if(!general.appendChild(vssln).isNull()) { kddbg << "Writing solution: " << sln->getName() << endl; }
+        else { kddbg << "Can't write solution: " << sln->getName() << endl; return; }
+      }
+      else { kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::closeProject"); return; }
+    }
+
+    // Write configurations
+    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+      vcfg_p cfg(*it);
+      if(cfg != 0) {
+        QDomElement vscfg = dom.createElement(VSPART_CONFIG);
+        vscfg.setAttribute("platform", platform2String(cfg->platform()));
+        vscfg.setAttribute("name", cfg->getName());
+
+        BOOSTVEC_FOR(vse_ci, it, m_entities) {
+          vss_p sln = static_cast<vss_p>(*it);
+          if(sln != 0) {
+            if(sln->isLoaded()) {
+              vsbb_p pbb = sln->getBB(cfg);
+              if(pbb != 0) {
+                QDomElement vssln = dom.createElement(VSPART_SOLUTION);
+                vssln.setAttribute("config", pbb->config().getName());
+                vssln.setAttribute("platform", platform2String(pbb->config().platform()));
+                vssln.setAttribute("name", sln->getName());
+                vssln.setAttribute("enabled", pbb->isEnabled());
+                if(!vscfg.appendChild(vssln).isNull()) {
+                  kddbg << "Buildbox for: " << sln->getName() << "is added to: " << cfg->getName() << endl;
+                }
+                else {
+                  kddbg << VSPART_ERROR"Can't append sln config to config node.\n";
+                  return;
+                }
+              }
+              else {
+                kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg->toString()).arg("VSPart::closeProject");
+                return;
+              }
+            }
+          }
+          else { kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::closeProject"); return; }
+        }
+
+        if(!general.appendChild(vscfg).isNull()) {
+          kddbg << "Config: " << cfg->getName() << " is inserted to project upon save.\n";
+        }
+        else {
+          kddbg << VSPART_ERROR"Can't insert config node: " << cfg->getName() << "into general node upon save.\n";
+          return;
+        }
+      }
+      else { kddbg << g_err_list_corrupted.arg(VSPART_CONFIG).arg("VSPart::closeProject"); return; }
+    }
+
+    if(!project.appendChild(general).isNull()) {
+      kddbg << "Config node \"general\" is saved in DOM tree.\n";
+    }
+    else {
+      kddbg << "Can't append general to project.\n";
+      return;
+    }
+
+    // Rename general node and remove old general node
+    //general.setTagName("general");
+    if(!project.removeChild(old_general).isNull()) {
+      kddbg << VSPART_ERROR"Can't remove general_backup node.\n";
+    }
+    else {
+      kddbg << "Node: general_backup is removed.\n";
+    }
+
+    // Write active config
+    DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVECFG, active_cfg->toString());
+
+    // Write active solution
+    DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVESLN, active_sln->getName());
+
+#ifdef DEBUG
+    kddbg << "Project is saved.\n";
+#endif
   }
 
   QString VSPart::projectName() const {
@@ -441,425 +576,8 @@ namespace VStudio {
     kddbg << VSPART_WARNING"Saving session partially.\n";
   }
 
-  bool VSPart::loadVsSolution(const QString &internal_name, const QString &path) {
-    QString abspath = m_prjpath+"/"+path;
-    QFile sln_f;
-    QString ln;
-    vsp_p prj_active = 0; // Active project to collect dependencies from project section
-
-    kddbg << "Solution internal NAME: " << internal_name << endl;
-    kddbg << "Solution PATH: " << path << endl;
-
-    if(!sln_f.exists(abspath)) { kddbg << "is not there" << endl; return false; }
-    sln_f.setName(abspath);
-    if(!sln_f.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
-    if(!sln_f.isReadable()) { kddbg << "is not readable" << endl; return false; }
-    if(!sln_f.isWritable()) { kddbg << "is not writable" << endl; return false; }
-    if(!sln_f.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
-
-    kddbg << "<<<<< Parsing solution file >>>>>" << endl;
-
-    QTextStream str(&sln_f);
-
-    //BEGIN // Read the MS guards and version info
-    QString ms_guard, ms_sharp_guard, ms_ver;
-    int sln_ver = 0;
-    int sln_ver_expected = 0;
-
-    ms_guard = str.readLine();
-    if(ms_guard.isEmpty()) {
-      kddbg << "Error! Empty line at begin of file detected" << endl;
-      ms_guard = str.readLine();
-    }
-
-    ms_sharp_guard = str.readLine();
-
-    if(ms_sharp_guard.compare(QString("# Visual Studio 2008")) == 0) {
-      sln_ver_expected = 9;
-    } else if(ms_sharp_guard.compare(QString("# Visual Studio 2005")) == 0) {
-      sln_ver_expected = 8;
-    } else {
-      sln_ver_expected = 7;
-    }
-
-    kddbg << "MS_GUARD: " << ms_guard << endl;
-    kddbg << "MS_#GUARD: " << ms_sharp_guard << endl;
-
-    ms_ver = ms_guard.right(5);
-    ms_ver.remove(ms_ver.find('.'), 3);
-    kddbg << "MS_VER: \"" << ms_ver << "\" expected (" << sln_ver_expected << ")\n";
-    bool b_ok = false;
-    sln_ver = ms_ver.toInt(&b_ok, 10);
-
-    if(!b_ok) {
-      kddbg << "Error! Can't convert version string to int" << endl;
-      return false;
-    }
-
-    kddbg << "Solution ver: " << sln_ver << endl;
-    //END // Read the MS guards and version info
-
-    // Create model::solution item
-    vss_p sln = new VSSolution(internal_name, abspath);
-    if(sln == 0) {
-      kddbg << g_err_notenoughmem.arg(VSPART_SOLUTION).arg("VSPart::loadVsSolution");
-      return false;
-    }
-#ifdef USE_BOOST
-    m_entities.push_back(sln);
-#else
-    m_entities.append(sln);
-#endif
-
-    while(!str.atEnd()) {
-      ln = str.readLine();
-      //BEGIN // Read project info
-      if(0 == ln.left(7).compare(QString("Project"))) {
-        // kddbg << " >>>>> Solution item section\n";
-        while(0 != ln.left(10).compare(QString("EndProject"))) {
-          // kddbg << "Line: " << ln << endl;
-
-          //BEGIN // Read project section info, dependencies
-          if(ln.find(QRegExp("ProjectSection"), 0) >= 0) {
-            // kddbg << "Project section found\n";
-
-            //TODO: Analyze project setion header line
-            /** e.g. ProjectSection(ProjectDependencies) = postProject */
-            QTextIStream s(&ln);
-            QChar ch(0);
-            QString psname;  // Section name
-            QString pssetting; // Section setting
-
-            if(!parseSectionHeader(s, psname, pssetting)) {
-              kddbg << "Error! Can't parse section header\n";
-              return false;
-            }
-            ln = str.readLine();
-
-            // Read section data
-            e_VSPrjSection stype = string2PrjSectionType(psname);
-            switch(stype) {
-              //BEGIN // ProjectDependencies section
-              case prjs_dependencies: {
-                while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
-                  QTextIStream si(&ln);
-                  ch = 0;
-                  QUuid uuid1, uuid2, *uid=&uuid1;
-
-                  while(!si.atEnd()) {
-                    switch(ch.latin1()) {
-                      case '{': {
-                        if(!parseGUID(si, ch, *uid)) return false;
-                        uid=&uuid2;
-                        si >> ch;
-                        break; }
-                      default:
-                        si >> ch;
-                        break;
-                    }
-                  }
-                  // kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
-                  // prj_active->addDependency((vsp_p)sln->getByUID(uuid2));
-                  VSSolution::vsmd_p mdp = sln->metaDependency(prj_active->getUID());
-                  if(mdp != 0) {
-                    mdp->addDependency(uuid2);
-                  }
-                  ln = str.readLine();
-                }
-                break; }
-              //END // ProjectDependencies section
-              //BEGIN // SolutionItems section
-              case prjs_slnitems: {
-                while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
-                  kddbg << psname << ": " << ln << endl;
-                  ln = str.readLine();
-                }
-                break; }
-              //END // SolutionItems section
-              default:
-                kddbg << "Error! Unknown section type: " << psname << endl;
-                return false;
-            }
-          }
-          //END // Read project section info, dependencies
-          //BEGIN // Read and analyze solution unit data
-          else {
-            // Read solution unit data
-            QTextIStream is(&ln);
-            bool typeuid_found = false;
-            bool prjuid_found = false;
-            bool prjname_found = false;
-            bool prjrltpath_found = false;
-            QUuid puid; //Internal and project UIDs
-            e_VSEntityType typ;
-            e_VSPrjLangType ltyp;
-            QString prjname, prjpath_rlt;
-            QChar ch(0);
-            vse_p unit(0);
-#ifdef DEBUG
-            char latin1ch = 0x00;
-#endif
-            /** Analyze project string to get project parameters:
-            * Project info inside sln looks like this.
-            * Project("TYPE_GUID") = "internal name" , "rel path", "PRJ_GUID"
-            */
-            while(!is.atEnd()) {
-              switch(ch.latin1()) {
-                case '"': {
-                  if(!typeuid_found) {
-                    QUuid tuid;
-                    is >> ch;
-                    if(!parseGUID(is, ch, tuid)) return false;
-                    typeuid_found = true;
-                    is >> ch >> ch >> ch >> ch;
-                    typ = uid2VSType(tuid);
-                    ltyp = uid2PrjLangType(tuid);
-                  }
-                  else if(typeuid_found && !prjname_found) {
-                    is >> ch;
-                    do {
-                      prjname.append(ch);
-                      is >> ch;
-                    } while(ch.latin1() != '"');
-                    prjname_found = true;
-                    is >> ch >> ch;
-                  }
-                  else if(prjname_found && !prjrltpath_found) {
-                    is >> ch;
-                    do {
-                      prjpath_rlt.append(ch);
-                      is >> ch;
-                    } while(ch.latin1() != '"');
-                    prjrltpath_found = true;
-                    is >> ch >> ch;
-                  }
-                  else if(!prjuid_found) {
-                    is >> ch;
-                    if(!parseGUID(is, ch, puid)) return false;
-                    prjuid_found = true;
-                    is >> ch;
-                  }
-                  break;
-                }
-                default:
-                  is >> ch;
-#ifdef DEBUG
-                  latin1ch = ch.latin1();
-#endif
-                  break;
-              }
-            }
-
-            switch(typ) {
-              case vs_project: {
-                /* kddbg << "Project [" << prjLangType2String(ltyp) << "] "
-                    << puid.toString() << " \"" << prjname << "\" under: \""
-                    << prjpath_rlt << "\"\n";
-                */
-                switch(ltyp) {
-                  case vs_prjlang_c: {
-                    // Create and add model representation
-                    unit = new VSProject_c(prjname, puid, prjpath_rlt);
-                    break; }
-                  case vs_prjlang_cs: {
-                    kddbg << "VS Project for C# \"" << guid2String(puid) <<
-                        "\" is not supported\n";
-                    ln = str.readLine();
-                    continue; }
-                  default:
-                    kddbg << "Error! " << type2String(typ) << " \"" << prjname
-                        << "\": language [" << prjLangType2String(ltyp) <<
-                        "] support is not implemented\n";
-                    ln = str.readLine();
-                    continue; //NOTE: Just skip this unknown project
-                }
-                if(unit==0) {
-                  kddbg << "Error! Out of memory space" << endl;
-                  return false; }
-                // Set most recent "active" project ptr
-                prj_active = static_cast<vsp_p>(unit);
-                break; }
-              case vs_filter: {
-                /* kddbg << "Filter " << puid.toString() << " \"" << prjname
-                    << "\" under: \"" << prjpath_rlt << "\"\n";
-                */
-                // Create and add model representation
-                unit = new VSFilter(prjname, puid);
-                if(unit == 0) {
-                  kddbg << "Error! Out of memory space" << endl;
-                  return false; }
-                break; }
-              default:
-                kddbg << "Error!!! Uncompatible solution unit type \""
-                    << type2String(typ) << "\" is requested\n";
-                return false;
-            }
-            sln->insert(unit);
-          }
-          //END // Read and analyze solution unit data
-          ln = str.readLine();
-        }
-      }
-      //END // Read project info
-      //BEGIN // Read global solution sections
-      else if(0 == ln.compare("Global")) {
-        kddbg << "Entering global settings section" << endl;
-        while(ln.find(QRegExp("EndGlobal"), 0) < 0) {
-          kddbg << "Line: " << ln << endl;
-          if(ln.find(QRegExp("GlobalSection"), 0) >= 0) {
-
-            kddbg << "(G)Line: " << ln << endl;
-            QTextIStream si(&ln);
-            QString sname; // Section name
-            QString sparam; // Section parameter
-
-            if(!parseSectionHeader(si, sname, sparam)) {
-              kddbg << "Error! Can't parse section header\n";
-              return false;
-            }
-            ln = str.readLine();
-
-            // Read section data
-            e_VSSlnSection stype = string2SlnSectionType(sname);
-            switch(stype) {
-              //BEGIN // SolutionConfigurationPlatforms
-              case slns_sln_cfgplatforms: {
-                // ln = str.readLine();
-                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-#ifdef DEBUG
-                  kddbg << sname << ": " << ln << endl;
-#endif
-                  QString conf_name;
-                  QString c_internal_name;
-                  QRegExp rx("^\t\t(.+\|\w+)\ \=\ (.+\|\w+)$");
-                  if(-1 != rx.search(ln)) {
-                    conf_name = rx.cap(1);
-                    c_internal_name = rx.cap(2);
-                  }
-#ifdef DEBUG
-                  kddbg << "Configuration: " << conf_name << " presented as: "
-                      << c_internal_name << endl;
-#endif
-                  // Create and add configuration
-                  VSConfigCreate cr;
-                  cr.name = conf_name.left(conf_name.find('|'));
-                  cr.platform = string2Platform(conf_name.mid(conf_name.find('|')+1));
-
-                  //TODO: Consider enabling VSSolution::createCfg to handle 0 as non-lethal case,
-                  //  for setting some tmp parent config that will be replaces upon loading of project
-                  if(!sln->createCfg(0, cr)) {
-                    kddbg << VSPART_ERROR"Config: " << conf_name << " can't be added.\n";
-                    return false;
-                  }
-                  ln = str.readLine();
-                }
-                break; }
-              //END // SolutionConfigurationPlatforms
-              //BEGIN // ProjectConfigurationPlaftorms
-              case slns_prj_cfgplatforms: {
-                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-                  // kddbg << sname << ": " << ln << endl;
-                  /**
-                   * There is two parts that are responsible for enabling project
-                   * to be built in the solution
-                   * - Active configuration string
-                   *  Tells what project configuration will be used for build.
-                   * - Build "marker"
-                   *  Tells if the project is enabled to be build under
-                   *  specified solution configuration
-                   *
-                   * ActiveCfg:
-                   *   GUID.sln_config_name.ActiveCfg = prj_config_name
-                   * Build "marker"
-                   *   GUID.sln_config_name.Build.0 = prj_config_name
-                   *
-                   * Build marker can be present or not
-                   * if not, that means that this project is not enabled in the
-                   * selected configuration
-                  */
-                  ln = str.readLine();
-                }
-                break; }
-              //END // ProjectConfigurationPlaftorms
-              //BEGIN // SolutionProperties
-              case slns_sln_properties: {
-                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-                  // kddbg << sname << ": " << ln << endl;
-                  ln = str.readLine();
-                }
-                break; }
-              //END // SolutionProperties
-              //BEGIN // NestedProjects
-              case slns_nested_prjs: {
-                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-                  // kddbg << sname << ": " << ln << endl;
-                  QTextIStream si(&ln);
-                  QChar ch(0);
-                  QUuid uid1, uid2, *uid=&uid1;
-
-                  while(!si.atEnd()) {
-                    switch(ch.latin1()) {
-                      case '{': {
-                        if(!parseGUID(si, ch, *uid)) return false;
-                        uid=&uid2;
-                        si >> ch;
-                        break; }
-                      default:
-                        si >> ch;
-                        break;
-                    }
-                  }
-                  //Get filer and project model representation
-                  vse_p ent = sln->getByUID(uid1); // get entity
-                  if(ent == 0) {
-                    ent = sln->getFltByUID(uid1);
-                    if(ent == 0) {
-#ifdef DEBUG
-                      kddbg << " >>>> Failed to obtain entity for " << uid1.toString() << endl;
-#endif
-                      ln = str.readLine();
-                      continue;
-                    }
-                  }
-                  vsf_p cnt = sln->getFltByUID(uid2); // get container
-                  if(cnt == 0) {
-#ifdef DEBUG
-                    kddbg << " >>>> Failed to obtain container for " << uid2.toString() << endl;
-#endif
-                    ln = str.readLine();
-                    continue;
-                  }
-#ifdef DEBUG
-                  /* kddbg << type2String(cnt->getType()) << " \"" << cnt->getName()
-                      << "\" <<< " << type2String(ent->getType()) << " \""
-                      << ent->getName() << "\"\n"; */
-#endif
-                  cnt->insert(ent);
-                  ln = str.readLine();
-                }
-                break; }
-              //END // NestedProjects
-              default:
-                kddbg << "Unknown section type: " << sname << endl;
-                return false;
-            }
-            // ln = str.readLine();
-          }
-          ln = str.readLine();
-        }
-      }
-      //END // Read global solution sections
-    }
-
-    sln_f.close();
-    kddbg << "<<<<< Parsing FINISHED >>>>>" << endl;
-
-    if(!sln->updateDependencies()) {
-      kddbg << "Error! Failed to update dependencies.\n";
-    }
-    // Create UI representation
-    return sln->populateUI();
-    // return true;
+  bool VSPart::loadVsSolution(const QString &/*internal_name*/, const QString &/*path*/) {
+    return false;
   }
 
   bool VSPart::unloadVsSolution(const QString &/*sln_path*/) {
@@ -992,14 +710,14 @@ namespace VStudio {
 
   bool VSPart::saveSln(vss_p sln) {
     if(sln != 0) {
-      QString abspath = sln->getRelPath();
+      QString abspath = sln->getAbsPath();
       abspath.append(".test");
       QString str;
       QFile sln_f(abspath);
       // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
       sln_f.setName(abspath);
       if(!sln_f.open(IO_WriteOnly|IO_Raw)) {
-        kddbg << "can't open solution file: " << abspath << "\n";
+        kddbg << "can't open solution file: " << abspath << endl;
         return false;
       }
       if(!sln_f.isWritable()) {
@@ -1135,10 +853,12 @@ namespace VStudio {
         BOOSTVEC_FOR(vse_ci, it, m_entities) {
           vss_p s = static_cast<vss_p>(*it);
           if(s != 0) {
-            if(!s->selectCfg(active_cfg)) {
-              kddbg << VSPART_ERROR"Failed to set sln config: " << cfg->toString() << " for \"" << s->getName()
-                  << "\", in {VSPart::setCfg}\n";
-              return false;
+            if(s->isLoaded()) { // Atempt config change only on loaded solutions
+              if(!s->selectCfg(active_cfg)) {
+                kddbg << VSPART_ERROR"Failed to set sln config: " << cfg->toString() << " for \"" << s->getName()
+                    << "\", in {VSPart::setCfg}\n";
+                return false;
+              }
             }
           } else {
             kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::selectCfg");
@@ -1164,48 +884,6 @@ namespace VStudio {
       else { kddbg << g_err_list_corrupted.arg(VSPART_CONFIG).arg("VSPart::getCfg"); }
     }
     return 0;
-  }
-
-  bool VSPart::parseSectionHeader(QTextIStream &s, QString &nm, QString &prm) {
-    QChar c(0);
-#ifdef DEBUG
-    char latin1c(0);
-#endif
-    while(!s.atEnd()) {
-      switch(c.latin1()) {
-        case '(': {
-          s >> c;
-          do {
-            nm.append(c);
-            s >> c;
-          } while(c.latin1() != ')');
-          break; }
-          case '=': {
-            s >> prm;
-            break; }
-        default:
-          s >> c;
-#ifdef DEBUG
-          latin1c = c.latin1();
-#endif
-          break;
-      }
-    }
-    // kddbg << "| Section: " << nm << " set: " << prm << " |\n";
-    return true;
-  }
-
-  bool VSPart::parseGUID(QTextIStream &s, QChar &ch, QUuid &uid) {
-    if(ch.latin1() != '{') {
-      kddbg << "Error! Can't get GUID, incorrect uid string format, expect {XXXXX...XXXX} format" << endl;
-      return false;
-    }
-    if(!readGUID(s, uid)) {
-      kddbg << "Error! Failed to obtain GUID"<< endl;
-      return false;
-    }
-    s >> ch;
-    return true;
   }
 
   //BEGIN // Slot methods

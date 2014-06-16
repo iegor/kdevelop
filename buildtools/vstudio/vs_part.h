@@ -108,10 +108,6 @@ namespace VStudio {
     bool createSlnCfg(vss_p sln);
     vcfg_p getCfg(const QString& c) const;
 
-  private:
-    bool parseSectionHeader(QTextIStream &stream, QString &section_name, QString &section_param);
-    bool parseGUID(QTextIStream &stream, QChar &control_char, QUuid &uid);
-
   private slots:
     void slotAddSolution();
     void slotBuildSolution();

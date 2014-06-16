@@ -13,6 +13,7 @@
 */
 #include <string.h>
 #include <qtextstream.h>
+#include <qregexp.h>
 
 #include <kdebug.h>
 #include <kaction.h>
@@ -150,7 +151,8 @@ namespace VStudio {
   //===========================================================================
   VSFSStored::VSFSStored()
   : path_rlt(QString::null)
-  , path_abs(QString::null) {
+  , path_abs(QString::null)
+  , in_sync(false) {
   }
 
   VSFSStored::~VSFSStored() {
@@ -208,15 +210,17 @@ namespace VStudio {
   //===========================================================================
   // Visual studio solution methods
   //===========================================================================
-  VSSolution::VSSolution(const QString &nm, const QString &path)
+  VSSolution::VSSolution(const QString &nm)
   : VSEntity(vs_solution)
   , VSNameable(nm)
   , VSFSStored()
   , uisln(0)
   , active_bb(0)
   , active_prj(0)
-  , active(false) {
-    setRelPath(path);
+  , active(false)
+  , load_ok(false)
+  , version(vssln_ver_unknown)
+  , fmt_version(0) {
   }
 
   VSSolution::~VSSolution() {
@@ -310,6 +314,417 @@ namespace VStudio {
     return 0;
   }
 
+  bool VSSolution::write(bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSSolution::write(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSSolution::read(bool synchronize/*=true*/) {
+    //Check paths:
+    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSSolution::read"); return false; }
+    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSSolution::read"); return false; }
+
+    QFile fl;
+
+    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
+    fl.setName(path_abs);
+    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
+    if(!fl.isReadable()) { kddbg << "is not readable" << endl; return false; }
+    if(!fl.isWritable()) { kddbg << "is not writable" << endl; return false; }
+    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
+
+    QTextStream stream(&fl);
+
+    if(!read(stream, true)) {
+      kddbg << VSPART_ERROR"Failed to parse sln: " << name << " file \"" << path_abs << "\"\n";
+      return false;
+    }
+
+    fl.close();
+    return true;
+  }
+
+  bool VSSolution::read(QTextStream &str, bool synchronize/*=true*/) {
+    QString ln;
+    vsp_p prj_active = 0; // Active project to collect dependencies from project section
+    kddbg << "[" << name << "]========================================: Begin parse\n";
+    kddbg << "PATH: " << path_abs << endl;
+
+    //BEGIN // Read the .sln header and version info
+    QString header, guard, ver;
+    //int sln_ver = 0;
+    //int sln_ver_expected = 0;
+
+    // Read the header of a file
+    guard = str.readLine();
+    kddbg << "HEADER: " << guard << endl;
+
+    //TODO: I forgot what was about this "one chance save" empty line detection code
+    if(guard.isEmpty()) {
+      kddbg << VSPART_ERROR"Empty line at begin of file detected.\n";
+      guard = str.readLine();
+    }
+
+    // Detect version of a VS by file
+    header = str.readLine();
+    kddbg << "VERSION STRING: " << header << endl;
+
+    if(header.isEmpty() || header[0].latin1() != '#') {
+      kddbg << VSPART_ERROR"File \"" << path_abs << "\" is not a .sln file.\n";
+      return false;
+    }
+
+    if(header.compare(QString("# Visual Studio 2008")) == 0) { //NOTE: Pretty simple, maybe there is a neater way
+      version = vssln_ver9;
+    } else if(header.compare(QString("# Visual Studio 2005")) == 0) {
+      version = vssln_ver8;
+    } else {
+      version = vssln_ver7;
+    }
+
+    if(version == vssln_ver_unknown) {
+      kddbg << VSPART_ERROR"Failed to read version from \"" << path_abs << "\".\n";
+      return false;
+    }
+    kddbg << "VS VERSION: " << slnVer2String(version) << endl;
+
+    //Format version detection
+    //TODO: Still don't know what is the proper use for this
+    //NOTE: It says "Format version", suppose it's intenal for .sln
+    //TODO: Work a simplier solution which will eliminat need of QString ver
+    ver = guard.right(5);
+    ver.remove(ver.find('.'), 3);
+    bool b_ok = false;
+    fmt_version = ver.toInt(&b_ok, 10);
+    if(!b_ok) { kddbg << "Error! Can't convert version string to int.\n"; return false; }
+    kddbg << "VS_FMT_VER: " << fmt_version << endl;
+    //END // Read the .sln header and version info
+
+    while(!str.atEnd()) {
+      ln = str.readLine();
+      //BEGIN // Read project info
+      if(0 == ln.left(7).compare(QString("Project"))) { // kddbg << " >>>>> Solution item section\n";
+        while(0 != ln.left(10).compare(QString("EndProject"))) { // kddbg << "Line: " << ln << endl;
+
+          //BEGIN // Read project section info, dependencies
+          if(ln.find(QRegExp("ProjectSection"), 0) >= 0) { // kddbg << "Project section found\n";
+            /** Tells us what elements and settings should sln entity (project|filter) have
+             * e.g. ProjectSection(ProjectDependencies) = postProject
+            */
+            QTextIStream s(&ln);
+            QChar ch(0);
+            QString psname;  // Section name
+            QString pssetting; // Section setting
+
+            if(!__read_parse_shdr(s, psname, pssetting)) {
+              kddbg << VSPART_ERROR"Can't parse section header\n";
+              return false;
+            }
+            ln = str.readLine();
+
+            // Read section data
+            e_VSPrjSection stype = string2PrjSectionType(psname);
+            switch(stype) {
+              //BEGIN // ProjectDependencies section
+              case prjs_dependencies: {
+                while(ln.find(QRegExp("EndProjectSection"), 0) < 0) {
+                  QTextIStream si(&ln);
+                  ch = 0;
+                  QUuid uuid1, uuid2, *uid=&uuid1;
+
+                  while(!si.atEnd()) {
+                    switch(ch.latin1()) {
+                      case '{': {
+                        if(!__read_parse_uid(si, ch, *uid)) return false;
+                        uid=&uuid2;
+                        si >> ch;
+                        break; }
+                      default: { si >> ch; break; }
+                    }
+                  }
+                  // kddbg << "\t\t\t" << psname << ": " << uuid1.toString() << " = " << uuid2.toString() << endl;
+                  // prj_active->addDependency((vsp_p)sln->getByUID(uuid2));
+                  vsmd_p mdp = metaDependency(prj_active->getUID());
+                  if(mdp != 0) {
+                    mdp->addDependency(uuid2);
+                  }
+                  ln = str.readLine();
+                }
+                break; }
+              //END // ProjectDependencies section
+              //BEGIN // SolutionItems section
+                case prjs_slnitems: {
+                  while(ln.find(QRegExp("EndProjectSection"), 0) < 0) { kddbg << psname << ": " << ln << endl;
+                    ln = str.readLine();
+                  }
+                  break; }
+              //END // SolutionItems section
+              default: { kddbg << "Error! Unknown section type: " << psname << endl; return false; }
+            }
+          }
+          //END // Read project section info, dependencies
+          //BEGIN // Read and analyze solution unit data
+          else {
+            // Read solution unit data
+            QTextIStream is(&ln);
+            bool typeuid_found = false;
+            bool prjuid_found = false;
+            bool prjname_found = false;
+            bool prjrltpath_found = false;
+            QUuid puid; //Internal and project UIDs
+            e_VSEntityType typ;
+            e_VSPrjLangType ltyp;
+            QString prjname, prjpath_rlt;
+            QChar ch(0);
+            vse_p unit(0);
+#ifdef DEBUG
+            //char latin1ch = 0x00;
+#endif
+            /** Analyze project string to get project parameters:
+             * Project info inside sln looks like this.
+             * Project("TYPE_GUID") = "internal name" , "rel path", "PRJ_GUID"
+             */
+            while(!is.atEnd()) {
+              switch(ch.latin1()) {
+                case '"': {
+                  if(!typeuid_found) {
+                    QUuid tuid;
+                    is >> ch;
+                    if(!__read_parse_uid(is, ch, tuid)) return false;
+                    typeuid_found = true;
+                    is >> ch >> ch >> ch >> ch;
+                    typ = uid2VSType(tuid);
+                    ltyp = uid2PrjLangType(tuid);
+                  }
+                  else if(typeuid_found && !prjname_found) {
+                    is >> ch;
+                    do {
+                      prjname.append(ch);
+                      is >> ch;
+                    } while(ch.latin1() != '"');
+                    prjname_found = true;
+                    is >> ch >> ch;
+                  }
+                  else if(prjname_found && !prjrltpath_found) {
+                    is >> ch;
+                    do {
+                      prjpath_rlt.append(ch);
+                      is >> ch;
+                    } while(ch.latin1() != '"');
+                    prjrltpath_found = true;
+                    is >> ch >> ch;
+                  }
+                  else if(!prjuid_found) {
+                    is >> ch;
+                    if(!__read_parse_uid(is, ch, puid)) return false;
+                    prjuid_found = true;
+                    is >> ch;
+                  }
+                  break; }
+                default: {
+                  is >> ch;
+#ifdef DEBUG
+                  //latin1ch = ch.latin1();
+#endif
+                  break; }
+              }
+            }
+
+            switch(typ) {
+              case vs_project: {
+                /* kddbg << "Project [" << prjLangType2String(ltyp) << "] " << puid.toString() << " \"" << prjname
+                << "\" under: \"" << prjpath_rlt << "\"\n";
+                */
+                switch(ltyp) {
+                  case vs_prjlang_c: {
+                    // Create and add model representation
+                    unit = new VSProject_c(prjname, puid, prjpath_rlt);
+                    break; }
+                  case vs_prjlang_cs: {
+                    kddbg << "VS Project for C# \"" << guid2String(puid) << "\" is not supported\n";
+                    ln = str.readLine();
+                    continue; }
+                  default:
+                    kddbg << "Error! " << type2String(typ) << " \"" << prjname << "\": language ["
+                        << prjLangType2String(ltyp) << "] support is not implemented\n";
+                    ln = str.readLine();
+                    continue; //NOTE: Just skip this unknown project
+                }
+                if(unit == 0) {
+                  kddbg << g_err_notenoughmem.arg(VSPART_PROJECT).arg("VSSolution::read");
+                  return false;
+                }
+                prj_active = static_cast<vsp_p>(unit); // Set most recent "active" project ptr
+                break; }
+              case vs_filter: {
+                /* kddbg << "Filter " << puid.toString() << " \"" << prjname << "\" under: \"" << prjpath_rlt << "\"\n";
+                */
+                // Create and add model representation
+                unit = new VSFilter(prjname, puid);
+                if(unit == 0) {
+                  kddbg << g_err_notenoughmem.arg(VSPART_FILTER).arg("VSSolution::read");
+                  return false;
+                }
+                break; }
+              default: { kddbg << g_err_unsupportedtyp.arg(type2String(typ)).arg("VSSolution::read"); return false; }
+            }
+            insert(unit);
+          }
+          //END // Read and analyze solution unit data
+          ln = str.readLine();
+        }
+      }
+      //END // Read project info
+      //BEGIN // Read global solution sections
+      else if(0 == ln.compare("Global")) { kddbg << "Entering global settings section.\n";
+        while(ln.find(QRegExp("EndGlobal"), 0) < 0) { kddbg << "Line: " << ln << endl;
+          if(ln.find(QRegExp("GlobalSection"), 0) >= 0) { kddbg << "(G)Line: " << ln << endl;
+            QTextIStream si(&ln);
+            QString sname; // Section name
+            QString sparam; // Section parameter
+
+            if(!__read_parse_shdr(si, sname, sparam)) { kddbg << "Error! Can't parse section header\n"; return false; }
+            ln = str.readLine();
+
+            // Read section data
+            e_VSSlnSection stype = string2SlnSectionType(sname);
+            switch(stype) {
+              //BEGIN // SolutionConfigurationPlatforms
+              case slns_sln_cfgplatforms: {
+                // ln = str.readLine();
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
+#ifdef DEBUG
+                  kddbg << sname << ": " << ln << endl;
+#endif
+                  QString conf_name;
+                  QString c_internal_name;
+                  QRegExp rx("^\t\t(.+\|\w+)\ \=\ (.+\|\w+)$");
+                  if(-1 != rx.search(ln)) {
+                    conf_name = rx.cap(1);
+                    c_internal_name = rx.cap(2);
+                  }
+#ifdef DEBUG
+                  kddbg << "Configuration: " << conf_name << " presented as: " << c_internal_name << endl;
+#endif
+                  // Create and add configuration
+                  VSConfigCreate cr;
+                  cr.name = conf_name.left(conf_name.find('|'));
+                  cr.platform = string2Platform(conf_name.mid(conf_name.find('|')+1));
+
+                  //TODO: Consider enabling VSSolution::createCfg to handle 0 as non-lethal case,
+                  //  for setting some tmp parent config that will be replaces upon loading of project
+                  if(!createCfg(0, cr)) {
+                    kddbg << VSPART_ERROR"Config: " << conf_name << " can't be added.\n";
+                    return false;
+                  }
+                  ln = str.readLine();
+                }
+                break; }
+              //END // SolutionConfigurationPlatforms
+              //BEGIN // ProjectConfigurationPlaftorms
+                case slns_prj_cfgplatforms: {
+                  while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) { // kddbg << sname << ": " << ln << endl;
+                    /**
+                      * There is two parts that are responsible for enabling project
+                      * to be built in the solution
+                      * - Active configuration string
+                      *  Tells what project configuration will be used for build.
+                      * - Build "marker"
+                      *  Tells if the project is enabled to be build under
+                      *  specified solution configuration
+                      *
+                    * ActiveCfg:
+                      *   GUID.sln_config_name.ActiveCfg = prj_config_name
+                      * Build "marker"
+                      *   GUID.sln_config_name.Build.0 = prj_config_name
+                      *
+                      * Build marker can be present or not
+                      * if not, that means that this project is not enabled in the
+                      * selected configuration
+                    */
+
+                    //TODO: Implement this part, since all basis is implemented
+                    ln = str.readLine();
+                  }
+                  break; }
+              //END // ProjectConfigurationPlaftorms
+              //BEGIN // SolutionProperties
+                  case slns_sln_properties: {
+                    while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) { // kddbg << sname << ": " << ln << endl;
+                      ln = str.readLine();
+                    }
+                    break; }
+              //END // SolutionProperties
+              //BEGIN // NestedProjects
+                    case slns_nested_prjs: {
+                      while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) { // kddbg << sname << ": " << ln << endl;
+                        QTextIStream si(&ln);
+                        QChar ch(0);
+                        QUuid uid1, uid2, *uid=&uid1;
+
+                        while(!si.atEnd()) {
+                          switch(ch.latin1()) {
+                            case '{': {
+                              if(!__read_parse_uid(si, ch, *uid)) return false;
+                              uid=&uid2;
+                              si >> ch;
+                              break; }
+                            default: { si >> ch; break; }
+                          }
+                        }
+
+                        //Get filer and project model representation
+
+                        // Get entity
+                        vse_p ent = getByUID(uid1);
+                        if(ent == 0) {
+                          //NOTE: Try once more, in case entity is a filter
+                          ent = getFltByUID(uid1);
+                          if(ent == 0) {
+                            kddbg << VSPART_WARNING"Failed to obtain entity for " << uid1.toString() << endl;
+                            ln = str.readLine();
+                            continue;
+                          }
+                        }
+
+                        // Get container
+                        vsf_p cnt = getFltByUID(uid2);
+                        if(cnt == 0) {
+                          kddbg << VSPART_WARNING"Failed to obtain container for " << uid2.toString() << endl;
+                          ln = str.readLine();
+                          continue;
+                        }
+#ifdef DEBUG
+                        /*
+                        kddbg << type2String(cnt->getType()) << " \"" << cnt->getName() << "\" <<< "
+                            << type2String(ent->getType()) << " \"" << ent->getName() << "\"\n";
+                        */
+#endif
+                        cnt->insert(ent); // Put entity into container
+                        ln = str.readLine();
+                      }
+                      break; }
+              //END // NestedProjects
+              default: { kddbg << VSPART_WARNING"Unknown section type: " << sname << endl; /*return false;*/ }
+            }
+            // ln = str.readLine();
+          }
+          ln = str.readLine();
+        }
+      }
+      //END // Read global solution sections
+    }
+    kddbg << "[" << name << "]========================================: Parsed" << endl;
+    load_ok = true;
+    in_sync = synchronize;
+    return true;
+  }
+
   vse_p VSSolution::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     vsp_ci it=projects.begin();
@@ -337,10 +752,12 @@ namespace VStudio {
   }
 
   bool VSSolution::createUI() {
-    if(uisln==0) {
+    if(uisln == 0) {
       uisln = part()->explorerWidget()->addSolutionNode(this);
-      if(uisln==0) { kddbg << "failed to add sln UI node" << endl; return false; }
-      kddbg << "<<< Sln: " << name << endl;
+      if(uisln == 0) { kddbg << "failed to add sln UI node" << endl; return false; }
+#ifdef DEBUG
+      kddbg << "UI item created for sln: " << name << endl;
+#endif
     }
     return true;
   }
@@ -399,6 +816,15 @@ namespace VStudio {
 
     // Save solution's project configuration platforms
     s << section_header.arg(VSPART_SLNSECTION_PCFG_PLATFORMS).arg("postSolution");
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
+      if((*it) != 0) {
+        if(!(*it)->dumpConfigLayout(s)) {
+          kddbg << VSPART_ERROR"Failed to dump project's: " << (*it)->getName() << " config layout.\n";
+          return false;
+        }
+      }
+      else { kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::dumpLayout"); return false; }
+    }
     s << section_footer;
 
     // Save solution's properties
@@ -468,25 +894,13 @@ namespace VStudio {
 
   bool VSSolution::populateUI() {
     // Solution item
-    if(!createUI()) {
-      kddbg << "Error! Failed to create UI representation for sln \""
-          << name << "\"\n";
-      return false;
-    }
+    if(!createUI()) { kddbg << VSPART_ERROR"Can't create UI item for sln \"" << name << "\"\n"; return false; }
     // Insert leve filters, if any
-#ifdef USE_BOOST
-    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+    BOOSTVEC_FOR(vsf_ci, it, filters) {
       if(!(*it)->createUI()) return false;
       if(!(*it)->populateUI()) return false;
     }
-#ifdef USE_BOOST
-    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
       if(!(*it)->createUI(uisln)) return false;
       if(!(*it)->populateUI()) return false;
     }
@@ -602,7 +1016,7 @@ namespace VStudio {
       if(bb != 0) {
         active_bb = bb;
 #ifdef DEBUG
-        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg("VSSolution::selectCfg");
+        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg(name).arg("VSSolution::selectCfg");
 #endif
 
         // Update active configurations for all projects
@@ -653,6 +1067,7 @@ namespace VStudio {
       }
       active_prj = p;
       active_prj->setActive();
+      return true;
     }
     return false;
   }
@@ -700,6 +1115,10 @@ namespace VStudio {
       }
     }
     return 0;
+  }
+
+  /*inline*/ bool VSSolution::isLoaded() const {
+    return load_ok;
   }
 
   vsbb_p VSSolution::getBB(const QString &c) const {
@@ -760,6 +1179,48 @@ namespace VStudio {
 #endif
     //TODO: Not sure if this method is needed at all
     // For now I'll leave it just cleaning the meta-deps tree
+  }
+
+  bool VSSolution::__read_parse_shdr(QTextIStream &s, QString &nm, QString &prm) {
+    QChar c(0);
+#ifdef DEBUG
+    char latin1c(0);
+#endif
+    while(!s.atEnd()) {
+      switch(c.latin1()) {
+        case '(': {
+          s >> c;
+          do {
+            nm.append(c);
+            s >> c;
+          } while(c.latin1() != ')');
+          break; }
+          case '=': {
+            s >> prm;
+            break; }
+        default:
+          s >> c;
+#ifdef DEBUG
+          latin1c = c.latin1();
+#endif
+          break;
+      }
+    }
+    // kddbg << "| Section: " << nm << " set: " << prm << " |\n";
+    return true;
+  }
+
+  bool VSSolution::__read_parse_uid(QTextIStream &s, QChar &ch, QUuid &uid) {
+    if(ch.latin1() != '{') {
+      kddbg << "Error! Can't get GUID, incorrect uid string format, expect {XXXXX...XXXX} format" << endl;
+      return false;
+    }
+    if(!readGUID(s, uid)) {
+      kddbg << "Error! Failed to obtain GUID"<< endl;
+      return false;
+    }
+    s >> ch;
+    return true;
   }
 
   //===========================================================================
@@ -858,6 +1319,26 @@ namespace VStudio {
     return sln;
   }
 
+  bool VSProject::write(bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSProject::write(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSProject::read(bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSProject::read(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
   vse_p VSProject::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
     vsfl_ci it=files.begin();
@@ -924,6 +1405,27 @@ namespace VStudio {
       s << "\tEndProjectSection\n";
     }
     s << "EndProject\n";
+    return true;
+  }
+
+  bool VSProject::dumpConfigLayout(QTextStream &s) {
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+      if((*it) != 0) {
+#ifdef DEBUG
+        kddbg << "Try to dump config layout for project: " << name << endl;
+#endif
+        s << "\t\t" << guid2String(uid) << "." << (*it)->parentConfig()->toString() << ".ActiveCfg = "
+             << (*it)->config().toString() << endl;
+        if((*it)->isEnabled()) {
+          s << "\t\t" << guid2String(uid) << "." << (*it)->parentConfig()->toString() << ".Build.0 = "
+              << (*it)->config().toString() << endl;
+        }
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::dumpConfigLayout");
+        return false;
+      }
+    }
     return true;
   }
 
@@ -1214,7 +1716,7 @@ namespace VStudio {
       if(bb != 0) {
         active_bb = bb;
 #ifdef DEBUG
-        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg("VSProject::selectCfg");
+        kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg(name).arg("VSProject::selectCfg");
 #endif
       }
     }
@@ -1473,6 +1975,26 @@ namespace VStudio {
   //   //it will be procedural
   //   return false;
   // }
+
+  bool VSFile::write(bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSFile::write(QTextStream &/*s*/, bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSFile::read(bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
+
+  bool VSFile::read(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+    in_sync = synchronize;
+    return true;
+  }
 
   vsp_p VSFile::getByUID(const QUuid &uid) const {
 #ifdef USE_BOOST

@@ -439,7 +439,12 @@ namespace VStudio {
   : VSExplorerEntity(vs_solution, lv, s->getName())
   , sln(s) {
     name = s->getName();
-    setPixmap(0, SmallIcon("home"));
+
+    if(sln->isLoaded()) {
+      setPixmap(0, SmallIcon("home"));
+    } else {
+      setPixmap(0, SmallIcon("error"));
+    }
     // item->setText(1, name);
     // m_listView->insertItem(item);
   }
