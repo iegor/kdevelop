@@ -764,8 +764,18 @@ namespace VStudio {
 
   bool VSSolution::dumpLayout(QTextStream &s) {
     // Dump version data
-    s << "Microsoft Visual Studio Solution File, Format Version 10.00\n";
-    s << "# Visual Studio 2008\n";
+    s << QString("Microsoft Visual Studio Solution File, Format Version %1.00\n").arg(fmt_version);
+
+    // Write VS version for .sln file
+    switch(version) {
+      case vssln_ver9: { s << "# Visual Studio 2008\n"; break; }
+      case vssln_ver8: { break; }
+      case vssln_ver7: { break; }
+      default: {
+        kddbg << VSPART_ERROR"Unsupported version of VS file: " << slnVer2String(version) << endl;
+        return false;
+      }
+    }
 
     // Save projects layout
 #ifdef USE_BOOST
