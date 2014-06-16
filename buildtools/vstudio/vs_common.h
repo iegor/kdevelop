@@ -47,6 +47,11 @@
 #define VSPART_PLATFORM "vs_platform"
 #define VSPART_BUILDBOX "vs_buildbox"
 
+#define VSSLN_VER9 "vssln_ver9"
+#define VSSLN_VER8 "vssln_ver8"
+#define VSSLN_VER7 "vssln_ver7"
+#define VSSLN_VERUNKNOWN "vssln_ver_unknown"
+
 // VS build tool names
 #define VSTOOL_COMPILER "vstl_compiler"
 #define VSTOOL_LINKER "vstl_linker"
@@ -310,6 +315,13 @@ namespace VStudio {
     vstl_midl,
   };
 
+  enum e_VSSlnVersion {
+    vssln_ver_unknown = 0,
+    vssln_ver9, // VS 2008 .sln file
+    vssln_ver8, // VS 2005 .sln file
+    vssln_ver7, // VS .Net 2003 .sln file
+  };
+
   bool readGUID(QTextStream &tstream, QUuid &uid);
   QString guid2String(const QUuid &uid);
 
@@ -334,6 +346,9 @@ namespace VStudio {
 
   QString tool2String(e_VSBuildTool vstl);
   e_VSBuildTool string2Tool(const QString &vstl);
+
+  QString slnVer2String(e_VSSlnVersion sln_version);
+  e_VSSlnVersion string2SlnVer(const QString &string);
 
   typedef bool (*entityFunctor)(vse_p entity);
 

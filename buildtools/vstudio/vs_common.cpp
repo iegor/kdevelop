@@ -177,6 +177,22 @@ namespace VStudio {
     else return vstl_unknown;
   }
 
+  QString slnVer2String(e_VSSlnVersion v) {
+    switch(v) {
+      case vssln_ver9: return VSSLN_VER9;
+      case vssln_ver8: return VSSLN_VER8;
+      case vssln_ver7: return VSSLN_VER7;
+      default: return VSSLN_VERUNKNOWN;
+    }
+  }
+
+  e_VSSlnVersion string2SlnVer(const QString &s) {
+    if(s == VSSLN_VER9) { return vssln_ver9; }
+    if(s == VSSLN_VER8) { return vssln_ver8; }
+    if(s == VSSLN_VER7) { return vssln_ver7; }
+    else { return vssln_ver_unknown; }
+  }
+
   //===========================================================================
   // VS Part error message strings:
   //===========================================================================
@@ -185,6 +201,7 @@ namespace VStudio {
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */
+  const QString g_err_emptypath(VSPART_ERROR"%1 path is empty, in {%2} .\n");
   const QString g_err_unsupportedplatform(VSPART_ERROR"Platform: %1 is not supported.\n");
   const QString g_err_notenoughmem(VSPART_ERROR"Not enough mem to alloc %1, in {%2}.\n");
   // const QString g_err_refcount_nonzeroremoval(VSPART_ERROR"Destructing referenced object.\n");
