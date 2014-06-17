@@ -73,21 +73,21 @@ public:
 
     /**The component shall start to execute a make-like command.
      * Commands are always asynchronous. You can submit several jobs
-     * without caring about another job already running. There are
+     * without caring about another job already running. They are
      * executed in the order in which they are submitted. If one of
-     * then fails, all following jobs are dropped.
+     * them fails, all following jobs are dropped.
      * You should not make any assumptions about the directory in which
      * the command is started. If the command depends on that, put and
-     * explicit 'cd' into the command. 
+     * explicit 'cd' into the command.
      * @param dir A starting directory to find files when parsing compiler error
      * messages.
      * @param command A shell command to execute.
      */
     virtual void queueCommand(const QString &dir, const QString &command) = 0;
-    
+
     /**@return Whether the application is currently running.*/
     virtual bool isRunning() = 0;
-    
+
     /**Advices to synchronize the settings from KConfig because they were changed externally.*/
     virtual void updateSettingsFromConfig() = 0;
 
@@ -96,7 +96,7 @@ signals:
      * Only emitted if the command was succesfully finished.
      */
     void commandFinished(const QString &command);
-    
+
     /**
      * Emitted if a command failed.
      */
