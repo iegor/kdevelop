@@ -12,6 +12,7 @@
 * Copyright: See COPYING file that comes with this distribution
 */
 #include <string.h>
+
 #include <qtextstream.h>
 #include <qregexp.h>
 
@@ -543,7 +544,7 @@ namespace VStudio {
                 switch(ltyp) {
                   case vs_prjlang_c: {
                     // Create and add model representation
-                    unit = new VSProject_c(prjname, puid, prjpath_rlt);
+                    unit = new VSProject_c(prjname, puid);
                     break; }
                   case vs_prjlang_cs: {
                     kddbg << "VS Project for C# \"" << guid2String(puid) << "\" is not supported\n";
@@ -560,6 +561,21 @@ namespace VStudio {
                   return false;
                 }
                 prj_active = static_cast<vsp_p>(unit); // Set most recent "active" project ptr
+                prj_active->setRelPath(prjpath_rlt);
+                prj_active->setAbsPath(path_abs.left(path_abs.length()-(name.length()+4)).append(prjpath_rlt));
+
+                // Set absolute path
+                // QStringList l = QStringList::split( '/', path_abs);
+                // QStringList::ConstIterator it;
+                // for(it = l.begin(); it != l.end(); ++it) {
+                // }
+                kddbg << "Project abs path: " << prj_active->getAbsPath() << endl;
+
+                // Read project .vcproj file
+                if(!prj_active->read(true)) {
+                  kddbg << VSPART_ERROR"Can't read project file \"" << prj_active->getAbsPath() << "\"\n";
+                  return false;
+                }
                 break; }
               case vs_filter: {
                 /* kddbg << "Filter " << puid.toString() << " \"" << prjname << "\" under: \"" << prjpath_rlt << "\"\n";
@@ -638,17 +654,80 @@ namespace VStudio {
                       *  Tells if the project is enabled to be build under
                       *  specified solution configuration
                       *
-                    * ActiveCfg:
+                      * ActiveCfg:
                       *   GUID.sln_config_name.ActiveCfg = prj_config_name
-                      * Build "marker"
+                      * Build "marker":
                       *   GUID.sln_config_name.Build.0 = prj_config_name
                       *
                       * Build marker can be present or not
                       * if not, that means that this project is not enabled in the
                       * selected configuration
                     */
+                    QUuid uid;
+                    ln.remove(0, 2);
+                    // ln = ln.stripWhiteSpace();
+#ifdef DEBUG
+                    // kddbg << "LN: \"" << ln << "\"\n";
+#endif
+                    // Split: stage 1
+                    QStringList cfg_line = QStringList::split(QString(" = "), ln);
+#ifdef DEBUG
+                    // kddbg << "cfg_line[0]: " << cfg_line[0] << endl;
+                    // kddbg << "cfg_line[1]: " << cfg_line[1] << endl;
+#endif
+                    QString box_cfg = cfg_line[1];  // Remember configuration for project's bbox
 
-                    //TODO: Implement this part, since all basis is implemented
+                    // Split: stage 2
+                    QStringList cfg_init = QStringList::split(QString("."), cfg_line[0]);
+                    QTextIStream si(&cfg_init[0]);
+                    QChar ch(0);
+                    si >> ch; // should contain '{'
+#ifdef DEBUG
+                    // kddbg << "cfg_init[0]: \"" << cfg_init[0] << "\"\n";
+                    // kddbg << "cfg_init[1]: \"" << cfg_init[1] << "\"\n";
+                    // kddbg << "cfg_init[2]: \"" << cfg_init[2] << "\"\n";
+#endif
+                    if(!__read_parse_uid(si, ch, uid)) {
+                      kddbg << g_err_guidparse.arg(cfg_init[0]).arg("VSSolution::read");
+                      return false;
+                    }
+#ifdef DEBUG
+                    // kddbg << "GUID: " << guid2String(uid) << endl;
+#endif
+                    // Get project by UID
+                    vsp_p project = static_cast<vsp_p>(getByUID(uid));
+                    if(project != 0) {
+                      vsbb_p pbb = getBB(cfg_init[1]);
+                      if(pbb != 0) {
+                          // Get bb from project by config
+                          vsbb_p prjbb = project->getBB(box_cfg);
+                          if(prjbb != 0) {
+                            if(cfg_init[2].compare("ActiveCfg") == 0) {
+                              prjbb->setParentCfg(&pbb->config());
+                              kddbg << "[" << project->getName() << "]:[" << prjbb->config().toString()
+                                  << "], parent is [" << pbb->config().toString() << "].\n";
+                            }
+                            else if(cfg_init[2].compare("Build") == 0) {
+                              prjbb->setEnabled();
+                              kddbg << "[" << project->getName() << "]:[" << prjbb->config().toString()
+                                  << "] is enabled to build under it's parent [" << pbb->config().toString() << "].\n";
+                            }
+                          }
+                          else {
+                            kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(box_cfg).arg("VSSolution::read");
+                            return false;
+                          }
+                      }
+                      else {
+                        kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg_init[1]).arg("VSSolution::read");
+                        return false;
+                      }
+                    }
+                    else {
+                      kddbg << g_err_ent_notfound.arg(VSPART_PROJECT).arg(cfg_init[0]).arg("VSSolution::read");
+                      return false;
+                    }
+
                     ln = str.readLine();
                   }
                   break; }
@@ -778,11 +857,7 @@ namespace VStudio {
     }
 
     // Save projects layout
-#ifdef USE_BOOST
-    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
       if((*it) == 0) {
          kddbg << g_err_list_corrupted.arg("projects").arg("VSSolution::dumpLayout");
         return false;
@@ -791,11 +866,7 @@ namespace VStudio {
     }
 
     // Save filters layout
-#ifdef USE_BOOST
-    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
+    BOOSTVEC_FOR(vsf_ci, it, filters) {
       if((*it) == 0) {
         kddbg << g_err_list_corrupted.arg("filters").arg("VSSolution::dumpLayout");
         return false;
@@ -810,11 +881,7 @@ namespace VStudio {
 
     // Save solution's configurations
     s << section_header.arg(VSPART_SLNSECTION_SCFG_PLATFORMS).arg("preSolution");
-#ifdef USE_BOOST
-    for(vsbb_ci it=bboxes.begin(); it!=bboxes.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
       vsbb_p bb = static_cast<vsbb_p>(*it);
       if(bb != 0) {
         s << "\t\t" << bb->config().toString() << " = " << bb->config().toString() << endl;
@@ -1148,6 +1215,8 @@ namespace VStudio {
   }
 
   vsbb_p VSSolution::getBB(const vcfg_p parent_cfg) const {
+    /*
+    // Print all bboxes for this solution
 #ifdef DEBUG
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
       if((*it) != 0) {
@@ -1156,6 +1225,7 @@ namespace VStudio {
       }
     }
 #endif
+    */
     if(parent_cfg != 0) {
       BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
         if((*it) != 0) {
@@ -1222,11 +1292,11 @@ namespace VStudio {
 
   bool VSSolution::__read_parse_uid(QTextIStream &s, QChar &ch, QUuid &uid) {
     if(ch.latin1() != '{') {
-      kddbg << "Error! Can't get GUID, incorrect uid string format, expect {XXXXX...XXXX} format" << endl;
+      kddbg << VSPART_ERROR"Can't get GUID, incorrect uid string format, expect {XXXXX...XXXX} format" << endl;
       return false;
     }
     if(!readGUID(s, uid)) {
-      kddbg << "Error! Failed to obtain GUID"<< endl;
+      kddbg << g_err_guidparse.arg("{...}").arg("VSSolution::__read_parse_uid");
       return false;
     }
     s >> ch;
@@ -1236,7 +1306,7 @@ namespace VStudio {
   //===========================================================================
   // Visual studio project methods
   //===========================================================================
-  VSProject::VSProject(e_VSPrjLangType ltype, const QString &nm, const QUuid &uid, const QString &path)
+  VSProject::VSProject(e_VSPrjLangType ltype, const QString &nm, const QUuid &uid)
   : VSEntity(vs_project)
   , VSRefcountable()
   , VSNameable(nm)
@@ -1247,7 +1317,6 @@ namespace VStudio {
   , uiprj(0)
   , active_bb(0)
   , active(false) {
-    setRelPath(path);
   }
 
   VSProject::~VSProject() {
@@ -1340,11 +1409,89 @@ namespace VStudio {
   }
 
   bool VSProject::read(bool synchronize/*=true*/) {
-    in_sync = synchronize;
+    //Check paths:
+    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSProject::read"); return false; }
+    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSProject::read"); return false; }
+
+    QFile fl;
+
+    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
+    fl.setName(path_abs);
+    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open project file" << endl; return false; }
+    if(!fl.isReadable()) { kddbg << g_err_fileread.arg(path_abs).arg("VSProject::read"); return false; }
+    if(!fl.isWritable()) { kddbg << g_err_filewrite.arg(path_abs).arg("VSProject::read"); return false; }
+    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
+
+    QTextStream stream(&fl);
+
+    if(!read(stream, true)) {
+      kddbg << VSPART_ERROR"Failed to parse prj: " << name << " file \"" << path_abs << "\"\n";
+      return false;
+    }
+
+    fl.close();
     return true;
   }
 
-  bool VSProject::read(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+  bool VSProject::read(QTextStream &stream, bool synchronize/*=true*/) {
+    if(FALSE == doc.setContent(stream.read())) {
+      kddbg << VSPART_ERROR"Can't set content for DOM element in project: " << name << endl;
+      return false;
+    }
+
+#ifdef DEBUG
+    kddbg << "Reading configs.\n";
+    // QDomElement q = doc.documentElement();
+    // QDomNode n = q.firstChild();
+    // while(!n.isNull()) {
+    //   QDomElement e = n.toElement();
+    //   kddbg << "Tag: " << e.tagName() << endl;
+    //   n = n.nextSibling();
+    // }
+#endif
+
+    QDomElement project = doc.documentElement();
+
+    // Read project configurations
+    QDomElement configs = project.namedItem(VSPART_DOM_PROJECT_CONFIGS).toElement();
+    // DomUtil::elementByPath(doc, VSPART_DOM_PROJECT"/"VSPART_DOM_PROJECT_CONFIGS);
+    QDomElement config = configs.firstChild().toElement();
+
+    if(configs.isNull()) {
+      kddbg << VSPART_ERROR"Configs elem is 0.\n";
+      return false;
+    }
+    if(config.isNull()) {
+      kddbg << VSPART_ERROR"Config elem is 0.\n";
+      return false;
+    }
+
+    while(!config.isNull()) {
+#ifdef DEBUG
+      kddbg << "Parsing tag: " << config.tagName() << endl;
+#endif
+      if(config.tagName() == "Configuration") {
+        QString cfg_name = config.attribute("Name");
+        QString outdir = config.attribute("OutputDirectory");
+
+        VSConfigCreate cr;
+        cr.name = cfg_name.left(cfg_name.find('|'));
+        cr.platform = string2Platform(cfg_name.mid(cfg_name.find('|')+1));
+
+        if(!createCfg(0, cr)) {
+          kddbg << VSPART_ERROR"Can't create config: " << name << " for: " << name << endl;
+          return false;
+        }
+#ifdef DEBUG
+        else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject::read"); }
+#endif
+      }
+      else {
+        kddbg << VSPART_WARNING"Wrong tag: " << config.tagName() << endl;
+      }
+      config = config.nextSibling().toElement();
+    }
+
     in_sync = synchronize;
     return true;
   }
@@ -1677,46 +1824,45 @@ namespace VStudio {
   }
 
   bool VSProject::createCfg(const vcfg_cp p, const vcfgcr_r cr) {
-    if(p != 0) {
-      // Check configs list for duplications and ambiguities
-      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-        vsbb_p pbb = static_cast<vsbb_p>(*it);
-        if(pbb != 0) {
-          if(pbb->config() == cr) {
-            kddbg << VSPART_ERROR"Config [" << pbb->config().toString() << "] already exists in: " << name << " prj.\n";
-            return false;
-          }
-          //NOTE: We can't have two configs with same parent either, this will lead to ambiguity.
-          else if(pbb->belongs(p)) {
+    // Check configs list for duplications and ambiguities
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+      vsbb_p pbb = static_cast<vsbb_p>(*it);
+      if(pbb != 0) {
+        if(pbb->config() == cr) {
+          kddbg << VSPART_ERROR"Config [" << pbb->config().toString() << "] already exists in: " << name << " prj.\n";
+          return false;
+        }
+        //NOTE: We can't have two configs with same parent either, this will lead to ambiguity.
+        if(p != 0) {
+          if(pbb->belongs(p)) {
             if(pbb->isEnabled()) {
               // Substitute this config with new one that will be created
               pbb->setEnabled(false);
               continue;
             }
           }
-        } else {
-          kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::createCfg");
-          return false;
         }
-      }
-
-      // Create new buildbox and make all necessary preparations
-      vsbb_p bb = new VSBuildBox(cr.name, cr.platform);
-
-      if(bb != 0) {
-        bb->setParentCfg(p);
-        bb->setEnabled(true);
-        BOOSTVEC_PUSHBACK(bboxes, bb);
-#ifdef DEBUG
-        kddbg << "Config created: " << bb->config().toString() << " within: " << getName() << ".\n";
-#endif
-        return true;
       } else {
-        kddbg << g_err_notenoughmem.arg("vsbb_p bb").arg("VSProject::createCfg");
+        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::createCfg");
         return false;
       }
     }
-    else { kddbg << g_err_nullptr.arg("VSProject::createCfg"); return false; }
+
+    // Create new buildbox and make all necessary preparations
+    vsbb_p bb = new VSBuildBox(cr.name, cr.platform);
+
+    if(bb != 0) {
+      bb->setParentCfg(p);
+      bb->setEnabled(true);
+      BOOSTVEC_PUSHBACK(bboxes, bb);
+#ifdef DEBUG
+      kddbg << "Config created: " << bb->config().toString() << " within: " << getName() << ".\n";
+#endif
+      return true;
+    } else {
+      kddbg << g_err_notenoughmem.arg("vsbb_p bb").arg("VSProject::createCfg");
+      return false;
+    }
     return false;
   }
 
@@ -1728,10 +1874,65 @@ namespace VStudio {
 #ifdef DEBUG
         kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg(name).arg("VSProject::selectCfg");
 #endif
+        // Update UI in VSExplorer
+        if(uiprj != 0) {
+          //NOTE: TODO: This is temporary, untill I figure out how to design and implement a descent
+          //  GUI items for VSExplorer
+          uiprj->setText(0, QString(name).append(" [%1]").arg(active_bb->config().toString()));
+        }
       }
     }
     else { kddbg << g_err_nullptr.arg("VSProject::selectCfg"); return false; }
     return false;
+  }
+
+  bool VSProject::build() {
+    /** NOTE: This method will make VSProject a pure virtual class.
+     *
+     * The build process:
+     * - Solution is setting up a tree of projects based on dependencies between projects.
+     * - The forms something like a list of build levels, going from level to level, solution will trigger a level-set
+     *   of projects to be build.
+     * - Project will go through it's files and based on priorities of tools within build-box project will process
+     *     it's files.
+     *     NOTE: That rings an idea that every tool should have a list of file extensions that are supported,
+     *       to help project to form a sequence of build.
+     *     Based on build-box and information about tool-executables project will form commands and execute them
+     *     NOTE: That will be based on project's build-box settings, if they allow multi-threaded build.
+     *     Project will take each file and will form a command taking info from build-box and other sources,
+     *     then upon successful command generation it will be executed and report about that will be formed
+     *     according to settings.
+     *
+     * Some stages for build command:
+     * - Prepare
+     * - Report
+     * - Execute
+     * - Report result
+     */
+
+      /// Will return list of tools that are arranged by their "order" in the build box
+      // virtual const pv_VSTool& tools() const = 0;
+      /// Prepares build|clear, etc command for a file
+      // virtual bool prepare_cmd(vsfl_p file) = 0;
+      /// Executes build|clear command for a file
+      // virtual bool execute_cmd(vsfl_p file) = 0;
+    return false;
+  }
+
+  vsbb_p VSProject::getBB(const QString &c) const {
+    if(c != QString::null) {
+      BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+        if((*it) != 0) {
+          if((*it)->config().toString() == c) { return (*it); }
+        }
+      }
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg("VSProject::getBB");
+      return 0;
+    }
+#ifdef DEBUG
+    kddbg << VSPART_ERROR"Wrong param in {VSProject::getBB}.\n";
+#endif
+    return 0;
   }
 
   vsbb_p VSProject::getBB(const vcfg_cp parent_cfg) const {
@@ -2049,8 +2250,8 @@ namespace VStudio {
   //===========================================================================
   // Visual studio file methods
   //===========================================================================
-  VSProject_c::VSProject_c(const QString &nm, const QUuid &uid, const QString &path)
-  : VSProject(vs_prjlang_c, nm, uid, path) {
+  VSProject_c::VSProject_c(const QString &nm, const QUuid &uid)
+  : VSProject(vs_prjlang_c, nm, uid) {
   }
 
   VSProject_c::~VSProject_c() {
@@ -2072,78 +2273,78 @@ namespace VStudio {
   //===========================================================================
   // Visual studio "MSVC compiler" build tool methods
   //===========================================================================
-  VSToolCompilerMSVC::VSToolCompilerMSVC()
+  VSToolCompiler::VSToolCompiler()
   : VSTool(vstl_compiler) {
   }
 
-  VSToolCompilerMSVC::~VSToolCompilerMSVC() {
+  VSToolCompiler::~VSToolCompiler() {
   }
 
-  vse_p VSToolCompilerMSVC::getByUID(const QUuid &/*uid*/) const {
+  vse_p VSToolCompiler::getByUID(const QUuid &/*uid*/) const {
     return 0;
   }
 
-  uivse_p VSToolCompilerMSVC::getUI() const {
+  uivse_p VSToolCompiler::getUI() const {
     //TODO: Implement UI for MSVC compiler build tool
     return 0;
   }
 
-  void VSToolCompilerMSVC::setParent(vse_p /*parent*/) {
+  void VSToolCompiler::setParent(vse_p /*parent*/) {
   }
 
-  vse_p VSToolCompilerMSVC::getParent() const {
+  vse_p VSToolCompiler::getParent() const {
     return 0;
   }
 
   //===========================================================================
   // Visual studio "MSVC linker" build tool methods
   //===========================================================================
-  VSToolLinkerMSVC::VSToolLinkerMSVC()
+  VSToolLinker::VSToolLinker()
   : VSTool(vstl_linker) {
   }
 
-  VSToolLinkerMSVC::~VSToolLinkerMSVC() {
+  VSToolLinker::~VSToolLinker() {
   }
 
-  vse_p VSToolLinkerMSVC::getByUID(const QUuid &/*uid*/) const {
+  vse_p VSToolLinker::getByUID(const QUuid &/*uid*/) const {
     return 0;
   }
 
-  uivse_p VSToolLinkerMSVC::getUI() const {
+  uivse_p VSToolLinker::getUI() const {
     //TODO: Implement UI for MSVC linker build tool
     return 0;
   }
 
-  void VSToolLinkerMSVC::setParent(vse_p /*parent*/) {
+  void VSToolLinker::setParent(vse_p /*parent*/) {
   }
 
-  vse_p VSToolLinkerMSVC::getParent() const {
+  vse_p VSToolLinker::getParent() const {
     return 0;
   }
 
   //===========================================================================
   // Visual studio "MSVC linker" build tool methods
   //===========================================================================
-  VSToolCompilerMSMidl::VSToolCompilerMSMidl()
+  VSToolMidl::VSToolMidl()
   : VSTool(vstl_midl) {
   }
 
-  VSToolCompilerMSMidl::~VSToolCompilerMSMidl() {
+  VSToolMidl::~VSToolMidl() {
   }
 
-  vse_p VSToolCompilerMSMidl::getByUID(const QUuid &/*uid*/) const {
+  vse_p VSToolMidl::getByUID(const QUuid &/*uid*/) const {
     return 0;
   }
 
-  uivse_p VSToolCompilerMSMidl::getUI() const {
+  uivse_p VSToolMidl::getUI() const {
     //TODO: Implement UI for MS midl compiler build tool
     return 0;
   }
 
-  void VSToolCompilerMSMidl::setParent(vse_p /*parent*/) {
+  void VSToolMidl::setParent(vse_p /*parent*/) {
   }
 
-  vse_p VSToolCompilerMSMidl::getParent() const {
+  vse_p VSToolMidl::getParent() const {
     return 0;
   }
 
@@ -2347,7 +2548,7 @@ namespace VStudio {
 #ifdef DEBUG
     if(pcfg != 0) {
       kddbg << "Config: " << pcfg->toString() << " is parent to: " << cfg.toString() << endl;
-    } else { kddbg << VSPART_ERROR"parent config is still 0.\n"; }
+    } else { kddbg << VSPART_WARNING"parent config is 0, in {VSBuildBox::setParentCfg}.\n"; }
 #endif
   }
 

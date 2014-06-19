@@ -18,6 +18,7 @@
 #define __KDEVPART_VSTUDIOPART_SOLUTION_H__
 
 // #include <qfile.h>
+#include <qdom.h>
 #include <qguardedptr.h>
 
 #include "vs_common.h"
@@ -242,7 +243,7 @@ namespace VStudio {
   public VSIndexable,
   public VSFSStored {
     public:
-      VSProject(e_VSPrjLangType ltype, const QString &name, const QUuid &uid, const QString &path_rlt);
+      VSProject(e_VSPrjLangType ltype, const QString &name, const QUuid &uid);
       virtual ~VSProject();
 
     // VS Entity methods:
@@ -282,9 +283,10 @@ namespace VStudio {
       // Configuraion works
       bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
       bool selectCfg(const vcfg_cp parent_config);
-
-    private:
       vsbb_p getBB(const vcfg_cp parent_config) const;
+      vsbb_p getBB(const QString &config) const;
+
+      bool build();
 
     private:
       e_VSPrjLangType lang; // Project choosen language
@@ -300,6 +302,7 @@ namespace VStudio {
 #else
 #endif
       bool active;
+      QDomDocument doc;
   };
 
   class VSFilter : public VSEntity,
@@ -379,7 +382,7 @@ namespace VStudio {
   //BEGIN VS derived entities
   class VSProject_c : public VSProject {
     public:
-      VSProject_c(const QString &name, const QUuid &uid, const QString &path_rlt);
+      VSProject_c(const QString &name, const QUuid &uid);
       virtual ~VSProject_c();
 
     //VSProject intergace methods:
@@ -405,12 +408,75 @@ namespace VStudio {
 
     protected:
       e_VSBuildTool vstl;
+      QString ext; // Supported file extensions like [*.c;*.cpp] devided by ';'
   };
 
-  class VSToolCompilerMSVC : public VSTool {
+  /** Settings
+   * Used to setup buildtool or configuration, etc
+   * There are several types of settings for tools
+   * - value ( \b e.g. \a OutputName,OutputDir,TargetMachineArch )
+   * - value list ( \b e.g. \a AdditionalIncludeDirectories,Predefines,Libraries )
+   *
+   * With different kinds of values:
+   * - Boolean ( \b e.g. \a MinimalRebuild )
+   * - Index ( \b e.g. \a UsePrecompiledHeaders,WarningLevel,Optimization )
+   *    Now, those are interesting...
+   *    Thing is that kind of settings will be stored logically like an array, or list of integers
+   *    Each integer will mean something on pre-build stage where buildtools will be setup.
+   *
+   * Each build tool will have it's own set of settings, they will belong to this type of tool only.
+   *
+   */
+
+  class VSSetting {
     public:
-      VSToolCompilerMSVC();
-      virtual ~VSToolCompilerMSVC();
+      VSSetting() {
+      }
+      virtual ~VSSetting() {
+      }
+
+      /*! Getting value for build command
+       * @return will return something like /Gb or -lfoo.lib or -I /usr/include/
+       */
+      virtual const QString& cmd() const = 0;
+      /*! Getting value for storing or UI purposes
+       * @return will return something like 1 or WINDOWS;DEBUG;WIN32 or /usr/include;/my/inc
+       */
+      virtual const QString& cfg() const = 0;
+  };
+
+  /*! \class VSSetting_preprocdefs
+   * \brief Contains a preprocessor pre-defines for project|file
+   */
+  class VSPreprocDefs : public VSSetting {
+    public:
+      VSPreprocDefs();
+
+      virtual const QString& cmd() const;
+      virtual const QString& cfg() const;
+
+    public:
+  };
+
+  class VSToolCompiler : public VSTool {
+    public:
+      VSToolCompiler();
+      virtual ~VSToolCompiler();
+
+    // VS Entity interface methods:
+      virtual vse_p getByUID(const QUuid &uid) const;
+      virtual uivse_p getUI() const;
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+
+    private:
+      // ppdfs; // preprocessor definitions
+  };
+
+  class VSToolLinker : public VSTool {
+    public:
+      VSToolLinker();
+      virtual ~VSToolLinker();
 
     // VS Entity interface methods:
       virtual vse_p getByUID(const QUuid &uid) const;
@@ -421,24 +487,10 @@ namespace VStudio {
     private:
   };
 
-  class VSToolLinkerMSVC : public VSTool {
+  class VSToolMidl : public VSTool {
     public:
-      VSToolLinkerMSVC();
-      virtual ~VSToolLinkerMSVC();
-
-    // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
-      virtual void setParent(vse_p parent);
-      virtual vse_p getParent() const;
-
-    private:
-  };
-
-  class VSToolCompilerMSMidl : public VSTool {
-    public:
-      VSToolCompilerMSMidl();
-      virtual ~VSToolCompilerMSMidl();
+      VSToolMidl();
+      virtual ~VSToolMidl();
 
     // VS Entity interface methods:
       virtual vse_p getByUID(const QUuid &uid) const;
@@ -548,6 +600,18 @@ namespace VStudio {
       const VSPlatform &vspl;
   };
 
+  /*! \class VSBuildBox
+   * \brief Contains configurations and tools necessary for \a vs_entity to be build|cleaned|re-builded, etc
+   *
+   * - Connects configurations of entity's parent to self.
+   * - Tunes and setup build tools to work with them
+   *
+   * TODO: Think about merge concept for build box.
+   *   When doing some action ( e.g. \a build ) there will be moments when for example files will have their own
+   *   settings customized by user, those settings must be taken into account.
+   *   Kind of \a "merging" settings from different buildboxes will be a good solution to that topic.
+   */
+
   class VSBuildBox : public VSEntity {
     public:
       class VSToolUnit {
@@ -581,15 +645,33 @@ namespace VStudio {
       void setParentCfg(const vcfg_cp config);
       const vcfg_cr config() const;
       bool belongs(const vcfg_cp parent_cfg) const;
+      void setDom(const QDomElement &element) { dom = element; }
 
     private:
       const VSConfig cfg;
       vcfg_cp pcfg; // Parent (higher order) configuration
       bool enabled;
+      QDomElement dom;
+  };
+
+  class VSPrjCBuildBox : public VSBuildBox {
+    public:
+      VSPrjCBuildBox(const QString& name, e_VSPlatform platform);
+      virtual ~VSPrjCBuildBox();
+
+    private:
+      pv_VSTool vtls; // Tools
   };
 
   //END VS build entities
   //===========================================================================
+
+  /**
+   * TODO: Think about compiler-collection object, kind of box where compile, linker, midl, etc are
+   *   that will contain paths to tool-executables and maybe some additional info
+   *   It will be used within project when build is happening, to provide info to
+   *   setup a commond for tool along with buildbox
+   */
 
   vss_p getParentSln(vse_p entity);
 };

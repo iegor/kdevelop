@@ -36,6 +36,7 @@ extern const QString g_msg_entselected;
 #endif /* DEBUG */
 
 // extern const QString g_err_refcount_nonzeroremoval;
+extern const QString g_err_guidparse;
 extern const QString g_err_emptypath;
 extern const QString g_err_unsupportedplatform;
 extern const QString g_err_notenoughmem;
@@ -47,6 +48,8 @@ extern const QString g_err_prjload;
 extern const QString g_err_ent_notfound;
 extern const QString g_err_unsupportedtyp;
 extern const QString g_wrn_unsupportedtyp;
+extern const QString g_err_fileread;
+extern const QString g_err_filewrite;
 }; /* VStudio namespace */
 
 #endif /* __KDEVPART_VSTUDIOPART_ERRORS_H__ */

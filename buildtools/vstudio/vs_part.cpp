@@ -404,6 +404,7 @@ namespace VStudio {
   }
 
   void VSPart::closeProject() {
+    return;
 #ifdef DEBUG
     kddbg << VSPART_WARNING"Closing project file.\n";
 #endif
@@ -454,7 +455,7 @@ namespace VStudio {
                 vssln.setAttribute("name", sln->getName());
                 vssln.setAttribute("enabled", pbb->isEnabled());
                 if(!vscfg.appendChild(vssln).isNull()) {
-                  kddbg << "Buildbox for: " << sln->getName() << "is added to: " << cfg->getName() << endl;
+                  kddbg << "Buildbox for: " << sln->getName() << " is added to: " << cfg->getName() << endl;
                 }
                 else {
                   kddbg << VSPART_ERROR"Can't append sln config to config node.\n";

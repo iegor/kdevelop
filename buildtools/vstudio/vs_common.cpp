@@ -201,6 +201,7 @@ namespace VStudio {
   const QString g_msg_slnselect("Selecting \"%1\" solution.\n");
   const QString g_msg_entselected("[%1] \"%2\" is selected in vsexplorer.\n");
 #endif /* DEBUG */
+  const QString g_err_guidparse(VSPART_ERROR"Can't parse GUID %1, in {%2}.\n");
   const QString g_err_emptypath(VSPART_ERROR"%1 path is empty, in {%2} .\n");
   const QString g_err_unsupportedplatform(VSPART_ERROR"Platform: %1 is not supported.\n");
   const QString g_err_notenoughmem(VSPART_ERROR"Not enough mem to alloc %1, in {%2}.\n");
@@ -213,4 +214,6 @@ namespace VStudio {
   const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found, in {%3}.\n");
   const QString g_err_unsupportedtyp(VSPART_ERROR"Type [%1] is unsupported, in {%2}.\n");
   const QString g_wrn_unsupportedtyp(VSPART_WARNING"Type [%1] is unsupported, in {%2}.\n");
+  const QString g_err_fileread(VSPART_ERROR"Can't read file \"%1\", in {%2}.\n");
+  const QString g_err_filewrite(VSPART_ERROR"Can't write file \"%1\", in {%2}.\n");
 };

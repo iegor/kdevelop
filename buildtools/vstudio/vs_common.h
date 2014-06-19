@@ -36,6 +36,9 @@
 #define VSPART_XML_SECTION_ACTIVESLN VSPART_XML_SECTION_GENERAL"/active_sln"
 #define VSPART_XML_SECTION_ACTIVECFG VSPART_XML_SECTION_GENERAL"/active_cfg"
 
+#define VSPART_DOM_PROJECT "VisualStudioProject"
+#define VSPART_DOM_PROJECT_CONFIGS "Configurations"
+
 // VStudio basic type names
 #define VSSOLUTION_VERSION 10
 #define VSPART_TOOL "vs_tool"
@@ -172,6 +175,11 @@ Environment variables and make arguments can be specified in the project setting
 #define VSPART_ACTION_CONFIGURATION_CFGPLATFORM "config_cfgplatform"
 #define VSPART_ACTION_CONFIGURATION_CFGPLATFORM_TIP "Configuration platform"
 #define VSPART_ACTION_CONFIGURATION_CFGPLATFORM_WIT "Select the platform for current configuration"
+
+// VS Tools settings
+#define VSPARTTS_ADDOPTS "AdditionalOptions"
+#define VSPARTTS_PREPROCDEFS "PreprocessorDefinitions"
+#define VSPARTTS_ADDIDIRS "AdditionalIncludeDirectories"
 
 //Widget data
 #define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
