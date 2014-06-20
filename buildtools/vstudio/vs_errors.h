@@ -50,6 +50,7 @@ extern const QString g_err_unsupportedtyp;
 extern const QString g_wrn_unsupportedtyp;
 extern const QString g_err_fileread;
 extern const QString g_err_filewrite;
+extern const QString g_err_domelemnotpresent;
 }; /* VStudio namespace */
 
 #endif /* __KDEVPART_VSTUDIOPART_ERRORS_H__ */

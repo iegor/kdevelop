@@ -153,7 +153,8 @@ namespace VStudio {
   VSFSStored::VSFSStored()
   : path_rlt(QString::null)
   , path_abs(QString::null)
-  , in_sync(false) {
+  , in_sync(false)
+  , reachable(false) {
   }
 
   VSFSStored::~VSFSStored() {
@@ -173,6 +174,22 @@ namespace VStudio {
 
   /*inline*/ void VSFSStored::setAbsPath(const QString& abp) {
     path_abs = abp;
+  }
+
+  /*inline*/ bool VSFSStored::isInSync() const {
+    return in_sync;
+  }
+
+  /*inline*/ bool VSFSStored::isReachable() const {
+    return reachable;
+  }
+
+  /*inline*/ void VSFSStored::__try_reach() {
+    if(!path_abs.isEmpty()) {
+      QFile fl;
+      if(fl.exists(path_abs)) { reachable = true; return; }
+    }
+    reachable = false;
   }
 
   //===========================================================================
@@ -352,6 +369,7 @@ namespace VStudio {
 
   bool VSSolution::read(QTextStream &str, bool synchronize/*=true*/) {
     QString ln;
+    bool nestedprjs_section_loaded = false;
     vsp_p prj_active = 0; // Active project to collect dependencies from project section
     kddbg << "[" << name << "]========================================: Begin parse\n";
     kddbg << "PATH: " << path_abs << endl;
@@ -574,7 +592,7 @@ namespace VStudio {
                 // Read project .vcproj file
                 if(!prj_active->read(true)) {
                   kddbg << VSPART_ERROR"Can't read project file \"" << prj_active->getAbsPath() << "\"\n";
-                  return false;
+                  // return false;
                 }
                 break; }
               case vs_filter: {
@@ -598,8 +616,8 @@ namespace VStudio {
       //END // Read project info
       //BEGIN // Read global solution sections
       else if(0 == ln.compare("Global")) { kddbg << "Entering global settings section.\n";
-        while(ln.find(QRegExp("EndGlobal"), 0) < 0) { kddbg << "Line: " << ln << endl;
-          if(ln.find(QRegExp("GlobalSection"), 0) >= 0) { kddbg << "(G)Line: " << ln << endl;
+        while(ln.find(QRegExp("EndGlobal"), 0) < 0) { kddbg << "SECTION: " << ln << endl;
+          if(ln.find(QRegExp("GlobalSection"), 0) >= 0) { // kddbg << "(G)Line: " << ln << endl;
             QTextIStream si(&ln);
             QString sname; // Section name
             QString sparam; // Section parameter
@@ -613,10 +631,7 @@ namespace VStudio {
               //BEGIN // SolutionConfigurationPlatforms
               case slns_sln_cfgplatforms: {
                 // ln = str.readLine();
-                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) {
-#ifdef DEBUG
-                  kddbg << sname << ": " << ln << endl;
-#endif
+                while(ln.find(QRegExp("EndGlobalSection"), 0) < 0) { // kddbg << "SEC: " << sname << ": " << ln << endl;
                   QString conf_name;
                   QString c_internal_name;
                   QRegExp rx("^\t\t(.+\|\w+)\ \=\ (.+\|\w+)$");
@@ -695,37 +710,39 @@ namespace VStudio {
                     // kddbg << "GUID: " << guid2String(uid) << endl;
 #endif
                     // Get project by UID
-                    vsp_p project = static_cast<vsp_p>(getByUID(uid));
-                    if(project != 0) {
-                      vsbb_p pbb = getBB(cfg_init[1]);
-                      if(pbb != 0) {
-                          // Get bb from project by config
-                          vsbb_p prjbb = project->getBB(box_cfg);
-                          if(prjbb != 0) {
-                            if(cfg_init[2].compare("ActiveCfg") == 0) {
-                              prjbb->setParentCfg(&pbb->config());
-                              kddbg << "[" << project->getName() << "]:[" << prjbb->config().toString()
-                                  << "], parent is [" << pbb->config().toString() << "].\n";
+                    vsp_p prj = static_cast<vsp_p>(getByUID(uid));
+                    if(prj != 0) {
+                      if(prj->isLoaded()) {
+                        vsbb_p pbb = getBB(cfg_init[1]);
+                        if(pbb != 0) {
+                            // Get bb from project by config
+                            vsbb_p prjbb = prj->getBB(box_cfg);
+                            if(prjbb != 0) {
+                              if(cfg_init[2].compare("ActiveCfg") == 0) {
+                                prjbb->setParentCfg(&pbb->config());
+                                kddbg << "[" << prj->getName() << "]:[" << prjbb->config().toString()
+                                    << "], parent is [" << pbb->config().toString() << "].\n";
+                              }
+                              else if(cfg_init[2].compare("Build") == 0) {
+                                prjbb->setEnabled();
+                                kddbg << "[" << prj->getName() << "]:[" << prjbb->config().toString()
+                                    << "] is enabled to build under it's parent [" << pbb->config().toString() << "].\n";
+                              }
                             }
-                            else if(cfg_init[2].compare("Build") == 0) {
-                              prjbb->setEnabled();
-                              kddbg << "[" << project->getName() << "]:[" << prjbb->config().toString()
-                                  << "] is enabled to build under it's parent [" << pbb->config().toString() << "].\n";
+                            else {
+                              kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(box_cfg).arg("VSSolution::read");
+                              return false;
                             }
-                          }
-                          else {
-                            kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(box_cfg).arg("VSSolution::read");
-                            return false;
-                          }
-                      }
-                      else {
-                        kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg_init[1]).arg("VSSolution::read");
-                        return false;
+                        }
+                        else {
+                          kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg_init[1]).arg("VSSolution::read");
+                          return false;
+                        }
                       }
                     }
                     else {
                       kddbg << g_err_ent_notfound.arg(VSPART_PROJECT).arg(cfg_init[0]).arg("VSSolution::read");
-                      return false;
+                      // return false;
                     }
 
                     ln = str.readLine();
@@ -787,6 +804,7 @@ namespace VStudio {
                         cnt->insert(ent); // Put entity into container
                         ln = str.readLine();
                       }
+                      nestedprjs_section_loaded = true;
                       break; }
               //END // NestedProjects
               default: { kddbg << VSPART_WARNING"Unknown section type: " << sname << endl; /*return false;*/ }
@@ -797,6 +815,22 @@ namespace VStudio {
         }
       }
       //END // Read global solution sections
+
+      /* NOTE: Some solutions will be without NESTED section
+       * that is basically means that all projects are inserted into a solution node
+       * i.e. without any filters involved
+       */
+      if(!nestedprjs_section_loaded) {
+        if(!filters.empty()) {
+          kddbg << VSPART_ERROR"No nesting was not done, but there are filters in [" << name << "] sln.\n";
+          //return false;
+        }
+        BOOSTVEC_FOR(vsp_ci, it, projects) {
+          if((*it) != 0) {
+            //insert((*it));
+          }
+        }
+      }
     }
     kddbg << "[" << name << "]========================================: Parsed" << endl;
     load_ok = true;
@@ -805,37 +839,22 @@ namespace VStudio {
   }
 
   vse_p VSSolution::getByUID(const QUuid &uid) const {
-#ifdef USE_BOOST
-    vsp_ci it=projects.begin();
-    for(; it!=projects.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
       if((*it) != 0) {
-        if((*it)->getUID() == uid) { break; }
-      } else {
-        kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::getByUID");
-        return 0;
+        if((*it)->getUID() == uid) { return (*it); }
       }
+      else { kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::getByUID"); return 0; }
     }
-#ifdef USE_BOOST
-    if(it!=projects.end()) { return (*it); }
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
-    else {
-         kddbg << g_err_ent_notfound.arg(VSPART_PROJECT).arg(guid2String(uid)).arg(name);
-      return 0;
-    }
+    kddbg << g_err_ent_notfound.arg(VSPART_PROJECT).arg(guid2String(uid)).arg(name);
     return 0;
   }
 
-  bool VSSolution::createUI() {
+  bool VSSolution::createUI(uivse_p /*pnt*/) {
     if(uisln == 0) {
       uisln = part()->explorerWidget()->addSolutionNode(this);
       if(uisln == 0) { kddbg << "failed to add sln UI node" << endl; return false; }
 #ifdef DEBUG
-      kddbg << "UI item created for sln: " << name << endl;
+      kddbg << QString("UI for [%1]:[%2] created\n").arg(type2String(type)).arg(name);
 #endif
     }
     return true;
@@ -971,16 +990,25 @@ namespace VStudio {
 
   bool VSSolution::populateUI() {
     // Solution item
-    if(!createUI()) { kddbg << VSPART_ERROR"Can't create UI item for sln \"" << name << "\"\n"; return false; }
-    // Insert leve filters, if any
+    if(!createUI(0)) { kddbg << VSPART_ERROR"Can't create UI item for sln \"" << name << "\"\n"; return false; }
+
+    // Insert filters, if any
     BOOSTVEC_FOR(vsf_ci, it, filters) {
-      if(!(*it)->createUI()) return false;
-      if(!(*it)->populateUI()) return false;
+      vsf_p flt(*it);
+      if(flt != 0) {
+        if(!flt->populateUI(uisln)) { return false; }
+      }
     }
+
+    // Create UI items for all projects that are not in filters
     BOOSTVEC_FOR(vsp_ci, it, projects) {
-      if(!(*it)->createUI(uisln)) return false;
-      if(!(*it)->populateUI()) return false;
+      vsp_p prj(*it);
+      if(prj != 0) {
+        if(!prj->createUI(uisln)) { return false; }
+        if(!prj->populateUI()) { return false; }
+      }
     }
+
     return true;
   }
 
@@ -1051,7 +1079,7 @@ namespace VStudio {
     // Create new build box and make all necessary preparations
     vsbb_p bb = new VSBuildBox(pc.name, pc.platform);
     if(bb != 0) {
-      bb->setParent(p);
+      bb->setParentCfg(p);
       bb->setEnabled(true);
 
       // Create configs for nested projects if necessary
@@ -1059,13 +1087,16 @@ namespace VStudio {
         BOOSTVEC_FOR(vsp_ci, it, projects) {
           vsp_p prj = static_cast<vsp_p>(*it);
           if(prj != 0) {
-            pc.sync_subs = false;
-            if(!prj->createCfg(&bb->config(), pc)) {
-              kddbg << VSPART_ERROR"Can't create config: " << pc.string() << " for project: "
-                    << prj->getName() << ".\n";
-              delete bb;
-              return false;
+            if(prj->isLoaded()) {
+              pc.sync_subs = false;
+              if(!prj->createCfg(&bb->config(), pc)) {
+                kddbg << VSPART_ERROR"Can't create config: " << pc.string() << " for project: "
+                      << prj->getName() << ".\n";
+                delete bb;
+                return false;
+              }
             }
+            else { kddbg << g_err_prjload.arg(prj->getName()).arg("VSSolution::createCfg"); }
           } else {
             kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::createCfg");
             delete bb;
@@ -1079,12 +1110,22 @@ namespace VStudio {
 #endif
       return true;
     } else {
-      kddbg << g_err_notenoughmem.arg(VSPART_BUILDBOX).arg("VSSolution::selectCfg");
+      kddbg << g_err_notenoughmem.arg(VSPART_BUILDBOX).arg("VSSolution::createCfg");
       return false;
     }
     return false;
   }
 
+  /*! VSSolution::selectCfg
+   * \brief Selects config from its own list of build-boxes based on KDevelop project's parent config
+   *
+   * receives pointer to parent config, searches the corresponding config in own list of build-boxes
+   * <b>if bbox is found</b> for parent config, then switches it's config and also switches and updates
+   * configs for all projects within solution.
+   * <b>if bbox is not found</b> returns false
+   * @param p pointer to parent configuration within KDevelop project
+   * @return \b true upon success, \b false if something is seriously wrong
+   */
   bool VSSolution::selectCfg(const vcfg_p p) {
     vsbb_p bb = 0;
     if(p != 0) {
@@ -1100,30 +1141,38 @@ namespace VStudio {
         BOOSTVEC_FOR(vsp_ci, it, projects) {
           vsp_p prj(*it);
           if(prj != 0) {
-            if(!prj->selectCfg(&bb->config())) {
+            if(prj->isLoaded()) {
+              if(!prj->selectCfg(&bb->config())) {
 #ifdef DEBUG
-              kddbg << VSPART_ERROR"Can't set config for project: \"" << prj->getName() << "\" in \""
-                  << getName() << "\", in {VSSolution::setCfg}\n";
+                kddbg << VSPART_ERROR"Can't set config for project: \"" << prj->getName() << "\" in \""
+                    << getName() << "\", in {VSSolution::selectCfg}\n";
 #endif
+              }
             }
+#ifdef DEBUG
+            else { kddbg << g_err_prjload.arg(prj->getName()).arg("VSSolution::selectCfg"); }
+#endif
           }
           else {
             kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::selectCfg");
+            return false;
           }
         }
 
         // Update UI in VSExplorer
         if(uisln != 0) {
-          //NOTE: TODO: This is temporary, untill I figure out how to design and implement a descent
-          //  GUI items for VSExplorer
-          uisln->setText(0, QString(name).append(" [%1]").arg(active_bb->config().toString()));
+          /*NOTE: TODO: This is temporary, untill I figure out how to design and implement a descent
+            GUI items for VSExplorer */
+          uisln->setState("normal");
         }
-        return true;
       }
       else {
-        kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(p->toString()).arg("VSSolution::selectCfg");
-        return false;
+        /* kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(p->toString()).arg(QString(
+                                        "VSSolution[%1]::selectCfg").arg(name)); */
+        // Update UI in VSExplorer
+        if(uisln != 0) { uisln->setState("detached"); }
       }
+      return true;
     }
     else { kddbg << g_err_nullptr.arg("VSSolution::selectCfg"); return false; }
     return false;
@@ -1205,17 +1254,16 @@ namespace VStudio {
           if((*it)->config().toString() == c) { return (*it); }
         }
       }
-      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg("VSSolution::getBB");
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg(QString("VSSolution[%1]::getBB").arg(name));
       return 0;
     }
 #ifdef DEBUG
-    kddbg << VSPART_ERROR"Wrong param in {VSSolution::getBB}.\n";
+    kddbg << VSPART_ERROR"Wrong param in {VSSolution[" << name << "]::getBB}.\n";
 #endif
     return 0;
   }
 
   vsbb_p VSSolution::getBB(const vcfg_p parent_cfg) const {
-    /*
     // Print all bboxes for this solution
 #ifdef DEBUG
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
@@ -1225,7 +1273,6 @@ namespace VStudio {
       }
     }
 #endif
-    */
     if(parent_cfg != 0) {
       BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
         if((*it) != 0) {
@@ -1236,13 +1283,19 @@ namespace VStudio {
         }
         else {
           kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::getBB");
+          return false;
         }
       }
-      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(parent_cfg->toString()).arg("VSSolution::getBB");
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(parent_cfg->toString()).arg(
+                                      "VSSolution[%1]::getBB").arg(name);
       return 0;
     }
     kddbg << g_err_nullptr.arg("VSSolution::getBB");
     return 0;
+  }
+
+  const vcfg_cr VSSolution::currentCfg() const {
+    return active_bb->config();
   }
 
   void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {
@@ -1316,7 +1369,9 @@ namespace VStudio {
   , sln(0)
   , uiprj(0)
   , active_bb(0)
-  , active(false) {
+  , active(false)
+  , load_ok(false)
+  , version(vsprj_ver_unknown) {
   }
 
   VSProject::~VSProject() {
@@ -1354,25 +1409,18 @@ namespace VStudio {
   void VSProject::insert(vse_p item) {
     switch(item->getType()) {
       case vs_filter: {
-#ifdef USE_BOOST
-        filters.push_back(static_cast<vsf_p>(item));
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+        BOOSTVEC_PUSHBACK(filters, static_cast<vsf_p>(item));
         break; }
       case vs_file: {
         vsfl_p f = static_cast<vsfl_p>(item);
-#ifdef USE_BOOST
-        files.push_back(f);
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-        f->setParent(this); //NOTE: acquires item
+        BOOSTVEC_PUSHBACK(files, f);
+        // f->setParent(static_cast<vse_p>(this)); //NOTE: acquires item
         break; }
       default: {
         kddbg << g_wrn_unsupportedtyp.arg(type2String(item->getType())).arg("VSProject::insert");
         return; }
     }
+    item->setParent(static_cast<vse_p>(this));
   }
 
   void VSProject::setParent(vse_p pnt) {
@@ -1439,8 +1487,28 @@ namespace VStudio {
       return false;
     }
 
+    // Acquire all necessary elements
+    QDomElement prj_e = doc.documentElement();
+    QDomElement cfg_e = prj_e.namedItem(VSPRJ_DOM_CONFIGS).toElement();
+    QDomElement fil_e = prj_e.namedItem(VSPRJ_DOM_FILES).toElement();
+
+    // Check all elements
+    if(prj_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg("Project root").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+    if(cfg_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_CONFIGS).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+    if(fil_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_FILES).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+
+    //BEGIN: Read project configurations
 #ifdef DEBUG
-    kddbg << "Reading configs.\n";
+    kddbg << "VSPROJ: [" << name << "] Reading configs.\n";
     // QDomElement q = doc.documentElement();
     // QDomNode n = q.firstChild();
     // while(!n.isNull()) {
@@ -1449,30 +1517,20 @@ namespace VStudio {
     //   n = n.nextSibling();
     // }
 #endif
-
-    QDomElement project = doc.documentElement();
-
-    // Read project configurations
-    QDomElement configs = project.namedItem(VSPART_DOM_PROJECT_CONFIGS).toElement();
     // DomUtil::elementByPath(doc, VSPART_DOM_PROJECT"/"VSPART_DOM_PROJECT_CONFIGS);
-    QDomElement config = configs.firstChild().toElement();
-
-    if(configs.isNull()) {
-      kddbg << VSPART_ERROR"Configs elem is 0.\n";
-      return false;
-    }
-    if(config.isNull()) {
-      kddbg << VSPART_ERROR"Config elem is 0.\n";
+    QDomElement it_e = cfg_e.firstChild().toElement();
+    if(it_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg("it_e:configuration").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
       return false;
     }
 
-    while(!config.isNull()) {
+    while(!it_e.isNull()) {
 #ifdef DEBUG
-      kddbg << "Parsing tag: " << config.tagName() << endl;
+      kddbg << "Parsing: " << it_e.tagName() << QString(" in {VSProject[%1]::read}.\n").arg(name);
 #endif
-      if(config.tagName() == "Configuration") {
-        QString cfg_name = config.attribute("Name");
-        QString outdir = config.attribute("OutputDirectory");
+      if(it_e.tagName() == "Configuration") {
+        QString cfg_name = it_e.attribute("Name");
+        QString outdir = it_e.attribute("OutputDirectory");
 
         VSConfigCreate cr;
         cr.name = cfg_name.left(cfg_name.find('|'));
@@ -1483,50 +1541,63 @@ namespace VStudio {
           return false;
         }
 #ifdef DEBUG
-        else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject::read"); }
+        else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject[%1]::read").arg(name); }
 #endif
       }
       else {
-        kddbg << VSPART_WARNING"Wrong tag: " << config.tagName() << endl;
+        kddbg << VSPART_WARNING"Wrong tag: " << it_e.tagName() << endl;
       }
-      config = config.nextSibling().toElement();
+      it_e = it_e.nextSibling().toElement();
+      /* if(it_e.isNull()) {
+        kddbg << g_err_domelemnotpresent.arg("it_e:confguration").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+        return false;
+      } NOTE: don't need this since this is checked in while */
+    }
+    //END: Read project configurations
+
+    //BEGIN: Read project files
+    it_e = fil_e.firstChild().toElement();
+    if(it_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg("it_e:file").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
+      return false;
     }
 
-    in_sync = synchronize;
+    while(!it_e.isNull()) {
+      // "Unfiltered" file
+      if(it_e.tagName() == "File") {
+        if(!__read_file(it_e)) {
+          kddbg << VSPART_ERROR"Failed to read file [" << it_e.attribute("RelativePath") << "].\n";
+          return false;
+        }
+      }
+      // "Filtered" file
+      else if(it_e.tagName() == "Filter") {
+        if(!__read_filter(it_e)) {
+          kddbg << VSPART_ERROR"Failed to read filter [ " << it_e.attribute("Name") << " ] contents.\n";
+          return false;
+        }
+      }
+      it_e = it_e.nextSibling().toElement();
+    }
+    //END: Read project files
+
+    // load_ok = true;
+    // in_sync = synchronize;
     return true;
   }
 
-  vse_p VSProject::getByUID(const QUuid &uid) const {
-#ifdef USE_BOOST
-    vsfl_ci it=files.begin();
-    for(; it!=files.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      if((*it)!=0) {
-        if((*it)->getUID() == uid) { break; }
-      } else {
-        kddbg << g_err_list_corrupted.arg(VSPART_FILE).arg("");
-        return 0;
-      }
-    }
-#ifdef USE_BOOST
-    if(it!=files.end()) { return (*it); }
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-    else {
-      kddbg << "File " << guid2String(uid) << " not found.\n";
-      return 0;
-    }
+  vse_p VSProject::getByUID(const QUuid &/*uid*/) const {
     return 0;
   }
 
-  bool VSProject::createUI(uivse_p uipnt) {
+  bool VSProject::createUI(uivse_p p) {
     if(uiprj==0) {
-      uiprj = part()->explorerWidget()->addProjectNode(uipnt, this);
+      uiprj = part()->explorerWidget()->addProjectNode(p, this);
       if(uiprj==0) { kddbg << "failed to add prj UI node" << endl; return false; }
-      // kddbg << "Prj: " << name << " in " << uipnt->getName() << endl;
+#ifdef DEBUG
+      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+          arg(type2String(p->getType())).arg(p->text(0));
+#endif
     }
     return true;
   }
@@ -1664,6 +1735,22 @@ namespace VStudio {
     return 0;
   }
 
+  vsf_p VSProject::getFilter(const QString &nm) const {
+    BOOSTVEC_FOR(vsf_ci, it, filters) {
+      if((*it) != 0) {
+        if((*it)->getName() == nm) { return (*it); }
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg(VSPART_FILTER).arg(QString("in {VSProject[%1]::getFilter}.\n").arg(name));
+        return 0;
+      }
+    }
+#ifdef DEBUG
+    kddbg << g_err_ent_notfound.arg(VSPART_FILTER).arg(nm).arg(QString("in {VSProject[%1]::getFilter}.\n").arg(name));
+#endif
+    return 0;
+  }
+
   bool VSProject::addDependency(vsp_p dp) {
     if(dp != 0) {
       if(dp->getType() == vs_project) {
@@ -1779,24 +1866,15 @@ namespace VStudio {
   }
 
   bool VSProject::populateUI() {
-#ifdef USE_BOOST
-    if(!filters.empty()) {
-      for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-        if(!(*it)->createUI()) return false;
-        if(!(*it)->populateUI()) return false;
-      }
-    } else {
-#ifdef USE_BOOST
-      for(vsfl_ci it=files.begin(); it!=files.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-        if(!(*it)->createUI((uivse_p)uiprj)) return false;
-      }
+    BOOSTVEC_FOR(vsf_ci, it, filters) {
+      if(!(*it)->populateUI(static_cast<uivse_p>(uiprj))) { return false; }
     }
+
+    /*
+    BOOSTVEC_FOR(vsfl_ci, it, files) {
+      if(!(*it)->createUI(static_cast<uivse_p>(uiprj))) { return false; }
+    }
+    */
     return true;
   }
 
@@ -1919,6 +1997,109 @@ namespace VStudio {
     return false;
   }
 
+  /*inline*/ bool VSProject::isLoaded() const {
+    return load_ok;
+  }
+
+  bool VSProject::__read_filter(QDomElement flt) {
+    if(!flt.isNull()) {
+#ifdef DEBUG
+      kddbg << "Parsing: " << QString("[Filter]:[%1]").arg(flt.attribute("Name"))
+          << QString(" in {VSProject[%1]::__read_filter}.\n").arg(name);
+#endif
+      // Create VS filter
+      QUuid flt_uid;
+      if(!readGUID(flt.attribute("UniqueIdentifier"), flt_uid)) {
+        kddbg << g_err_guidparse.arg(flt.attribute("UniqueIdentifier")).
+            arg(QString("in {VSProject[%1]::__read_filter}").arg(name));
+        return false;
+      }
+
+      vsf_p filter = new vsf(flt.attribute("Name"), flt_uid);
+      if(filter != 0) {
+        insert(filter);
+
+        //TODO: make filters to store and work with filtered file extensions
+      }
+      else {
+        kddbg << g_err_notenoughmem.arg(QString("["VSPART_FILTER"]:[%1]").arg(flt.attribute("Name"))).
+            arg(QString("in {VSProject[%1]::__read_filter}").arg(name));
+        return false;
+      }
+
+      QDomElement it_e = flt.firstChild().toElement();
+      if(it_e.isNull()) {
+        kddbg << g_err_domelemnotpresent.arg("it_e").arg(QString("in {VSProject[%1]::__read_filter}").arg(name));
+        return false;
+      }
+
+      // Read filter items
+      while(!it_e.isNull()) {
+        if(it_e.tagName() == "File") {
+          vsfl_p fl = __read_file(it_e);
+          if(fl != 0) {
+            filter->insert(fl); // Add file to filter
+          }
+          else {
+            kddbg << VSPART_ERROR"Failed to read file [" << it_e.attribute("RelativePath") << "].\n";
+            return false;
+          }
+        }
+        else if(it_e.tagName() == "Filter") {
+          if(!__read_filter(it_e)) {
+            kddbg << VSPART_ERROR"Failed to read filter [ " << it_e.attribute("Name") << " ] contents.\n";
+            return false;
+          }
+        }
+        it_e = it_e.nextSibling().toElement();
+      }
+
+      return true;
+    }
+  }
+
+  vsfl_p VSProject::__read_file(QDomElement el) {
+#ifdef DEBUG
+    kddbg << "Parsing: " << QString("[File]:[%1]").arg(el.attribute("RelativePath"))
+        << QString(" in {VSProject[%1]::__read_file}.\n").arg(name);
+#endif
+    QString fl_name("<not loaded>");
+    QString fl_path_r = el.attribute("RelativePath");
+
+    // Retrieve name from relative path
+    fl_name = fl_path_r.mid(fl_path_r.findRev('\\')+1);
+
+#ifdef DEBUG
+    kddbg << "Filename condidate: " << fl_name << endl;
+#endif
+
+    vsfl_p fl = new vsfl(fl_name, this);
+    if(fl != 0) {
+      fl->setRelPath(fl_path_r);
+      fl->setDom(el); //NOTE: copy DOM element for modification|storage|saving
+
+      // Check for file configurations
+      QDomElement it_cfg_e = el.firstChild().toElement();
+      while(!it_cfg_e.isNull()) {
+        kddbg << "File config: " << it_cfg_e.attribute("Name") << endl;
+        //TODO: Make something like initBBFromDom()
+        it_cfg_e = it_cfg_e.nextSibling().toElement();
+      }
+
+      insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
+#ifdef DEBUG
+      kddbg << QString("[%1]:[%2]").arg(type2String(fl->getType())).arg(fl->getName())
+          << " inserted into: " << name << ".\n";
+#endif
+      return fl;
+    }
+    else {
+      kddbg << g_err_notenoughmem.arg(QString("["VSPART_FILE"]:[%1]").arg(fl_path_r)).
+          arg(QString("in {VSProject[%1]::__read_file}").arg(name));
+    }
+    return 0;
+  }
+
   vsbb_p VSProject::getBB(const QString &c) const {
     if(c != QString::null) {
       BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
@@ -1926,7 +2107,7 @@ namespace VStudio {
           if((*it)->config().toString() == c) { return (*it); }
         }
       }
-      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg("VSProject::getBB");
+      kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(c).arg("VSProject[%1]::getBB").arg(name);
       return 0;
     }
 #ifdef DEBUG
@@ -1971,27 +2152,20 @@ namespace VStudio {
   void VSFilter::insert(vse_p item) {
     switch(item->getType()) {
       case vs_file:
-      case vs_project:
-#ifdef USE_BOOST
-        chld.push_back(item);
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+      case vs_project: {
+        BOOSTVEC_PUSHBACK(chld, item);
+
         //NOTE: We are not setting this filter as parent of
         // projects and files. Those already have a proper parent,
         // solution or project.
-        break;
-      case vs_filter:
-#ifdef USE_BOOST
-        chld.push_back(item);
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-        item->setParent(this);
-        break;
-      default:
+        break; }
+      case vs_filter: {
+        BOOSTVEC_PUSHBACK(chld, item);
+        item->setParent(static_cast<vse_p>(this));
+        break; }
+      default: {
         kddbg << g_wrn_unsupportedtyp.arg(type2String(item->getType())).arg("VSFilter::insert");
-        return;
+      }
     }
   }
 
@@ -2038,9 +2212,6 @@ namespace VStudio {
           case vs_filter: {
             if(static_cast<vsf_p>(*it)->getUID() == uid) { break; }
             break; }
-          case vs_file: {
-            if(static_cast<vsfl_p>(*it)->getUID() == uid) { break; }
-            break; }
           default: {
             break; }
         }
@@ -2061,19 +2232,16 @@ namespace VStudio {
     return 0;
   }
 
-  bool VSFilter::createUI() {
-    if(uiflt==0) {
-      if(parent != 0) {
-        uiflt = part()->explorerWidget()->addFilterNode(parent->getUI(), this);
-        if(uiflt==0) { kddbg << "failed to add filter UI node" << endl; return false; }
-        return true;
-      } else {
-        kddbg << "Fiter \"" << name << "\" has no parent.\n";
-        return false;
-      }
-      // kddbg << "Flt: " << name << " in " << parent->getName() << endl;
+  bool VSFilter::createUI(uivse_p pnt) {
+    if(uiflt == 0) {
+      uiflt = part()->explorerWidget()->addFilterNode(pnt, this);
+      if(uiflt == 0) { kddbg << "failed to add filter UI node" << endl; return false; }
+#ifdef DEBUG
+      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+          arg(type2String(pnt->getType())).arg(pnt->text(0));
+#endif
     }
-    return false;
+    return true;
   }
 
   bool VSFilter::dumpLayout(QTextStream &s) {
@@ -2112,24 +2280,33 @@ namespace VStudio {
     return false;
   }
 
-  bool VSFilter::populateUI() {
-#ifdef USE_BOOST
-    for(vse_ci it=chld.begin(); it!=chld.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      switch((*it)->getType()) {
-        case vs_project: {
-          vsp_p prj=(vsp_p)(*it);
-          if(!prj->createUI((uivse_p)uiflt)) return false;
-          if(!prj->populateUI()) return false;
-          break; }
-        case vs_file: {
-          vsfl_p fl=(vsfl_p)(*it);
-          if(!fl->createUI((uivse_p)uiflt)) return false;
-          break; }
-        default:
-          break;
+  bool VSFilter::populateUI(uivse_p pnt) {
+    if(pnt != 0) {
+      if(!createUI(pnt)) { kddbg << VSPART_ERROR"Can't create UI item for flt \"" << name << "\"\n"; return false; }
+      BOOSTVEC_FOR(vse_ci, it, chld) {
+        if((*it) != 0) {
+          switch((*it)->getType()) {
+            case vs_project: {
+              vsp_p prj=static_cast<vsp_p>(*it);
+              if(!prj->createUI(static_cast<uivse_p>(uiflt))) { return false; }
+              if(!prj->populateUI()) { return false; }
+              break; }
+            case vs_file: {
+              vsfl_p fl=static_cast<vsfl_p>(*it);
+              if(!fl->createUI(static_cast<uivse_p>(uiflt))) { return false; }
+              break; }
+            case vs_filter: {
+              vsf_p flt = static_cast<vsf_p>(*it);
+              if(!flt->populateUI(static_cast<uivse_p>(uiflt))) { return false; }
+              break; }
+            default: {
+              break; }
+          }
+        }
+        else {
+          kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSFilter::populateUI");
+          return false;
+        }
       }
     }
     return true;
@@ -2138,54 +2315,55 @@ namespace VStudio {
   //===========================================================================
   // Visual studio file methods
   //===========================================================================
-  VSFile::VSFile(const QString &nm, const QUuid &uid, vsp_p pnt)
+  VSFile::VSFile(const QString &nm/*, const QUuid &uid*/, vsp_p p)
   : VSEntity(vs_file)
   , VSRefcountable()
   , VSNameable(nm)
-  , VSIndexable(uid)
+//  , VSIndexable(uid)
   , VSFSStored()
-  , uifl(0) {
-    setParent(pnt);
+  , project(p)
+  , parent(0)
+  , uifl(0)
+  , active_bb(0)
+  , load_ok(false) {
   }
 
   VSFile::~VSFile() {
-    if(uifl!=0) { delete uifl; uifl=0; }
+    // if(uifl!=0) { delete uifl; uifl=0; }
   }
 
-  void VSFile::setParent(vsp_p pnt) {
-    switch(pnt->getType()) {
-      case vs_project: {
-        //TODO: Think about how should parent variable behave, since there
-        // is setting projects and solutions into active states and many
-        // other things that will require "parent" variable
-        if(parent == 0) {
+  void VSFile::setParent(vse_p pnt) {
+    //TODO: Think about how should parent variable behave, since there
+    // is setting projects and solutions into active states and many
+    // other things that will require "parent" variable
+    if(parent == 0) {
+      switch(pnt->getType()) {
+        case vs_project: {
+          parent = static_cast<vsp_p>(pnt);
+          //project = static_cast<vsp_p>(parent); //NOTE: DO NOT UPDATE PROJECT VAR !
+          acquire(pnt);
+
+          /* Since setting parent should happen in only some cases that grant absolute paths for file,
+              test FS file accessibility and modes.
+            NOTE: This might be not very good place to it, but for now I can't imagine better place.
+            TODO: In future search|create a better workflow for this
+          */
+          __try_reach();
+          break; }
+        case vs_filter: {
           parent = pnt;
+          break; }
+        default: {
+          kddbg << VSPART_ERROR"Can't set \"" << type2String(pnt->getType()) << "\" as a parent of \""
+              << type2String(getType()) << "\"\n";
         }
-        acquire(static_cast<vse_p>(pnt));
-        break; }
-      default: {
-        kddbg << "Error! Can't set \"" << type2String(pnt->getType())
-            << "\" as a parent of \"" << type2String(getType()) << "\"\n";
-        return; }
+      }
     }
   }
 
   /*inline*/ vse_p VSFile::getParent() const {
     return parent;
   }
-
-  // QString VSFile::getRelativePath() const {
-  //   //TODO: make it return a path relative to project it's in
-  //   return "";
-  // }
-
-  // bool VSFile::setRelativePath(const QString &path) {
-  //   //TODO: make it change parent according to relative path from input
-  //   //so that it moved between parent projects (copied or moved)
-  //   //and that also makes storing path not necessary, because nature of
-  //   //it will be procedural
-  //   return false;
-  // }
 
   bool VSFile::write(bool synchronize/*=true*/) {
     in_sync = synchronize;
@@ -2205,6 +2383,14 @@ namespace VStudio {
   bool VSFile::read(QTextStream &/*stream*/, bool synchronize/*=true*/) {
     in_sync = synchronize;
     return true;
+  }
+
+  /*inline*/ void VSFile::setDom(QDomElement el) {
+    dom = el;
+  }
+
+  /*inline*/ vsp_p VSFile::getProject() const {
+    return project;
   }
 
   vsp_p VSFile::getByUID(const QUuid &uid) const {
@@ -2235,11 +2421,18 @@ namespace VStudio {
     return 0;
   }
 
+  /*inline*/uivse_p VSFile::getUI() const {
+    return static_cast<uivse_p>(uifl);
+  }
+
   bool VSFile::createUI(uivse_p pnt) {
     if(uifl==0) {
       uifl = part()->explorerWidget()->addFileNode(pnt, this);
       if(uifl==0) { kddbg << "failed to add file UI node" << endl; return false; }
-      kddbg << "File: " << name << " in " << pnt->getName() << endl;
+#ifdef DEBUG
+      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+          arg(type2String(pnt->getType())).arg(pnt->text(0));
+#endif
     }
     return true;
   }
@@ -2524,7 +2717,7 @@ namespace VStudio {
   }
 
   void VSBuildBox::setParent(const vse_p /*p*/) {
-    kddbg << VSPART_ERROR"VSBuildBox::setParent is undefined.\n";
+    kddbg << VSPART_ERROR"method {VSBuildBox::setParent} is undefined, and should not be used.\n";
   }
 
   vse_p VSBuildBox::getParent() const {
@@ -2583,16 +2776,7 @@ namespace VStudio {
           }
           break; }
         case vs_file: {
-          switch(e->getParent()->getType()) {
-            case vs_project: {
-              sln = static_cast<vss_p>(e->getParent());
-              break; }
-            case vs_filter: {
-              sln = static_cast<vss_p>(e->getParent()->getParent());
-              break; }
-            default: {
-              break; }
-          }
+          sln = static_cast<vss_p>(static_cast<vsfl_p>(e)->getProject()->getParent());
           break; }
         default: {
           kddbg << g_err_unsupportedtyp.arg(type2String(e->getType()));

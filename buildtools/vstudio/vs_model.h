@@ -82,15 +82,21 @@ namespace VStudio {
       const QString& getAbsPath() const;
       void setAbsPath(const QString& abs_path);
 
+      bool isInSync() const;
+      bool isReachable() const;
+
       virtual bool write(bool synchronize=true) = 0;
       virtual bool write(QTextStream &stream, bool synchronize=true) = 0;
       virtual bool read(bool synchronize=true) = 0;
       virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
 
     protected:
+      void __try_reach();
+    protected:
       QString path_rlt;
       QString path_abs;
       bool in_sync;
+      bool reachable; // File can be reached for read|write
   };
 
   class VSEntity {
@@ -158,7 +164,7 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
-      virtual bool createUI();
+      virtual bool createUI(uivse_p parent_ui);
       /**
        * @param uid
        * @return project ptr
@@ -197,6 +203,7 @@ namespace VStudio {
       bool selectCfg(const vcfg_p parent_config);
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_p parent_config) const;
+      const vcfg_cr currentCfg() const;
 
       void setActive(bool active=true);
       bool isActive() const;
@@ -270,6 +277,7 @@ namespace VStudio {
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
       vsf_p getFltByUID(const QUuid &uid) const;
+      vsf_p getFilter(const QString &name) const;
       bool addDependency(vsp_p dep);
       bool addDependency(const QUuid &uid);
       bool addRequirement(vsp_p req);
@@ -287,6 +295,14 @@ namespace VStudio {
       vsbb_p getBB(const QString &config) const;
 
       bool build();
+      /** Tells if project file was read and parsed successfully
+       * @return true if load was successfull
+       */
+      bool isLoaded() const;
+
+    private:
+      bool __read_filter(QDomElement filter);
+      vsfl_p __read_file(QDomElement file);
 
     private:
       e_VSPrjLangType lang; // Project choosen language
@@ -302,6 +318,8 @@ namespace VStudio {
 #else
 #endif
       bool active;
+      bool load_ok; // Project .v*proj file was read and parsed successfully
+      e_VSPrjVersion version;
       QDomDocument doc;
   };
 
@@ -314,10 +332,8 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
-      virtual bool createUI();
+      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent); //NOTE: Inserts this filter into parent's filters
-      // virtual QString getRelativePath() const;
-      // virtual bool setRelativePath(const QString &path);
       virtual vse_p getByUID(const QUuid &uid) const;
       virtual uivse_p getUI() const { return (uivse_p)uiflt; }
       virtual vse_p getParent() const;
@@ -326,7 +342,7 @@ namespace VStudio {
       bool dumpLayout(QTextStream &layout);
       e_VSEntityType getParentType() const { return parent->getType(); }
       bool getParentUID(QUuid* uid) const;
-      bool populateUI();
+      bool populateUI(uivse_p parent);
 
     private:
       vse_p parent; // Parent solution|filter|project
@@ -348,19 +364,17 @@ namespace VStudio {
   class VSFile : public VSEntity,
   public VSRefcountable,
   public VSNameable,
-  public VSIndexable,
+  //public VSIndexable,
   public VSFSStored {
     public:
-      VSFile(const QString &name, const QUuid &uid, vsp_p parent);
+      VSFile(const QString &name/*, const QUuid &uid*/, vsp_p project);
       virtual ~VSFile();
 
     // VS Entity interface methods:
-      virtual bool createUI(uivse_p ui_parent);
-      virtual void setParent(vsp_p parent_prj);
-      // virtual QString getRelativePath() const;
-      // virtual bool setRelativePath(const QString &path);
+      virtual bool createUI(uivse_p parent_ui);
+      virtual void setParent(vse_p parent_prj);
       virtual vsp_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const { return (uivse_p)uifl; }
+      virtual uivse_p getUI() const;
       virtual vse_p getParent() const;
 
     // VS FSStored interface methods:
@@ -370,10 +384,17 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS File methods:
+      void setDom(QDomElement el);
+      vsp_p getProject() const;
 
     private:
-      vsp_p parent; // Current parent project
+      vsp_p project; // Current parent project
+      vse_p parent; // Parent that can be project or filter
       uivsfl_p uifl; // UI representation
+      QDomElement dom; // VS Dom representation of a file
+      vsbb_p active_bb; // Active build-box, represents active configuration for this file
+      pv_VSBuildBox bboxes;
+      bool load_ok;
   };
   //END VS basic entities
   //===========================================================================

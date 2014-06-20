@@ -13,6 +13,7 @@
 //#include <string.h>
 
 #include "vs_common.h"
+#include <qstringlist.h>
 
 #ifndef USE_BOOST
 #error "VStudio: Boost support is no enabled"
@@ -46,6 +47,23 @@ namespace VStudio {
     s >> iuid.data1 >> iuid.data2 >> iuid.data3;
     s >> d4[0] >> d4[1] >> d4[2] >> d4[3] >> d4[4] >> d4[5] >> d4[6] >> d4[7];
     memcpy(iuid.data4, d4, sizeof(char)*8);
+#endif
+    return true;
+  }
+
+  bool readGUID(const QString &string, QUuid &uid) {
+    QTextIStream s(&string);
+#ifdef QT_NO_QUUID_STRING
+    char d4[8];
+    s >> d4[0]; //NOTE: This will remove '{'
+    s >> iuid.data1 >> iuid.data2 >> iuid.data3;
+    s >> d4[0] >> d4[1] >> d4[2] >> d4[3] >> d4[4] >> d4[5] >> d4[6] >> d4[7];
+    memcpy(iuid.data4, d4, sizeof(char)*8);
+#else
+    ushort raw[37]={0};
+    s.readRawBytes((char*)raw, 72);
+    QString guid((const QChar*)raw, 36);
+    uid = QUuid(guid);
 #endif
     return true;
   }
@@ -182,7 +200,7 @@ namespace VStudio {
       case vssln_ver9: return VSSLN_VER9;
       case vssln_ver8: return VSSLN_VER8;
       case vssln_ver7: return VSSLN_VER7;
-      default: return VSSLN_VERUNKNOWN;
+      default: return "unknown";
     }
   }
 
@@ -191,6 +209,43 @@ namespace VStudio {
     if(s == VSSLN_VER8) { return vssln_ver8; }
     if(s == VSSLN_VER7) { return vssln_ver7; }
     else { return vssln_ver_unknown; }
+  }
+
+  QString prjVer2String(e_VSPrjVersion v) {
+    switch(v) {
+      case vsprj_ver9: { return VSPRJ_VER9; }
+      case vsprj_ver8: { return VSPRJ_VER8; }
+      case vsprj_ver7: { return VSPRJ_VER7; }
+      case vsprj_ver6: { return VSPRJ_VER6; }
+      default: { return "unknown"; }
+    }
+  }
+
+  e_VSPrjVersion string2PrjVer(const QString &s) {
+    if(s == VSPRJ_VER9) { return vsprj_ver9; }
+    else if(s == VSPRJ_VER8) { return vsprj_ver8; }
+    else if(s == VSPRJ_VER7) { return vsprj_ver7; }
+    else if(s == VSPRJ_VER6) { return vsprj_ver6; }
+    else { return vsprj_ver_unknown; }
+  }
+
+  QString Rebase_WinPath(const QString &path_base, const QString &path_relative) {
+    QStringList base = QStringList::split('\\', path_base);
+    QStringList::ConstIterator base_it = base.end();
+    QStringList relative = QStringList::split('\\', path_relative);
+    QStringList::ConstIterator relative_it;
+
+    // Shift up as much as we need
+    for(relative_it = relative.begin(); relative_it != relative.end(); ++relative_it) {
+      if((*relative_it).compare("..") == 0) { // Shift base one level up
+        --base_it;
+      }
+    }
+
+    // Construct new corrected absolute path
+    QStringList::ConstIterator base_s_i;
+    for(base_s_i = base.begin(); base_s_i != base_it; ++base_s_i) {
+    }
   }
 
   //===========================================================================
@@ -210,10 +265,11 @@ namespace VStudio {
   const QString g_err_nullptr(VSPART_ERROR"Null pointer at {%1}.\n");
   const QString g_err_slnactivate(VSPART_ERROR"sln \"%1\" is failed to be activated.\n");
   const QString g_err_slnload(VSPART_ERROR"\"%1\" solution failed to load.\n");
-  const QString g_err_prjload(VSPART_ERROR"\"%1\" project failed to load.\n");
-  const QString g_err_ent_notfound(VSPART_ERROR"[%1]:[%2] entity is not found, in {%3}.\n");
+  const QString g_err_prjload(VSPART_ERROR"\"%1\" project is not loaded, in {%2}.\n");
+  const QString g_err_ent_notfound(VSPART_ERROR"[ %1 ]:[ %2 ] entity is not found, in {%3}.\n");
   const QString g_err_unsupportedtyp(VSPART_ERROR"Type [%1] is unsupported, in {%2}.\n");
   const QString g_wrn_unsupportedtyp(VSPART_WARNING"Type [%1] is unsupported, in {%2}.\n");
   const QString g_err_fileread(VSPART_ERROR"Can't read file \"%1\", in {%2}.\n");
   const QString g_err_filewrite(VSPART_ERROR"Can't write file \"%1\", in {%2}.\n");
+  const QString g_err_domelemnotpresent(VSPART_ERROR"Can't find dom element [ %1 ], in {%2}.\n");
 };

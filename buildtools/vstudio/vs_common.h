@@ -36,8 +36,9 @@
 #define VSPART_XML_SECTION_ACTIVESLN VSPART_XML_SECTION_GENERAL"/active_sln"
 #define VSPART_XML_SECTION_ACTIVECFG VSPART_XML_SECTION_GENERAL"/active_cfg"
 
-#define VSPART_DOM_PROJECT "VisualStudioProject"
-#define VSPART_DOM_PROJECT_CONFIGS "Configurations"
+#define VSPRJ_DOM_PROJECT "VisualStudioProject"
+#define VSPRJ_DOM_CONFIGS "Configurations"
+#define VSPRJ_DOM_FILES "Files"
 
 // VStudio basic type names
 #define VSSOLUTION_VERSION 10
@@ -53,7 +54,11 @@
 #define VSSLN_VER9 "vssln_ver9"
 #define VSSLN_VER8 "vssln_ver8"
 #define VSSLN_VER7 "vssln_ver7"
-#define VSSLN_VERUNKNOWN "vssln_ver_unknown"
+
+#define VSPRJ_VER9 "vsprj_ver9"
+#define VSPRJ_VER8 "vsprj_ver8"
+#define VSPRJ_VER7 "vsprj_ver7"
+#define VSPRJ_VER6 "vsprj_ver6"
 
 // VS build tool names
 #define VSTOOL_COMPILER "vstl_compiler"
@@ -330,7 +335,23 @@ namespace VStudio {
     vssln_ver7, // VS .Net 2003 .sln file
   };
 
+  enum e_VSPrjVersion {
+    vsprj_ver_unknown = 0,
+    vsprj_ver9, // VS 2008 .vcproj file
+    vsprj_ver8, // VS 2005 .vcproj file
+    vsprj_ver7, // VS .Net 2003 .vsproj file
+    vsprj_ver6, // VisualC++ 6.0 project file
+  };
+
+  /*
+  enum e_VSSlnCfgSelectMethod {
+    vscfgsel_by_parent = 0,
+    vscfgsel_by_
+  };
+  */
+
   bool readGUID(QTextStream &tstream, QUuid &uid);
+  bool readGUID(const QString &string, QUuid &uid);
   QString guid2String(const QUuid &uid);
 
   e_VSEntityType uid2VSType(const QUuid &uid);
@@ -358,7 +379,12 @@ namespace VStudio {
   QString slnVer2String(e_VSSlnVersion sln_version);
   e_VSSlnVersion string2SlnVer(const QString &string);
 
+  QString prjVer2String(e_VSPrjVersion prj_versio);
+  e_VSPrjVersion string2PrjVer(const QString &string);
+
   typedef bool (*entityFunctor)(vse_p entity);
+
+  QString Rebase_WinPath(const QString &path_base, const QString &path_relative);
 
 #ifdef USE_BOOST
   typedef boost::container::vector<QString> pv_QString;

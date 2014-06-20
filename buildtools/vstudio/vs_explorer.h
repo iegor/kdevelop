@@ -77,6 +77,7 @@ namespace VStudio {
     void slotConfigureEntity();
     void slotRenameEntity();
     void slotActivateEntity();
+    void slotHighlightContextMenuItem(int id);
     void slotSaveEntity();
     void slotSaveEntityAs();
 
@@ -127,18 +128,14 @@ namespace VStudio {
     VSExplorerEntity(e_VSEntityType type, uivse_p parent, const QString &text);
     virtual ~VSExplorerEntity();
 
-    virtual const QString& getName() const = 0;
-    virtual void setName(const QString& name) = 0;
     virtual vse_p getModel() const = 0;
     virtual const QUuid& getUID() const = 0;
 
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType getType() { return typ; }
-    QString getName() { return name; }
 
   protected:
     e_VSEntityType typ;
-    QString name;
   };
 
   /**
@@ -150,12 +147,11 @@ namespace VStudio {
     virtual ~VSSlnNode();
 
   // VSExplorerEntity interface
-    virtual const QString& getName() const;
-    virtual void setName(const QString& name);
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
   // VSSlnNode interface
+    void setState(const QString &state);
 
   private:
     vss_p sln;
@@ -176,8 +172,6 @@ namespace VStudio {
     virtual ~VSPrjNode();
 
   // VSExplorerEntity interface
-    virtual const QString& getName() const;
-    virtual void setName(const QString& name);
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
@@ -203,8 +197,6 @@ namespace VStudio {
     virtual ~VSFltNode();
 
   // VSExplorerEntity interface
-    virtual const QString& getName() const;
-    virtual void setName(const QString& name);
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
@@ -229,17 +221,15 @@ namespace VStudio {
     virtual ~VSFilNode();
 
   // VSExplorerEntity interface
-    virtual const QString& getName() const;
-    virtual void setName(const QString& name);
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
   // VSFilNode interface
-    uivsp_p getProject() const;
+    uivse_p getParent() const;
 
   private:
     vsfl_p file;
-    uivsp_p prj; // Parent project
+    uivse_p parent; // Parent filter|project
   };
 };
 //END // VStudio namespace

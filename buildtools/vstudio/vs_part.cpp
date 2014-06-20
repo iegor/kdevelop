@@ -347,6 +347,10 @@ namespace VStudio {
                 if(sln != 0) {
                   vsbb_p slnbb = sln->getBB(QString(sln_cfg_name).append("|%1").arg(sln_cfg_platform));
                   if(slnbb != 0) {
+#ifdef DEBUG
+                    kddbg << "KPROJ[ " << cfg->toString() << " ] <<< SLN[ " << sln->getName()
+                        << " ]:[ " << slnbb->config().toString() << " ].\n";
+#endif
                     slnbb->setParentCfg(cfg);
                   }
                 }
@@ -815,24 +819,18 @@ namespace VStudio {
 
   bool VSPart::selectCfg(const vcfgcr_r pc) {
     const QString cs(pc.string());
-    vcfg_p pcfg = 0;
     // Check if we have a configuration like that
-    BOOSTVEC_FOR(vcfg_ci, it, m_configs) {
+    vcfg_ci it = m_configs.begin();
+    BOOSTVEC_OFOR(it, m_configs) {
       if((*it) != 0) {
-        if((*it)->toString() == cs) {
-          pcfg = (*it);
-          break;
-        }
+        if((*it)->toString() == cs) { break; }
       }
     }
 
-    if(pcfg != 0) {
-      return selectCfg(pcfg);
+    if(it != m_configs.end()) {
+      return selectCfg((*it));
     }
-    else {
-      kddbg << g_err_ent_notfound.arg(VSPART_CONFIG).arg(cs).arg("VSPart::setCfg");
-      return false;
-    }
+    kddbg << g_err_ent_notfound.arg(VSPART_CONFIG).arg(cs).arg("VSPart::setCfg");
     return false;
   }
 
@@ -854,11 +852,10 @@ namespace VStudio {
         BOOSTVEC_FOR(vse_ci, it, m_entities) {
           vss_p s = static_cast<vss_p>(*it);
           if(s != 0) {
-            if(s->isLoaded()) { // Atempt config change only on loaded solutions
+            if(s->isLoaded()) { //NOTE: Atempt config change only on loaded solutions
               if(!s->selectCfg(active_cfg)) {
-                kddbg << VSPART_ERROR"Failed to set sln config: " << cfg->toString() << " for \"" << s->getName()
-                    << "\", in {VSPart::setCfg}\n";
-                return false;
+                kddbg << VSPART_ERROR"Sln [" << s->getName() << "] can't set config [" << cfg->toString()
+                    << "], in {VSPart::selectCfg}\n";
               }
             }
           } else {
