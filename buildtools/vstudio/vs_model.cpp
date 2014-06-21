@@ -1873,11 +1873,9 @@ namespace VStudio {
       if(!(*it)->populateUI(static_cast<uivse_p>(uiprj))) { return false; }
     }
 
-    /*
     BOOSTVEC_FOR(vsfl_ci, it, files) {
       if(!(*it)->createUI(static_cast<uivse_p>(uiprj))) { return false; }
     }
-    */
     return true;
   }
 
