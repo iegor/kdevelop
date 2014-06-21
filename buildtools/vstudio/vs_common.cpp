@@ -15,6 +15,8 @@
 #include "vs_common.h"
 #include <qstringlist.h>
 
+#include <kdebug.h>
+
 #ifndef USE_BOOST
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -229,23 +231,67 @@ namespace VStudio {
     else { return vsprj_ver_unknown; }
   }
 
-  QString Rebase_WinPath(const QString &path_base, const QString &path_relative) {
-    QStringList base = QStringList::split('\\', path_base);
+  void NormalizeSlashes(QString& path) {
+    uint i;
+    for(i=path.length(); i>0; --i) {
+      switch(path[i].latin1()) {
+        case '\\': {
+          path[i] = g_slash;
+          break; }
+        default: {
+          break; }
+      }
+    }
+  }
+
+  QString RebasePath_Win(QString path_base, QString path_relative) {
+    // Normalize pathes
+    // NormalizeSlashes(path_base);
+    // NormalizeSlashes(path_relative);
+#ifdef DEBUG
+    kddbg << "PATH_B: " << path_base << endl;
+    kddbg << "PATH_R: " << path_relative << endl;
+#endif
+    QString path;
+    QStringList base = QStringList::split(g_slash, path_base);
     QStringList::ConstIterator base_it = base.end();
-    QStringList relative = QStringList::split('\\', path_relative);
+    --base_it; //NOTE: Ignoring filename
+    QStringList relative = QStringList::split(g_slash, path_relative);
     QStringList::ConstIterator relative_it;
 
     // Shift up as much as we need
-    for(relative_it = relative.begin(); relative_it != relative.end(); ++relative_it) {
+    for(relative_it = relative.begin(); relative_it != relative.end(); ) {
       if((*relative_it).compare("..") == 0) { // Shift base one level up
         --base_it;
+        ++relative_it;
+      }
+      else if((*relative_it).compare(".") == 0) {
+        ++relative_it;
+      }
+      else {
+        break;
       }
     }
-
+#ifdef DEBUG
+    kddbg << "BASEIT: " << *base_it << endl;
+    kddbg << "TEST_END: " << *(base.end()) << endl;
+#endif
     // Construct new corrected absolute path
-    QStringList::ConstIterator base_s_i;
-    for(base_s_i = base.begin(); base_s_i != base_it; ++base_s_i) {
+    QStringList::ConstIterator bsi;
+    for(bsi = base.begin(); bsi != base_it; ++bsi) {
+#ifdef DEBUG
+      kddbg << "append: " << *bsi << endl;
+#endif
+      path.append(g_slash).append(*bsi);
     }
+    for(bsi = relative_it; bsi != relative.end(); ++bsi) {
+#ifdef DEBUG
+      kddbg << "append: " << *bsi << endl;
+#endif
+      path.append(g_slash).append(*bsi);
+    }
+
+    return path;
   }
 
   //===========================================================================

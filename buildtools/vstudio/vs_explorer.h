@@ -226,6 +226,8 @@ namespace VStudio {
 
   // VSFilNode interface
     uivse_p getParent() const;
+    void setState(const QString &state);
+    void refreshState();
 
   private:
     vsfl_p file;

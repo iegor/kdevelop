@@ -174,6 +174,7 @@ namespace VStudio {
 
   /*inline*/ void VSFSStored::setAbsPath(const QString& abp) {
     path_abs = abp;
+    __try_reach();
   }
 
   /*inline*/ bool VSFSStored::isInSync() const {
@@ -553,6 +554,8 @@ namespace VStudio {
                   break; }
               }
             }
+
+            NormalizeSlashes(path_rlt);
 
             switch(typ) {
               case vs_project: {
@@ -2065,17 +2068,24 @@ namespace VStudio {
 #endif
     QString fl_name("<not loaded>");
     QString fl_path_r = el.attribute("RelativePath");
+    NormalizeSlashes(fl_path_r);
 
     // Retrieve name from relative path
-    fl_name = fl_path_r.mid(fl_path_r.findRev('\\')+1);
-
+    fl_name = fl_path_r.mid(fl_path_r.findRev(g_slash)+1);
 #ifdef DEBUG
     kddbg << "Filename condidate: " << fl_name << endl;
+#endif
+
+    // Retrieve absolute path
+    QString fl_path_a = RebasePath_Win(path_abs, fl_path_r);
+#ifdef DEBUG
+    kddbg << "PATH: " << fl_path_a << endl;
 #endif
 
     vsfl_p fl = new vsfl(fl_name, this);
     if(fl != 0) {
       fl->setRelPath(fl_path_r);
+      fl->setAbsPath(fl_path_a);
       fl->setDom(el); //NOTE: copy DOM element for modification|storage|saving
 
       // Check for file configurations

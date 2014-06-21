@@ -283,6 +283,9 @@ namespace VStudio {
   static const QUuid uid_vs9filter(0x2150E333, 0x8FDC, 0x42A3, 0x94, 0x74, 0x1A, 0x39, 0x56, 0xD4, 0x6D, 0xE8);
 #endif
 
+  // Path slash used in our system
+  static const QChar g_slash('/');
+
   enum e_VSEntityType {
     vs_unknown = 0,
     vs_file,
@@ -384,7 +387,8 @@ namespace VStudio {
 
   typedef bool (*entityFunctor)(vse_p entity);
 
-  QString Rebase_WinPath(const QString &path_base, const QString &path_relative);
+  void NormalizeSlashes(QString& path);
+  QString RebasePath_Win(QString path_base, QString path_relative);
 
 #ifdef USE_BOOST
   typedef boost::container::vector<QString> pv_QString;

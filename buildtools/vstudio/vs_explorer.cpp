@@ -25,6 +25,9 @@
 #include <kconfig.h>
 #include <klistview.h>
 
+/* KDevelop */
+#include "kdevpartcontroller.h"
+
 // #include <urlutil.h>
 // #include <kdevcore.h>
 // #include <kdevlanguagesupport.h>
@@ -132,6 +135,7 @@ namespace VStudio {
 #ifdef DEBUG
         kddbg << g_msg_entselected.arg(type2String(fl->getType())).arg(fl->getName());
 #endif
+        m_part->partController()->editDocument(KURL(fl->getAbsPath()));
         break; }
       default: {
         break; }
@@ -551,13 +555,7 @@ namespace VStudio {
   , file(fl)
   , parent(pnt) {
     setMultiLinesEnabled(true);
-
-    if(file->isReachable()) {
-      setPixmap(0, SmallIcon("file"));
-    }
-    else {
-      setPixmap(0, SmallIcon("error"));
-    }
+    refreshState();
   }
 
   VSFilNode::~VSFilNode() {
@@ -573,6 +571,24 @@ namespace VStudio {
 
   /*inline*/ uivse_p VSFilNode::getParent() const {
     return parent;
+  }
+
+  /*inline*/ void VSFilNode::setState(const QString &st) {
+    if(st == "normal") {
+      setPixmap(0, SmallIcon("file"));
+      setText(0, file->getName());
+    }
+  }
+
+  /*inline*/ void VSFilNode::refreshState() {
+    if(file->isReachable()) {
+      setPixmap(0, SmallIcon("file"));
+      setText(0, file->getName());
+    }
+    else {
+      setPixmap(0, SmallIcon("error"));
+      setText(0, QString(file->getName()).append("\n [%1]").arg("[Unreachable]"));
+    }
   }
 };
 #include "vs_explorer.moc"
