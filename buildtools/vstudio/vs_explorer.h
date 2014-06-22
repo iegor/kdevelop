@@ -137,6 +137,9 @@ namespace VStudio {
     void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType getType() { return typ; }
 
+  // private slots:
+    virtual void slotRefreshText() = 0;
+
   protected:
     e_VSEntityType typ;
   };
@@ -153,7 +156,11 @@ namespace VStudio {
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
-  // VSSlnNode interface
+  // private slots:
+    virtual void slotRefreshText();
+
+  public:
+    // VSSlnNode interface
     void setState(const QString &state);
 
   private:
@@ -178,6 +185,10 @@ namespace VStudio {
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
+  // private slots:
+    virtual void slotRefreshText();
+
+  public:
   // VSPrjNode interface
     uivss_p getSolution() const { return sln; }
 
@@ -203,6 +214,10 @@ namespace VStudio {
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
+  // private slots:
+    virtual void slotRefreshText();
+
+  public:
   // VSFltNode interface
     uivse_p getParent() const { return parent; }
 
@@ -227,10 +242,13 @@ namespace VStudio {
     virtual vse_p getModel() const;
     virtual const QUuid& getUID() const;
 
+  // private slots:
+    virtual void slotRefreshText();
+
+  public:
   // VSFilNode interface
     uivse_p getParent() const;
     void setState(const QString &state);
-    void refreshState();
 
   private:
     vsfl_p file;

@@ -473,12 +473,7 @@ namespace VStudio {
   : VSExplorerEntity(vs_solution, lv, s->getName())
   , sln(s) {
     setMultiLinesEnabled(true);
-
-    if(sln->isLoaded()) {
-      setPixmap(0, SmallIcon("home"));
-    } else {
-      setPixmap(0, SmallIcon("error"));
-    }
+    void slotRefreshText();
   }
 
   VSSlnNode::~VSSlnNode() {
@@ -503,18 +498,23 @@ namespace VStudio {
     }
   }
 
+  void VSSlnNode::slotRefreshText() {
+    if(sln->isReachable() || sln->isLoaded()) {
+      setPixmap(0, SmallIcon("home"));
+      setText(0, QString(sln->getName()).append(" [%1]\n [%2]").
+          arg(sln->projs().size()).arg(sln->currentCfg().toString()));
+    } else {
+      setPixmap(0, SmallIcon("error"));
+    }
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity project class methods
   //===========================================================================
   VSPrjNode::VSPrjNode(uivse_p e, vsp_p p)
   : VSExplorerEntity(vs_project, e, p->getName())
   , prj(p) {
-    if(prj->isLoaded()) {
-      setPixmap(0, SmallIcon("tar"));
-    }
-    else {
-      setPixmap(0, SmallIcon("error"));
-    }
+    slotRefreshText();
   }
 
   VSPrjNode::~VSPrjNode() {
@@ -528,6 +528,15 @@ namespace VStudio {
     return prj->getUID();
   }
 
+  void VSPrjNode::slotRefreshText() {
+    if(prj->isLoaded()) {
+      setPixmap(0, SmallIcon("tar"));
+    }
+    else {
+      setPixmap(0, SmallIcon("error"));
+    }
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity filter class methods
   //===========================================================================
@@ -535,7 +544,7 @@ namespace VStudio {
   : VSExplorerEntity(vs_filter, pnt, flt->getName())
   , filter(flt)
   , parent(pnt) {
-    setPixmap(0, SmallIcon("folder"));
+    slotRefreshText();
   }
 
   VSFltNode::~VSFltNode() {
@@ -549,6 +558,10 @@ namespace VStudio {
     return filter->getUID();
   }
 
+  void VSFltNode::slotRefreshText() {
+    setPixmap(0, SmallIcon("folder"));
+  }
+
   //===========================================================================
   // Visual studio explorer widget entity file class methods
   //===========================================================================
@@ -557,7 +570,7 @@ namespace VStudio {
   , file(fl)
   , parent(pnt) {
     setMultiLinesEnabled(true);
-    refreshState();
+    slotRefreshText();
   }
 
   VSFilNode::~VSFilNode() {
@@ -582,7 +595,7 @@ namespace VStudio {
     }
   }
 
-  /*inline*/ void VSFilNode::refreshState() {
+  void VSFilNode::slotRefreshText() {
     if(file->isReachable()) {
       setPixmap(0, SmallIcon("file"));
       setText(0, file->getName());
