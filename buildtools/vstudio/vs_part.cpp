@@ -930,24 +930,24 @@ namespace VStudio {
   }
 
   void VSPart::slotAddFilter() {
-    kddbg << "slotAddFilter test" << endl;
+    kddbg << "slotAddFilter test.\n";
   }
 
   void VSPart::slotBuildFilter() {
-    kddbg << "slotBuildFilter test" << endl;
+    kddbg << "slotBuildFilter test.\n";
   }
 
   void VSPart::slotCleanFilter() {
-    kddbg << "slotCleanFilter test" << endl;
+    kddbg << "slotCleanFilter test.\n";
   }
 
   void VSPart::slotCreateConfig() {
     kddbg << "SLOT: Create Config.\n";
     // Ask user. What name and platform should be given to this configuration ?
-    QString test_name("test create config");
-    e_VSPlatform test_pl(vspl_win32);
-    bool create_sln_cfgs = true;
-    bool create_prj_cfgs = false;
+    // QString test_name("test create config");
+    // e_VSPlatform test_pl(vspl_win32);
+    // bool create_sln_cfgs = true;
+    // bool create_prj_cfgs = false;
   }
 
   void VSPart::slotSelectCfgName(QListViewItem *i) {
