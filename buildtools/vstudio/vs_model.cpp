@@ -72,14 +72,8 @@ namespace VStudio {
         return *this;
       }
 #endif
-#ifdef USE_BOOST
       vse_ci it=pnts.begin();
-      for(; it!=pnts.end(); ++it) {
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
-        if((*it) == p) { break; }
-      }
+      BOOSTVEC_OFOR(it, pnts) { if((*it) == p) { break; } }
 #ifdef USE_BOOST
       if(it!=pnts.end()) {
 #else
@@ -107,7 +101,7 @@ namespace VStudio {
     return static_cast<bool>(rfc==0);
   }
 
-  /*inline*/ const pv_VSEntity& VSRefcountable::parents() const {
+  /*inline*/ const pv_vse_cr VSRefcountable::parents() const {
     return pnts;
   }
 
@@ -203,7 +197,7 @@ namespace VStudio {
 
   VSEntity::~VSEntity() {
 #ifdef DEBUG
-    kddbg << "Freeing entity: " << type2String(type) << endl;
+    // kddbg << "Freeing entity: " << type2String(type) << endl;
 #endif
   }
 
@@ -1248,6 +1242,10 @@ namespace VStudio {
 
   /*inline*/ bool VSSolution::isLoaded() const {
     return load_ok;
+  }
+
+  const pv_vsp_cr VSSolution::projs() const {
+    return projects;
   }
 
   vsbb_p VSSolution::getBB(const QString &c) const {
@@ -2740,7 +2738,7 @@ namespace VStudio {
     enabled = e;
   }
 
-  /*inline*/ const vcfg_cp VSBuildBox::parentConfig() const {
+  /*inline*/ vcfg_cp VSBuildBox::parentConfig() const {
     return pcfg;
   }
 

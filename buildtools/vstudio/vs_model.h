@@ -36,14 +36,14 @@ namespace VStudio {
       vsr_r release(const vse_p parent);
       uint refs() const;
       bool isfree() const;
-      const pv_VSEntity& parents() const;
+      const pv_vse_cr parents() const;
 
     protected:
       //TODO: ATTENTION !
       // This must be done via boost's or Qt's guarded ptr.
       uint rfc;
 #ifdef USE_BOOST
-      pv_VSEntity pnts; // Parents
+      pv_vse pnts; // Parents
 #else
 #endif
   };
@@ -217,6 +217,8 @@ namespace VStudio {
        */
       bool isLoaded() const;
 
+      const pv_vsp_cr projs() const;
+
     private:
       bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
       bool __read_parse_uid(QTextIStream &stream, QChar &control_chr, QUuid &uid);
@@ -226,15 +228,15 @@ namespace VStudio {
       vsbb_p active_bb; // Active buildbox selected for this solution
       vsp_p active_prj; // Active project for this solution
 #ifdef USE_BOOST
-      pv_VSProject projects;
-      pv_VSFilter filters;
-      pv_VSBuildBox bboxes;  // build boxes, used to buil|clean, etc entire solution
+      pv_vsp projects;
+      pv_vsf filters;
+      pv_vsbb bboxes;  // build boxes, used to buil|clean, etc entire solution
 
       /*! Meta-dependencies tree
        * Used to contain raw dependencies for projects
        * Not filtered and allowed to have a cyclic dependencies
        */
-      pv_VSMetaDependency mdeps;
+      pv_vsmd mdeps;
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -310,11 +312,11 @@ namespace VStudio {
       uivsp_p uiprj; // UI representation
       vsbb_p active_bb; // Active buildbox
 #ifdef USE_BOOST
-      pv_VSProject deps; // Projects dependant on this one
-      pv_VSProject reqs; // Projects required to build this one, i.e. dependencies
-      pv_VSFilter filters;
-      pv_VSFile files;
-      pv_VSBuildBox bboxes;
+      pv_vsp deps; // Projects dependant on this one
+      pv_vsp reqs; // Projects required to build this one, i.e. dependencies
+      pv_vsf filters;
+      pv_vsfl files;
+      pv_vsbb bboxes;
 #else
 #endif
       bool active;
@@ -348,7 +350,7 @@ namespace VStudio {
       vse_p parent; // Parent solution|filter|project
       uivsf_p uiflt; // UI representation
 #ifdef USE_BOOST
-      pv_VSEntity chld; // Children
+      pv_vse chld; // Children
 #else
 #endif
   };
@@ -393,7 +395,7 @@ namespace VStudio {
       uivsfl_p uifl; // UI representation
       QDomElement dom; // VS Dom representation of a file
       vsbb_p active_bb; // Active build-box, represents active configuration for this file
-      pv_VSBuildBox bboxes;
+      pv_vsbb bboxes;
       bool load_ok;
   };
   //END VS basic entities
@@ -662,7 +664,7 @@ namespace VStudio {
     // VS BuildBox interface methods:
       bool isEnabled() const;
       void setEnabled(bool enabled=true);
-      const vcfg_cp parentConfig() const;
+      vcfg_cp parentConfig() const;
       void setParentCfg(const vcfg_cp config);
       const vcfg_cr config() const;
       bool belongs(const vcfg_cp parent_cfg) const;
@@ -681,7 +683,7 @@ namespace VStudio {
       virtual ~VSPrjCBuildBox();
 
     private:
-      pv_VSTool vtls; // Tools
+      pv_vstl vtls; // Tools
   };
 
   //END VS build entities

@@ -160,8 +160,8 @@ namespace VStudio {
     vsp_p active_prj;
     vcfg_p active_cfg; // Selected configuration
 #ifdef USE_BOOST
-    pv_VSEntity m_entities;     // Solutions
-    pv_VSConfig m_configs;
+    pv_vse m_entities;     // Solutions
+    pv_vcfg m_configs;
 #else
     QPtrList<vse_p> m_entities;
 #endif
