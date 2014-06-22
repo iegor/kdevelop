@@ -24,6 +24,7 @@
 #include "kdevbuildtool.h"
 #include "vs_common.h"
 #include "vs_explorer.h"  // VS Explorer widget
+#include "vs_dlg_addexisting_sln.h"
 #include "vs_model.h"
 // using namespace Extensions;
 
