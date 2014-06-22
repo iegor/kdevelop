@@ -1,7 +1,7 @@
 /***************************************************************************
                             -------------------
    begin                : 19.01.2003
-   copyright            : (C) 2002 by Victor Röder
+   copyright            : (C) 2002 by Victor Rï¿½der
    email                : victor_roeder@gmx.de
 ***************************************************************************/
 
@@ -19,7 +19,7 @@
 
 #include <qwidget.h>
 
-#include "kfiledndiconview.h"
+#include <kfiledndiconview.h>
 
 class KImportIconView : public KFileDnDIconView
 {
@@ -39,6 +39,6 @@ private:
 	bool m_bDropped;
 };
 
-#endif 
+#endif
 // kate: indent-mode csands; tab-width 4;
 
