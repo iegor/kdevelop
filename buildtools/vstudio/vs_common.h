@@ -189,28 +189,37 @@ Environment variables and make arguments can be specified in the project setting
 //Widget data
 #define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
 
+#define glue2(a,b) a ## b
+#define glue3(a,b,c) a ## b ## c
+
+#define check_bit(flags, bit) static_cast<bool>((flags&bit) == bit)
+
 #ifdef USE_BOOST
 #define predeclare_vs_tl_iters(pname, citer, iter) \
   typedef boost::container::vector<pname>::const_iterator citer; \
   typedef boost::container::vector<pname>::iterator iter;
 #define predeclare_vs_tl_vector(name) \
-  typedef boost::container::vector<name> v_##name; \
-  typedef boost::container::vector<name*> pv_##name;
+  typedef boost::container::vector<name> glue2(v_,name); \
+  typedef boost::container::vector<name> * glue3(v_,name,_p); \
+  typedef boost::container::vector<name> & glue3(v_,name,_r); \
+  typedef const boost::container::vector<name> & glue3(v_,name,_cr); \
+  typedef boost::container::vector<name*> glue2(pv_,name);\
+  typedef boost::container::vector<name*> * glue3(pv_,name,_p); \
+  typedef boost::container::vector<name*> & glue3(pv_,name,_r); \
+  typedef const boost::container::vector<name*> & glue3(pv_,name,_cr);
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
 
-#define glue(a,b) a ## b
-
 #define predeclare_vs_typ(cname, shortname) \
   class cname; \
   typedef cname shortname; \
-  typedef cname* glue(shortname,_p); \
-  typedef cname& glue(shortname,_r); \
-  typedef cname const& glue(shortname,_cr); \
-  typedef cname const* glue(shortname,_cp); \
-  predeclare_vs_tl_iters(glue(shortname,_p), glue(shortname,_ci), glue(shortname,_i)); \
-  predeclare_vs_tl_vector(cname); \
+  typedef cname* glue2(shortname,_p); \
+  typedef const cname* glue2(shortname,_cp); \
+  typedef cname& glue2(shortname,_r); \
+  typedef const cname& glue2(shortname,_cr); \
+  predeclare_vs_tl_iters(glue2(shortname,_p), glue2(shortname,_ci), glue2(shortname,_i)); \
+  predeclare_vs_tl_vector(shortname); \
 
 #ifdef USE_BOOST
 #define BOOSTVEC_FOR(ityp, i, v) \

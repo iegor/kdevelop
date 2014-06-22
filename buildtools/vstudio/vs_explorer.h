@@ -14,6 +14,7 @@
 #ifndef __VSMANAGER_WIDGET_H__
 #define __VSMANAGER_WIDGET_H__
 
+/* Qt */
 #include <qpushbutton.h>
 #include <qptrlist.h>
 #include <qmap.h>
@@ -25,8 +26,10 @@
 // #include <codemodel.h>
 // #include <fancylistviewitem.h>
 
-#include "vs_explorer_widget.h"
+/* VStudio */
 #include "vs_model.h"
+
+#include "vs_explorer_widget.h"
 
 class QPushButton;
 class QGridLayout;

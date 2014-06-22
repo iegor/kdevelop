@@ -10,12 +10,14 @@
 *
 * Copyright: See COPYING file that comes with this distribution
 */
+/* Qt */
 #include <qlayout.h>
 #include <qpainter.h>
 #include <qheader.h>
 #include <qdir.h>
 #include <qstylesheet.h>
 
+/* KDE */
 #include <kiconloader.h>
 #include <kinstance.h>
 #include <kurl.h>
@@ -24,6 +26,8 @@
 #include <kpopupmenu.h>
 #include <kconfig.h>
 #include <klistview.h>
+#include <klocale.h>
+#include <kdebug.h> //NOTE: for debug messaging purposes
 
 /* KDevelop */
 #include "kdevpartcontroller.h"
@@ -36,11 +40,9 @@
 // #include <codemodel.h>
 // #include <codemodel_utils.h>
 
-#include <klocale.h>
-#include <kdebug.h>
-
-#include "vs_explorer.h"
+/* VStudio */
 #include "vs_part.h"
+#include "vs_explorer.h"
 
 class KPopupMenu;
 
