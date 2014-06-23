@@ -249,8 +249,8 @@ namespace VStudio {
     NormalizeSlashes(path_base);
     NormalizeSlashes(path_relative);
 #ifdef DEBUG
-    kddbg << "PATH_B: " << path_base << endl;
-    kddbg << "PATH_R: " << path_relative << endl;
+    // kddbg << "PATH_B: " << path_base << endl;
+    // kddbg << "PATH_R: " << path_relative << endl;
 #endif
     QString path;
     QStringList base = QStringList::split(g_slash, path_base);
@@ -273,20 +273,20 @@ namespace VStudio {
       }
     }
 #ifdef DEBUG
-    kddbg << "BASEIT: " << *base_it << endl;
-    kddbg << "TEST_END: " << *(base.end()) << endl;
+    // kddbg << "BASEIT: " << *base_it << endl;
+    // kddbg << "TEST_END: " << *(base.end()) << endl;
 #endif
     // Construct new corrected absolute path
     QStringList::ConstIterator bsi;
     for(bsi = base.begin(); bsi != base_it; ++bsi) {
 #ifdef DEBUG
-      kddbg << "append: " << *bsi << endl;
+      // kddbg << "append: " << *bsi << endl;
 #endif
       path.append(g_slash).append(*bsi);
     }
     for(bsi = relative_it; bsi != relative.end(); ++bsi) {
 #ifdef DEBUG
-      kddbg << "append: " << *bsi << endl;
+      // kddbg << "append: " << *bsi << endl;
 #endif
       path.append(g_slash).append(*bsi);
     }

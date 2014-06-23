@@ -717,34 +717,14 @@ namespace VStudio {
 
   bool VSPart::saveSln(vss_p sln) {
     if(sln != 0) {
-      QString abspath = sln->getAbsPath();
-      abspath.append(".test");
-      QString str;
-      QFile sln_f(abspath);
-      // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
-      sln_f.setName(abspath);
-      if(!sln_f.open(IO_WriteOnly|IO_Raw)) {
-        kddbg << "can't open solution file: " << abspath << endl;
-        return false;
-      }
-      if(!sln_f.isWritable()) {
-        kddbg << "is not writable" << endl;
-        return false;
-      }
-
-      QTextStream s(&sln_f);
-      kddbg << "<<<<<< Saving: " << sln->getName() << " >>>>>>" << endl;
-
-      sln->dumpLayout(s);
-
-      sln_f.flush();
-      sln_f.close();
-
-      // printf("%s\n", str.ascii()); //TEST: only stdout
-
-      kddbg << "<<<<<<" << sln->getName() << " saved >>>>>>" << endl;
-      return true;
+      if(sln->write(true)) { return true; }
+#ifdef DEBUG
+      else { kddbg << VSPART_ERROR"Can't save sln: " << sln->getName() << endl; return false; }
+#endif
     }
+#ifdef DEBUG
+    else { kddbg << g_err_nullptr.arg("VSPart::saveSln"); }
+#endif
     return false;
   }
 

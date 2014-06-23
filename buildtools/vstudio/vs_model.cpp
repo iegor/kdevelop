@@ -327,12 +327,154 @@ namespace VStudio {
     return 0;
   }
 
-  bool VSSolution::write(bool synchronize/*=true*/) {
-    in_sync = synchronize;
+  bool VSSolution::write(bool sync/*=true*/) {
+    // Check that all necessary for saving points are checked
+    BOOSTVEC_FOR(vsp_ci, it, projects) { //NOTE: Checking projects, to make sure there is something to save into .sln
+      vsp_p prj(*it);
+      if(prj != 0) {
+        if(prj->isLoaded() && prj->isReachable()) {
+          // Save modified project files
+          if(!prj->isInSync()) {
+            if(!prj->write(true)) {
+              kddbg << QString(VSPART_ERROR"Failed to save [%1].\n").arg(prj->getName());
+              return false;
+            }
+          }
+        }
+        else {
+          kddbg << QString(VSPART_ERROR"Can't save [%1], contained project [%2] is not fully loaded.\n").
+              arg(name).arg(prj->getName());
+          return false;
+        }
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg(QString("VSSolution[%1]::write").arg(name));
+        return false;
+      }
+    }
+
+    QString path = path_abs.append(".test");
+    QString str;
+    QFile sln_f(path);
+      // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
+    sln_f.setName(path);
+    if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << VSPART_ERROR"Can't open \"" << path << "\"\n"; return false; }
+    if(!sln_f.isWritable()) { kddbg << VSPART_ERROR"Path \"" << path << "\" is not writable\n"; return false; }
+
+    QTextStream s(&sln_f);
+    kddbg << "[" << name << "]========================================: Begin save\n";
+
+    if(!write(s, sync)) {
+      kddbg << VSPART_ERROR"Can't save: \"" << path << "\"\n";
+      sln_f.flush();
+      sln_f.close();
+      return false;
+    }
+
+    sln_f.flush();
+    sln_f.close();
+
+    kddbg << "[" << name << "]========================================: Saved\n";
     return true;
   }
 
-  bool VSSolution::write(QTextStream &/*stream*/, bool synchronize/*=true*/) {
+  bool VSSolution::write(QTextStream &s, bool synchronize/*=true*/) {
+    // Dump version data
+    s << QString("Microsoft Visual Studio Solution File, Format Version %1.00\n").arg(fmt_version);
+
+    // Write VS version for .sln file
+    switch(version) {
+      case vssln_ver9: { s << "# Visual Studio 2008\n"; break; }
+      case vssln_ver8: { break; }
+      case vssln_ver7: { break; }
+      default: {
+        kddbg << VSPART_ERROR"Unsupported version of VS file: " << slnVer2String(version) << endl;
+        return false;
+      }
+    }
+
+    // Save filters layout
+    BOOSTVEC_FOR(vsf_ci, it, filters) {
+      if((*it) != 0) {
+        (*it)->dumpLayout(s);
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg("filters").arg("VSSolution::dumpLayout");
+        return false;
+      }
+    }
+
+    // Save projects layout
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
+      if((*it) != 0) {
+        (*it)->dumpLayout(s);
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg("projects").arg("VSSolution::dumpLayout");
+        return false;
+      }
+    }
+
+    //BEGIN // Save solution sections data
+    s << "Global" << endl;
+    const QString section_header("\tGlobalSection(%1) = %2\n");
+    const QString section_footer("\tEndGlobalSection\n");
+
+    // Save solution's configurations
+    s << section_header.arg(VSPART_SLNSECTION_SCFG_PLATFORMS).arg("preSolution");
+    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
+      vsbb_p bb = static_cast<vsbb_p>(*it);
+      if(bb != 0) {
+        s << "\t\t" << bb->config().toString() << " = " << bb->config().toString() << endl;
+      } else {
+        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::dumpLayout");
+      }
+    }
+    s << section_footer;
+
+    // Save solution's project configuration platforms
+    s << section_header.arg(VSPART_SLNSECTION_PCFG_PLATFORMS).arg("postSolution");
+    BOOSTVEC_FOR(vsp_ci, it, projects) {
+      vsp_p prj(*it);
+      if(prj != 0) {
+        BOOSTVEC_FOR(vsbb_ci, itbb, prj->bbs()) {
+          vsbb_p bb(*itbb);
+          if(bb != 0) {
+            if(bb->parentConfig() == 0) {
+              kddbg << QString(VSPART_ERROR"[%1]:[%2] config is parentless.\n").arg(prj->getName()).
+                  arg(bb->config().toString());
+              continue;
+            }
+            else {
+#ifdef DEBUG
+              kddbg << QString("Write [%1]:[%2] config.\n").arg(prj->getName()).arg(bb->config().toString());
+#endif
+              s << "\t\t" << guid2String(prj->getUID()) << "." << bb->parentConfig()->toString() << ".ActiveCfg = "
+                  << bb->config().toString() << endl;
+              if(bb->isEnabled()) {
+                s << "\t\t" << guid2String(prj->getUID()) << "." << bb->parentConfig()->toString() << ".Build.0 = "
+                    << bb->config().toString() << endl;
+              }
+            }
+          }
+          else { kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::write"); return false; }
+        }
+      }
+      else { kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::write"); return false; }
+    }
+    s << section_footer;
+
+    // Save solution's properties
+    s << section_header.arg(VSPART_SLNSECTION_SPROPS).arg("preSolution");
+    s << "\t\tHideSolutionNode = FALSE\n"; //TODO: Work on solution's properties
+    s << section_footer;
+
+    // Save solution's nesting info
+    s << section_header.arg(VSPART_SLNSECTION_NESTEDPRJ).arg("preSolution");
+    s << section_footer;
+
+    s << "EndGlobal" << endl;
+    //END //Save solution sections data
     in_sync = synchronize;
     return true;
   }
@@ -590,7 +732,7 @@ namespace VStudio {
                 // Read project .vcproj file
                 if(!prj_active->read(true)) {
                   kddbg << VSPART_ERROR"Can't read project file \"" << prj_active->getAbsPath() << "\"\n";
-                  // return false;
+                  break; // return false;
                 }
                 break; }
               case vs_filter: {
@@ -813,23 +955,24 @@ namespace VStudio {
         }
       }
       //END // Read global solution sections
+    }
 
-      /* NOTE: Some solutions will be without NESTED section
-       * that is basically means that all projects are inserted into a solution node
-       * i.e. without any filters involved
-       */
-      if(!nestedprjs_section_loaded) {
-        if(!filters.empty()) {
-          kddbg << VSPART_ERROR"No nesting was not done, but there are filters in [" << name << "] sln.\n";
+    /* NOTE: Some solutions will be without NESTED section
+    * that is basically means that all projects are inserted into a solution node
+    * i.e. without any filters involved
+    */
+    if(!nestedprjs_section_loaded) {
+      if(!filters.empty()) {
+        kddbg << VSPART_ERROR"No nesting was not done, but there are filters in [" << name << "] sln.\n";
           //return false;
-        }
-        BOOSTVEC_FOR(vsp_ci, it, projects) {
-          if((*it) != 0) {
+      }
+      BOOSTVEC_FOR(vsp_ci, it, projects) {
+        if((*it) != 0) {
             //insert((*it));
-          }
         }
       }
     }
+
     kddbg << "[" << name << "]========================================: Parsed" << endl;
     load_ok = true;
     in_sync = synchronize;
@@ -852,87 +995,14 @@ namespace VStudio {
       uisln = part()->explorerWidget()->addSolutionNode(this);
       if(uisln == 0) { kddbg << "failed to add sln UI node" << endl; return false; }
 #ifdef DEBUG
-      kddbg << QString("UI for [%1]:[%2] created\n").arg(type2String(type)).arg(name);
+      // kddbg << QString("UI for [%1]:[%2] created\n").arg(type2String(type)).arg(name);
 #endif
     }
     return true;
   }
 
-  bool VSSolution::dumpLayout(QTextStream &s) {
-    // Dump version data
-    s << QString("Microsoft Visual Studio Solution File, Format Version %1.00\n").arg(fmt_version);
-
-    // Write VS version for .sln file
-    switch(version) {
-      case vssln_ver9: { s << "# Visual Studio 2008\n"; break; }
-      case vssln_ver8: { break; }
-      case vssln_ver7: { break; }
-      default: {
-        kddbg << VSPART_ERROR"Unsupported version of VS file: " << slnVer2String(version) << endl;
-        return false;
-      }
-    }
-
-    // Save projects layout
-    BOOSTVEC_FOR(vsp_ci, it, projects) {
-      if((*it) == 0) {
-         kddbg << g_err_list_corrupted.arg("projects").arg("VSSolution::dumpLayout");
-        return false;
-      }
-      (*it)->dumpLayout(s);
-    }
-
-    // Save filters layout
-    BOOSTVEC_FOR(vsf_ci, it, filters) {
-      if((*it) == 0) {
-        kddbg << g_err_list_corrupted.arg("filters").arg("VSSolution::dumpLayout");
-        return false;
-      }
-      (*it)->dumpLayout(s);
-    }
-
-    //BEGIN // Save solution sections data
-    s << "Global" << endl;
-    const QString section_header("\tGlobalSection(%1) = %2\n");
-    const QString section_footer("\tEndGlobalSection\n");
-
-    // Save solution's configurations
-    s << section_header.arg(VSPART_SLNSECTION_SCFG_PLATFORMS).arg("preSolution");
-    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-      vsbb_p bb = static_cast<vsbb_p>(*it);
-      if(bb != 0) {
-        s << "\t\t" << bb->config().toString() << " = " << bb->config().toString() << endl;
-      } else {
-        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::dumpLayout");
-      }
-    }
-    s << section_footer;
-
-    // Save solution's project configuration platforms
-    s << section_header.arg(VSPART_SLNSECTION_PCFG_PLATFORMS).arg("postSolution");
-    BOOSTVEC_FOR(vsp_ci, it, projects) {
-      if((*it) != 0) {
-        if(!(*it)->dumpConfigLayout(s)) {
-          kddbg << VSPART_ERROR"Failed to dump project's: " << (*it)->getName() << " config layout.\n";
-          return false;
-        }
-      }
-      else { kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::dumpLayout"); return false; }
-    }
-    s << section_footer;
-
-    // Save solution's properties
-    s << section_header.arg(VSPART_SLNSECTION_SPROPS).arg("preSolution");
-    s << "\t\tHideSolutionNode = FALSE\n"; //TODO: Work on solution's properties
-    s << section_footer;
-
-    // Save solution's nesting info
-    s << section_header.arg(VSPART_SLNSECTION_NESTEDPRJ).arg("preSolution");
-    s << section_footer;
-
-    s << "EndGlobal" << endl;
-    //END //Save solution sections data
-    return true;
+  bool VSSolution::dumpLayout(QTextStream &/*s*/) {
+    return false;
   }
 
   vsf_p VSSolution::getFltByUID(const QUuid &uid) const {
@@ -1564,6 +1634,10 @@ namespace VStudio {
     }
     //END: Read project configurations
 
+    //NOTE: upon reaching this point project is considered as loaded:ok
+    //  To make sure that configurations will be parented and upon saving there will be no crash because of that.
+    load_ok = true;
+
     //BEGIN: Read project files
     it_e = fil_e.firstChild().toElement();
     if(it_e.isNull()) {
@@ -1574,8 +1648,22 @@ namespace VStudio {
     while(!it_e.isNull()) {
       // "Unfiltered" file
       if(it_e.tagName() == "File") {
-        if(!__read_file(it_e)) {
-          kddbg << VSPART_ERROR"Failed to read file [" << it_e.attribute("RelativePath") << "].\n";
+#ifdef DEBUG
+        kddbg << "Parsing: " << QString("[File]:[%1]").arg(it_e.attribute("RelativePath"))
+            << QString(" in {VSProject[%1]::read}.\n").arg(name);
+#endif
+        vsfl_p fl = new vsfl("unknown", this);
+        if(fl != 0) {
+          if(fl->read(it_e, true)) {
+            insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
+#ifdef DEBUG
+            kddbg << QString("File [%1] inserted into project [%2].\n").arg(fl->getName()).arg(name);
+#endif
+          }
+          else { kddbg << QString(VSPART_ERROR"Failed to read file \"%1\".\n").arg(it_e.attribute("RelativePath")); }
+        }
+        else {
+          kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::read}").arg(name));
           return false;
         }
       }
@@ -1590,7 +1678,6 @@ namespace VStudio {
     }
     //END: Read project files
 
-    // load_ok = true;
     // in_sync = synchronize;
     return true;
   }
@@ -1604,8 +1691,8 @@ namespace VStudio {
       uiprj = part()->explorerWidget()->addProjectNode(p, this);
       if(uiprj==0) { kddbg << "failed to add prj UI node" << endl; return false; }
 #ifdef DEBUG
-      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          arg(type2String(p->getType())).arg(p->text(0));
+      // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+      //     arg(type2String(p->getType())).arg(p->text(0));
 #endif
     }
     return true;
@@ -1645,25 +1732,8 @@ namespace VStudio {
     return true;
   }
 
-  bool VSProject::dumpConfigLayout(QTextStream &s) {
-    BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-      if((*it) != 0) {
-#ifdef DEBUG
-        kddbg << "Try to dump config layout for project: " << name << endl;
-#endif
-        s << "\t\t" << guid2String(uid) << "." << (*it)->parentConfig()->toString() << ".ActiveCfg = "
-             << (*it)->config().toString() << endl;
-        if((*it)->isEnabled()) {
-          s << "\t\t" << guid2String(uid) << "." << (*it)->parentConfig()->toString() << ".Build.0 = "
-              << (*it)->config().toString() << endl;
-        }
-      }
-      else {
-        kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSProject::dumpConfigLayout");
-        return false;
-      }
-    }
-    return true;
+  bool VSProject::dumpConfigLayout(QTextStream &/*s*/) {
+    return false;
   }
 
   vsp_p VSProject::getReqByUID(const QUuid &uid) const {
@@ -2043,12 +2113,24 @@ namespace VStudio {
       // Read filter items
       while(!it_e.isNull()) {
         if(it_e.tagName() == "File") {
-          vsfl_p fl = __read_file(it_e);
+#ifdef DEBUG
+          kddbg << "Parsing: " << QString("[File]:[%1]").arg(it_e.attribute("RelativePath"))
+              << QString(" in {VSProject[%1]::__read_file}.\n").arg(name);
+#endif
+          vsfl_p fl = new vsfl("unknown", this);
           if(fl != 0) {
-            filter->insert(fl); // Add file to filter
+            if(fl->read(it_e, true)) {
+              insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
+              filter->insert(fl); // Add file to filter
+#ifdef DEBUG
+              kddbg << QString("File [%1] inserted into project [%2].\n").arg(fl->getName()).arg(name);
+#endif
+            }
+            else { kddbg << QString(VSPART_ERROR"Failed to read file \"%1\".\n").arg(it_e.attribute("RelativePath")); }
           }
           else {
-            kddbg << VSPART_ERROR"Failed to read file [" << it_e.attribute("RelativePath") << "].\n";
+            kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::__read_file}").
+                arg(name));
             return false;
           }
         }
@@ -2063,55 +2145,6 @@ namespace VStudio {
 
       return true;
     }
-  }
-
-  vsfl_p VSProject::__read_file(QDomElement el) {
-#ifdef DEBUG
-    kddbg << "Parsing: " << QString("[File]:[%1]").arg(el.attribute("RelativePath"))
-        << QString(" in {VSProject[%1]::__read_file}.\n").arg(name);
-#endif
-    QString fl_name("<not loaded>");
-    QString fl_path_r = el.attribute("RelativePath");
-    NormalizeSlashes(fl_path_r);
-
-    // Retrieve name from relative path
-    fl_name = fl_path_r.mid(fl_path_r.findRev(g_slash)+1);
-#ifdef DEBUG
-    kddbg << "Filename condidate: " << fl_name << endl;
-#endif
-
-    // Retrieve absolute path
-    QString fl_path_a = RebasePath_Win(path_abs, fl_path_r);
-#ifdef DEBUG
-    kddbg << "PATH: " << fl_path_a << endl;
-#endif
-
-    vsfl_p fl = new vsfl(fl_name, this);
-    if(fl != 0) {
-      fl->setRelPath(fl_path_r);
-      fl->setAbsPath(fl_path_a);
-      fl->setDom(el); //NOTE: copy DOM element for modification|storage|saving
-
-      // Check for file configurations
-      QDomElement it_cfg_e = el.firstChild().toElement();
-      while(!it_cfg_e.isNull()) {
-        kddbg << "File config: " << it_cfg_e.attribute("Name") << endl;
-        //TODO: Make something like initBBFromDom()
-        it_cfg_e = it_cfg_e.nextSibling().toElement();
-      }
-
-      insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
-#ifdef DEBUG
-      kddbg << QString("[%1]:[%2]").arg(type2String(fl->getType())).arg(fl->getName())
-          << " inserted into: " << name << ".\n";
-#endif
-      return fl;
-    }
-    else {
-      kddbg << g_err_notenoughmem.arg(QString("["VSPART_FILE"]:[%1]").arg(fl_path_r)).
-          arg(QString("in {VSProject[%1]::__read_file}").arg(name));
-    }
-    return 0;
   }
 
   vsbb_p VSProject::getBB(const QString &c) const {
@@ -2145,6 +2178,10 @@ namespace VStudio {
     }
     else { kddbg << g_err_nullptr.arg("VSProject::getBB"); return 0; }
     return 0;
+  }
+
+  /*inline*/ pv_vsbb_cr VSProject::bbs() const {
+    return bboxes;
   }
 
   //===========================================================================
@@ -2251,8 +2288,8 @@ namespace VStudio {
       uiflt = part()->explorerWidget()->addFilterNode(pnt, this);
       if(uiflt == 0) { kddbg << "failed to add filter UI node" << endl; return false; }
 #ifdef DEBUG
-      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          arg(type2String(pnt->getType())).arg(pnt->text(0));
+      // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+      //     arg(type2String(pnt->getType())).arg(pnt->text(0));
 #endif
     }
     return true;
@@ -2389,14 +2426,61 @@ namespace VStudio {
     return true;
   }
 
-  bool VSFile::read(bool synchronize/*=true*/) {
-    in_sync = synchronize;
-    return true;
+  bool VSFile::read(bool sync/*=true*/) {
+    if(!dom.isNull()) {
+      //QString fl_name("<not loaded>");
+      QString fl_path_r = dom.attribute("RelativePath");
+      NormalizeSlashes(fl_path_r);
+      setRelPath(fl_path_r);
+
+      // Retrieve name from relative path
+      setName(path_rlt.mid(path_rlt.findRev(g_slash)+1));
+#ifdef DEBUG
+      // kddbg << "Filename condidate: " << name << endl;
+#endif
+
+      // Retrieve absolute path
+      setAbsPath(RebasePath_Win(project->getAbsPath(), path_rlt));  //NOTE: This tests inside if file is reachable
+#ifdef DEBUG
+      // kddbg << "PATH: " << path_abs << endl;
+#endif
+
+      //NOTE: This can be the place where the problem with case sensitive names is detected upon loading
+      if(!isReachable()) {
+        kddbg << QString("File [%1] is not reachable.\n").arg(name);
+        return true;
+      }
+
+      // Check for file configurations
+      //TODO: Make something like initBBFromDom()
+      QDomElement it_cfg_e = dom.firstChild().toElement();
+      while(!it_cfg_e.isNull()) {
+        kddbg << QString("config [%2] for [%1].\n").arg(name).arg(it_cfg_e.attribute("Name"));
+        it_cfg_e = it_cfg_e.nextSibling().toElement();
+      }
+
+      in_sync = sync;
+      return true;
+    }
+    else {
+      kddbg << QString(VSPART_ERROR"Can't read file [%1], dom is 0.\n").arg(name);
+      return false;
+    }
   }
 
-  bool VSFile::read(QTextStream &/*stream*/, bool synchronize/*=true*/) {
-    in_sync = synchronize;
-    return true;
+  bool VSFile::read(QTextStream &/*s*/, bool sync/*=true*/) {
+    return false;
+  }
+
+  bool VSFile::read(QDomElement el, bool sync/*=true*/) {
+    if(!el.isNull()) {
+      dom = el; //NOTE: copy DOM element for modification|storage|saving
+      return read(sync);
+    }
+    else {
+      kddbg << QString(VSPART_ERROR"Can't read file [%1], dom is 0.\n").arg(name);
+      return false;
+    }
   }
 
   /*inline*/ void VSFile::setDom(QDomElement el) {
@@ -2444,8 +2528,8 @@ namespace VStudio {
       uifl = part()->explorerWidget()->addFileNode(pnt, this);
       if(uifl==0) { kddbg << "failed to add file UI node" << endl; return false; }
 #ifdef DEBUG
-      kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          arg(type2String(pnt->getType())).arg(pnt->text(0));
+      // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
+      //    arg(type2String(pnt->getType())).arg(pnt->text(0));
 #endif
     }
     return true;
@@ -2752,11 +2836,17 @@ namespace VStudio {
 
   void VSBuildBox::setParentCfg(const vcfg_cp c) {
     pcfg = c;
-#ifdef DEBUG
     if(pcfg != 0) {
+#ifdef DEBUG
       kddbg << "Config: " << pcfg->toString() << " is parent to: " << cfg.toString() << endl;
-    } else { kddbg << VSPART_WARNING"parent config is 0, in {VSBuildBox::setParentCfg}.\n"; }
 #endif
+    }
+    else {
+#ifdef DEBUG
+      kddbg << VSPART_WARNING"parent config is 0, in {VSBuildBox::setParentCfg}.\n";
+#endif
+      enabled = false;
+    }
   }
 
   /*inline*/ const vcfg_cr VSBuildBox::config() const {

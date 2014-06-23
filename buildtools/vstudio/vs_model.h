@@ -294,8 +294,12 @@ namespace VStudio {
       // Configuraion works
       bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
       bool selectCfg(const vcfg_cp parent_config);
-      vsbb_p getBB(const vcfg_cp parent_config) const;
       vsbb_p getBB(const QString &config) const;
+      vsbb_p getBB(const vcfg_cp parent_config) const;
+      /** Get Build-Boxes for this project for non-modifying purposes
+       * @return - const ref to vector with Build-Boxes
+       */
+      pv_vsbb_cr bbs() const;
 
       bool build();
       /** Tells if project file was read and parsed successfully
@@ -305,7 +309,6 @@ namespace VStudio {
 
     private:
       bool __read_filter(QDomElement filter);
-      vsfl_p __read_file(QDomElement file);
 
     private:
       e_VSPrjLangType lang; // Project choosen language
@@ -387,6 +390,7 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS File methods:
+      bool read(QDomElement dom, bool synchronize=true);
       void setDom(QDomElement el);
       vsp_p getProject() const;
 
