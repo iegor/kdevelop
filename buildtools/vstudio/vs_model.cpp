@@ -577,7 +577,8 @@ namespace VStudio {
                 }
                 prj_active = static_cast<vsp_p>(unit); // Set most recent "active" project ptr
                 prj_active->setRelPath(prjpath_rlt);
-                prj_active->setAbsPath(path_abs.left(path_abs.length()-(name.length()+4)).append(prjpath_rlt));
+                prj_active->setAbsPath(RebasePath_Win(path_abs, prjpath_rlt));
+                //path_abs.left(path_abs.length()-(name.length()+4)).append(prjpath_rlt)
 
                 // Set absolute path
                 // QStringList l = QStringList::split( '/', path_abs);

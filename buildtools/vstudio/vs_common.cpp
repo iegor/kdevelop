@@ -246,8 +246,8 @@ namespace VStudio {
 
   QString RebasePath_Win(QString path_base, QString path_relative) {
     // Normalize pathes
-    // NormalizeSlashes(path_base);
-    // NormalizeSlashes(path_relative);
+    NormalizeSlashes(path_base);
+    NormalizeSlashes(path_relative);
 #ifdef DEBUG
     kddbg << "PATH_B: " << path_base << endl;
     kddbg << "PATH_R: " << path_relative << endl;
