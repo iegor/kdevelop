@@ -1125,12 +1125,10 @@ namespace VStudio {
    * @return \b true upon success, \b false if something is seriously wrong
    */
   bool VSSolution::selectCfg(const vcfg_p p) {
-    vsbb_p bb = 0;
     if(p != 0) {
-      bb = getBB(p); // Get bb that is for this configuration
+      active_bb = getBB(p); // Get bb that is for this configuration
 
-      if(bb != 0) {
-        active_bb = bb;
+      if(active_bb != 0) {
 #ifdef DEBUG
         kddbg << g_msg_configapply.arg(active_bb->config().toString()).arg(name).arg("VSSolution::selectCfg");
 #endif
@@ -1140,7 +1138,7 @@ namespace VStudio {
           vsp_p prj(*it);
           if(prj != 0) {
             if(prj->isLoaded()) {
-              if(!prj->selectCfg(&bb->config())) {
+              if(!prj->selectCfg(&active_bb->config())) {
 #ifdef DEBUG
                 kddbg << VSPART_ERROR"Can't set config for project: \"" << prj->getName() << "\" in \""
                     << getName() << "\", in {VSSolution::selectCfg}\n";
@@ -1165,10 +1163,10 @@ namespace VStudio {
         }
       }
       else {
+#ifdef DEBUG
         /* kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(p->toString()).arg(QString(
                                         "VSSolution[%1]::selectCfg").arg(name)); */
-        // Update UI in VSExplorer
-        if(uisln != 0) { uisln->setState("detached"); }
+#endif
       }
       return true;
     }
@@ -1245,6 +1243,10 @@ namespace VStudio {
     return load_ok;
   }
 
+  /*inline*/ bool VSSolution::isDetached() const {
+    return active_bb == 0;
+  }
+
   const pv_vsp_cr VSSolution::projs() const {
     return projects;
   }
@@ -1296,8 +1298,13 @@ namespace VStudio {
     return 0;
   }
 
-  const vcfg_cr VSSolution::currentCfg() const {
-    return active_bb->config();
+  vcfg_cp VSSolution::currentCfg() const {
+    if(active_bb != 0) {
+      return &active_bb->config();
+    }
+    else {
+      return 0;
+    }
   }
 
   void VSSolution::VSMetaDependency::syncToPrj(vsp_p prj) {

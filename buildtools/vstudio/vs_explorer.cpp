@@ -323,14 +323,18 @@ namespace VStudio {
     m_part->saveSlnAs(0, QString::null);
   }
 
+  void VSExplorer::slotRefreshUI() {
+    BOOSTVEC_FOR(uivse_ci, it, uients) {
+      if((*it) != 0) {
+        (*it)->slotRefreshText();
+      }
+    }
+  }
+
   uivss_p VSExplorer::addSolutionNode(vss_p sln) {
     uivss_p item = new VSSlnNode(m_listView, sln);
     if(item == 0) { kddbg << "Error! Out of memory" << endl; }
-#ifdef USE_BOOST
-    uients.push_back(item);
-#else
-    //TODO: Implement this
-#endif
+    BOOSTVEC_PUSHBACK(uients, item);
     return item;
   }
 
@@ -340,6 +344,7 @@ namespace VStudio {
       case vs_solution: {
         uivsp_p item = new VSPrjNode(pnt, prj);
         if(item == 0) { kddbg << "Error! Out of memory" << endl; }
+        BOOSTVEC_PUSHBACK(uients, item);
         return item; }
       default:
         kddbg << "Can't add project into unsupported parent node of type \""
@@ -355,6 +360,7 @@ namespace VStudio {
       case vs_filter: {
         uivsf_p filter = new VSFltNode(pnt, flt);
         if(filter == 0) { kddbg << "Error! Out of memory" << endl; }
+        BOOSTVEC_PUSHBACK(uients, filter);
         return filter; }
       default:
         kddbg << "Can't add filter " << flt->getName()
@@ -370,6 +376,7 @@ namespace VStudio {
       case vs_filter: {
         uivsfl_p file = new VSFilNode(pnt, fl);
         if(file == 0) { kddbg << "Error! Out of memory" << endl; }
+        BOOSTVEC_PUSHBACK(uients, file);
         return file; }
       default:
         kddbg << "Can't add file into unsupported parent node of type \""
@@ -378,27 +385,18 @@ namespace VStudio {
     }
   }
 
-  uivse_p VSExplorer::getByUID(const QUuid &uid) {
-#ifdef USE_BOOST
-    uivse_ci it=uients.begin();
-    for(; it!=uients.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
+  uivse_p VSExplorer::getByUID(const QUuid &uid) const {
+    BOOSTVEC_FOR(uivse_ci, it, uients) {
       uivse_p ent = static_cast<uivse_p>(*it);
       if(ent != 0) {
-        if(ent->getUID() == uid) { break; }
+        if(ent->getUID() == uid) { return (*it); }
+      }
+      else {
+        kddbg << g_err_list_corrupted.arg("UI entity").arg("VSExplorer::getByUID");
+        return 0;
       }
     }
-#ifdef USE_BOOST
-    if(it!=uients.end()) { return (*it); }
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-    else {
-      kddbg << "Can't find ui entity: " << guid2String(uid) << "\"\n";
-      return 0;
-    }
+    kddbg << "Can't find ui entity: " << guid2String(uid) << endl;
     return 0;
   }
 
@@ -473,7 +471,7 @@ namespace VStudio {
   : VSExplorerEntity(vs_solution, lv, s->getName())
   , sln(s) {
     setMultiLinesEnabled(true);
-    void slotRefreshText();
+    slotRefreshText();
   }
 
   VSSlnNode::~VSSlnNode() {
@@ -487,24 +485,43 @@ namespace VStudio {
     return uid_null;
   }
 
-  void VSSlnNode::setState(const QString &state) {
-    if(state == "detached") { //TODO: enum for states, but think deeper about states concept
+  void VSSlnNode::setState(const QString &/*state*/) {
+    /* if(state == "detached") { //TODO: enum for states, but think deeper about states concept
       setText(0, QString(sln->getName()).append("\n [Detached]"));
       setPixmap(0, SmallIcon("error"));
     }
     else if(state == "normal") {
-      setText(0, QString(sln->getName()).append("\n [%1]").arg(sln->currentCfg().toString()));
+      setText(0, QString(sln->getName()).append(" [%1]\n [%1]").
+          arg(sln->projs().size()).arg(sln->currentCfg().toString()));
       setPixmap(0, SmallIcon("home"));
-    }
+    } */
   }
 
   void VSSlnNode::slotRefreshText() {
-    if(sln->isReachable() || sln->isLoaded()) {
-      setPixmap(0, SmallIcon("home"));
-      setText(0, QString(sln->getName()).append(" [%1]\n [%2]").
-          arg(sln->projs().size()).arg(sln->currentCfg().toString()));
-    } else {
+    if(!sln->isReachable()) {
       setPixmap(0, SmallIcon("error"));
+      setText(0, QString(sln->getName()).append("\n [Unreachable]"));
+      return;
+    }
+
+    if(!sln->isLoaded()) {
+      setPixmap(0, SmallIcon("error"));
+      setText(0, QString(sln->getName()).append("\n [Load error]"));
+      return;
+    }
+
+    // See if solution in "detached" state (i.e. no config selected for build)
+    if(sln->isDetached()) {
+      setPixmap(0, SmallIcon("error"));
+      setText(0, QString(sln->getName()).append("\n [Detached]"));
+    }
+    else {
+      vcfg_cp cfg = sln->currentCfg();
+      // The count of projects
+      setPixmap(0, SmallIcon("gohome"));
+      setText(0, QString(sln->getName()).append(" [%1]\n [%2]").
+          arg(static_cast<int>(sln->projs().size()), 3 , 10).
+          arg(QString((cfg != 0) ? cfg->toString() : "error")));
     }
   }
 

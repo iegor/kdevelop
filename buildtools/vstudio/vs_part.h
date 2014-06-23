@@ -168,6 +168,9 @@ namespace VStudio {
 #endif
     QString m_prjpath;
     QString m_prjname;
+
+  signals:
+    void uisync();
   };
 };
 //END // VStudio namespace

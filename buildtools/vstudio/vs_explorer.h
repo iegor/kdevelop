@@ -64,7 +64,7 @@ namespace VStudio {
     uivsf_p addFilterNode(uivse_p parent, vsf_p filter);
     uivsfl_p addFileNode(uivse_p parent, vsfl_p file);
 
-    uivse_p getByUID(const QUuid &uid);
+    uivse_p getByUID(const QUuid &uid) const;
 
   protected:
     void contentsContextMenuEvent(QContextMenuEvent*);
@@ -83,6 +83,9 @@ namespace VStudio {
     void slotHighlightContextMenuItem(int id);
     void slotSaveEntity();
     void slotSaveEntityAs();
+
+  public slots:
+    void slotRefreshUI();
 
   private:
     VSPart *m_part;

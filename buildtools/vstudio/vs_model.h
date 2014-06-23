@@ -203,7 +203,7 @@ namespace VStudio {
       bool selectCfg(const vcfg_p parent_config);
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_p parent_config) const;
-      const vcfg_cr currentCfg() const;
+      vcfg_cp currentCfg() const;
 
       void setActive(bool active=true);
       bool isActive() const;
@@ -216,6 +216,7 @@ namespace VStudio {
        * @return \b true if .sln file was found and parsed successfully upon read
        */
       bool isLoaded() const;
+      bool isDetached() const;
 
       const pv_vsp_cr projs() const;
 

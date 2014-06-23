@@ -208,6 +208,8 @@ namespace VStudio {
     // connect(buildConfigAction, SIGNAL(activated(const QString&)), this, SLOT(slotBuildConfigChanged(const QString&)));
     // connect(buildConfigAction->popupMenu(), SIGNAL(aboutToShow()), this, SLOT(slotBuildConfigAboutToShow()));
 
+    connect(this, SIGNAL(uisync()), m_explorer_widget, SLOT(slotRefreshUI()));
+
     VSEntity::setPart(this);
   }
 
@@ -867,6 +869,7 @@ namespace VStudio {
         // Update UI
         actConfigName->view()->setCurrentText(cfg->getName());
         actConfigPlatform->view()->setCurrentText(platform2String(cfg->platform()));
+        emit uisync();
         return true;
       }
     }
