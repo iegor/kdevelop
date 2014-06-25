@@ -504,12 +504,31 @@ void AStyleWidget::set_example() {
 * Boston, MA 02110-1301, USA.\n*/\n\n\
 #ifndef DNSSDREMOTESERVICE_H\n\
 #define DNSSDREMOTESERVICE_H\n\n\
+/* { \n\
+      test commit\n\
+} */ \n\n\
 #include <qobject.h>\n\
 #include <dnssd/servicebase.h>\n\n\
 #define EXAMPLE_MACRO(ab,bb)\\\nmax(ab,bb);\n\n\
 class QDataStream;\n\
 class KURL;\n\
 namespace DNSSD\n{\n\
+class CPoint2D {\n\
+public:\n\
+  CPoint2D()\n\
+  {\n\
+  }\n\
+  ~CPoint2D() {}\n\n\
+  union\n\
+  {\n\
+    struct\n\
+    {\n\
+      int x;\n\
+      int y;\n\
+    };\n\
+    int ar[2];\n\
+  };\n\
+};\n\
 class RemoteServicePrivate;\n\n\
 /**\nRemoteService class...\n\n\n\
 @short class representing service announced on remote machine.\n\
