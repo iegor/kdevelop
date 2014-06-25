@@ -15,6 +15,62 @@
 #include <kdebug.h>
 #include <kdevcore.h>
 
+static const QString astyle_example(
+"#include <stdio.h>\n"
+"\n"
+"/*! This is an example of astyle formatting source code\n"
+" * Doxy comment\n"
+" */\n"
+"\n"
+"//NOTE: make a note\n"
+"//  starts here\n"
+"class CPoint2D {\n"
+"  public:\n"
+"    // Class {ctor}\n"
+"    CPoint2D() {\n"
+"    }\n"
+"    ~CPoint2D() {}\n"
+"\n"
+"    void foo1() { if(false) { never_exec(); } }\n"
+"\n"
+"    void foo()\n"
+"    {\n"
+"    }\n"
+"\n"
+"    /*! This is a test method\n"
+"     * Doxy /a comment\n"
+"     */\n"
+"    inline void oneliner() { /*comment*/ if(true) makefoo();  }\n"
+"\n"
+"  public:\n"
+"    class A {\n"
+"      public:\n"
+"        class B {\n"
+"          int a1,a2,a3;\n"
+"        };\n"
+"        unsigned short a,b,c;\n"
+"    };\n"
+"    struct\n"
+"    {\n"
+"      struct {\n"
+"        int a,b,c;\n"
+"      };\n"
+"      int b,c,a;\n"
+"    };\n"
+"    union {\n"
+"      struct\n"
+"      {\n"
+"        int x;\n"
+"        int y;\n"
+"      };\n"
+"      int pv[2];\n"
+"    };\n"
+"};\n"
+"\n"
+"int main (int argc, char *argv[]) {\n"
+"  return 0;\n"
+"}\n");
+
 AStyleWidget::AStyleWidget(AStylePart * part, AStyleWidget::context ctx, QWidget *parent, const char *name)
 : AStyleConfig(parent, name)
 , m_part(part)
@@ -496,87 +552,12 @@ void AStyleWidget::set_padding() {
  */
 void AStyleWidget::set_example() {
   StyleExample->clear();
-
-  QString example_text = "/* This file is part of the KDE project\n\
-*\n\
-* Copyright (C) 2004, 2005 Jakub Stachowski <qbast@go2.pl>\n*\n\
-* This library is free software; you can redistribute it and/or\n* ...\
-* Boston, MA 02110-1301, USA.\n*/\n\n\
-#ifndef DNSSDREMOTESERVICE_H\n\
-#define DNSSDREMOTESERVICE_H\n\n\
-/* { \n\
-      test commit\n\
-} */ \n\n\
-#include <qobject.h>\n\
-#include <dnssd/servicebase.h>\n\n\
-#define EXAMPLE_MACRO(ab,bb)\\\nmax(ab,bb);\n\n\
-class QDataStream;\n\
-class KURL;\n\
-namespace DNSSD\n{\n\
-class CPoint2D {\n\
-public:\n\
-  CPoint2D()\n\
-  {\n\
-  }\n\
-  ~CPoint2D() {}\n\n\
-  union\n\
-  {\n\
-    struct\n\
-    {\n\
-      int x;\n\
-      int y;\n\
-    };\n\
-    int ar[2];\n\
-  };\n\
-};\n\
-class RemoteServicePrivate;\n\n\
-/**\nRemoteService class...\n\n\n\
-@short class representing service announced on remote machine.\n\
-@author Jakub Stachowski\n*/\n\
-struct point { union { struct { short x,y; }; unsigned int pos; }; };\
-class KDNSSD_EXPORT RemoteService : public QObject, public ServiceBase\n{\n\
-Q_OBJECT\n\
-public:\n\
-typedef KSharedPtr<RemoteService> Ptr;\n\n\
-/**\n\
-Creates ...\n@param label Data returned by PTR query\n*/\n\
-RemoteService(const QString& label);\n\n\
-signals:\n\
-/**\nEmitted ... change)\n*/\n\
-void resolved(bool);\n\n\
-protected:\n\
-virtual void virtual_hook(int id, void *data){\nif(max(1,2)){\nreturn 1;}switch(sub){\n\
-case 1: break;\ncase 2: test; return 0;\ndefault: break;\n}\n}\n\
-private:\n\
-void resolveError();\n\
-friend KDNSSD_EXPORT QDataStream & operator<< (QDataStream & s, const RemoteService & a);\n\
-};\n}\n\
-void do_small_test ( QString s, int itest) {\n\
-      if(itest == 0) return;\n\
-      itest += itest *(Config(7)*5);\n\
-      if(test == 0) { Config(7) = 8; return;}\n\
-KTextEditor::EditInterface *iface\n\
-    = dynamic_cast<KTextEditor::EditInterface*>(partController()->activePart());\n\
-if (!iface)\n\
-  return;\n\n\
-bool has_selection = false;\n\n\
-KTextEditor::SelectionInterface *sel_iface\n\
-    = dynamic_cast<KTextEditor::SelectionInterface*>(partController()->activePart());\n\
-if (sel_iface && sel_iface->hasSelection())\n\
-  has_selection = true;\n\n\
-//if there is a selection, we only format it.\n\
-ASStringIterator is(has_selection ? sel_iface->selection() : iface->text());\n\
-KDevFormatter formatter(m_project);\n\n\
-formatter.init(&is);\n\
-}\n\
-\n\n#endif";
-
   switch(m_context) {
     case GLOBAL: {
-      StyleExample->setText(m_part->formatSource(example_text, this, m_part->getGlobalOptions()));
+      StyleExample->setText(m_part->formatSource(astyle_example, this, m_part->getGlobalOptions()));
     } break;
     case PROJECT: {
-      StyleExample->setText(m_part->formatSource(example_text, this, m_part->getProjectOptions()));
+      StyleExample->setText(m_part->formatSource(astyle_example, this, m_part->getProjectOptions()));
     } break;
     default: break;
   }

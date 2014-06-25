@@ -54,33 +54,42 @@ QString fmtstyle2string(enum astyle::FormatStyle style) {
   }
 }
 
-ASStringIterator::ASStringIterator(const QString &text)
-  : ASSourceIterator(), _content(text)
+ASStringIterator::ASStringIterator(const QString &txt)
+  : ASSourceIterator(), text(txt)
 {
-  _is = new QTextStream(&_content, IO_ReadOnly);
+  contents = QStringList::split('\n', text);
+  fetch = contents.begin();
+  peek = fetch;
+
+#ifdef DEBUG
+  QStringList::const_iterator it;
+  for(it=contents.begin(); it!=contents.end(); ++it) {
+    kdDebug(9009) << "[ ASTYLE ] cnt line: " << (*it).utf8() << endl;
+  }
+#endif
 }
 
-
-ASStringIterator::~ASStringIterator()
-{
-  delete _is;
+ASStringIterator::~ASStringIterator() {
 }
 
-
-bool ASStringIterator::hasMoreLines() const
-{
-  return !_is->eof();
+bool ASStringIterator::hasMoreLines() const {
+  return (fetch != contents.end());
 }
 
-std::string ASStringIterator::nextLine(bool /*emptyLineWasDeleted*/) {
-  return _is->readLine().utf8().data();
+std::string ASStringIterator::nextLine(bool /*deleted*/) {
+  std::string str = (*fetch).ascii();
+  ++fetch;
+  return str;
 }
 
 std::string ASStringIterator::peekNextLine() {
-  return _is->readLine().utf8().data();
+  std::string str = (*peek).ascii();
+  ++peek;
+  return str;
 }
 
 void ASStringIterator::peekReset() {
+  peek = fetch;
 }
 
 KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
@@ -107,8 +116,8 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
   {
 	  setTabIndentation(wsCount, options[ASOPTS_FILLFORCE].toBool() );
 	  m_indentString = "\t";
-  } else
-  {
+  }
+  else {
 	  setSpaceIndentation(wsCount);
 	  m_indentString = "";
 	  m_indentString.fill(' ', wsCount);
@@ -126,28 +135,31 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
   setLabelIndent(options[ASOPTS_INDENTLABELS].toBool());
   setBlockIndent(options[ASOPTS_INDENTBLOCKS].toBool());
   setPreprocDefineIndent(options[ASOPTS_INDENTPREPROCS].toBool());
-    setPreprocConditionalIndent(false);
+  setPreprocConditionalIndent(false);
 
   // continuation
   setMaxInStatementIndentLength(options[ASOPTS_MAXSTATEMENT].toInt());
   if (options[ASOPTS_MINCONDITIONAL].toInt() != -1) {
     setMinConditionalIndentOption(options[ASOPTS_MINCONDITIONAL].toInt());
     setMinConditionalIndentLength();
-    }
+  }
 
   // brackets
+  /*
   s = options[ASOPTS_BRACKETS].toString();
   if(s == "Break") setBracketFormatMode(astyle::BREAK_MODE);
   else if(s == "Attach") setBracketFormatMode(astyle::ATTACH_MODE);
   else if(s == "Linux") setBracketFormatMode(astyle::LINUX_MODE);
   else setBracketFormatMode(astyle::NONE_MODE);
+  */
+  setBracketFormatMode(astyle::LINUX_MODE);
 
   setBreakClosingHeaderBracketsMode(options[ASOPTS_BRACKETS_CH].toBool());
   // blocks
   setBreakBlocksMode(options[ASOPTS_BLOCK_BREAK].toBool());
   if (options[ASOPTS_BLOCK_BREAKALL].toBool()){
-	  setBreakBlocksMode(true);
-	  setBreakClosingHeaderBlocksMode(true);
+    setBreakBlocksMode(true);
+    setBreakClosingHeaderBlocksMode(true);
   }
   setBreakElseIfsMode(options[ASOPTS_BLOCK_BREAKIFELSE].toBool());
 
@@ -160,6 +172,10 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
   // oneliner
   setBreakOneLineBlocksMode(!options[ASOPTS_KEEPBLOCKS].toBool());
   setSingleStatementsMode(!options[ASOPTS_KEEPSTATEMENTS].toBool());
+
+  /*NOTE: For now this is hardcoded, but in the future this should be initialized from file settings or
+   in project settings or in KDevelop settings, somewhere, maybe something ierarchical */
+  setLineEndFormat(astyle::LINEEND_LINUX);
 }
 
 KDevFormatter::KDevFormatter( AStyleWidget * widget )
@@ -188,16 +204,16 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
 	setTabSpaceConversionMode(widget->Fill_ConvertTabs->isChecked());
 	setEmptyLineFill(widget->Fill_EmptyLines->isChecked());
 
-	// indent
-	setSwitchIndent( widget->Indent_Switches->isChecked() );
-	setClassIndent( widget->Indent_Classes->isChecked() );
-	setCaseIndent( widget->Indent_Cases->isChecked() );
-	setBracketIndent( widget->Indent_Brackets->isChecked() );
-	setNamespaceIndent( widget->Indent_Namespaces->isChecked() );
-	setLabelIndent( widget->Indent_Labels->isChecked() );
-	setBlockIndent( widget->Indent_Blocks->isChecked());
-	setPreprocDefineIndent(widget->Indent_Preprocessors->isChecked());
-    setPreprocConditionalIndent(false);
+  // indent
+  setSwitchIndent( widget->Indent_Switches->isChecked() );
+  setClassIndent( widget->Indent_Classes->isChecked() );
+  setCaseIndent( widget->Indent_Cases->isChecked() );
+  setBracketIndent( widget->Indent_Brackets->isChecked() );
+  setNamespaceIndent( widget->Indent_Namespaces->isChecked() );
+  setLabelIndent( widget->Indent_Labels->isChecked() );
+  setBlockIndent( widget->Indent_Blocks->isChecked());
+  setPreprocDefineIndent(widget->Indent_Preprocessors->isChecked());
+  setPreprocConditionalIndent(false);
 
 	// continuation
 	setMaxInStatementIndentLength( widget->Continue_MaxStatement->value() );
@@ -245,7 +261,7 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
 
 bool KDevFormatter::predefinedStyle( const QString & style )
 {
-	/*if (style == "ANSI") {
+	/* if (style == "ANSI") {
 		setBracketIndent(false);
 		setSpaceIndentation(4);
 		setBracketFormatMode(astyle::BREAK_MODE);
@@ -253,7 +269,8 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	} else */if (style == "KR") {
+	}
+  else */if (style == "KR") {
 		setBracketIndent(false);
 		setSpaceIndentation(4);
 		setBracketFormatMode(astyle::ATTACH_MODE);
@@ -261,7 +278,8 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	} else if (style == "Linux") {
+	}
+  else if (style == "Linux") {
 		setBracketIndent(false);
 		setSpaceIndentation(8);
 		setBracketFormatMode(astyle::LINUX_MODE);
@@ -269,7 +287,8 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	} else if (style == "GNU") {
+	}
+  else if (style == "GNU") {
 		setBlockIndent(true);
 		setSpaceIndentation(2);
 		setBracketFormatMode(astyle::BREAK_MODE);
@@ -277,7 +296,8 @@ bool KDevFormatter::predefinedStyle( const QString & style )
 		setSwitchIndent(false);
 		setNamespaceIndent(false);
 		return true;
-	} else if (style == "JAVA") {
+	}
+  else if (style == "JAVA") {
 		setJavaStyle();
 		setBracketIndent(false);
 		setSpaceIndentation(4);

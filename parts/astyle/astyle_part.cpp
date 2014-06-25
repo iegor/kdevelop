@@ -4,7 +4,10 @@
 #include <qwhatsthis.h>
 #include <qvbox.h>
 #include <qtextstream.h>
+#include <qlineedit.h>
+#include <qregexp.h>
 #include <qpopupmenu.h>
+
 #include <kdeversion.h>
 #include <kdebug.h>
 #include <kdialogbase.h>
@@ -17,19 +20,18 @@
 #include <ktexteditor/document.h>
 #include <ktexteditor/viewcursorinterface.h>
 #include <ktexteditor/selectioninterface.h>
-#include <kprogress.h>
-#include <kdevcore.h>
-#include <kdevapi.h>
-#include <kdevpartcontroller.h>
-#include <kdevplugininfo.h>
-#include <configwidgetproxy.h>
 #include <kapplication.h>
 #include <kconfig.h>
 #include <kfiledialog.h>
 #include <klocale.h>
 #include <kmessagebox.h>
-#include <qlineedit.h>
-#include <qregexp.h>
+#include <kprogress.h>
+
+#include <kdevcore.h>
+#include <kdevapi.h>
+#include <kdevpartcontroller.h>
+#include <kdevplugininfo.h>
+#include <configwidgetproxy.h>
 
 #include "astyle_widget.h"
 #include "astyle_adaptor.h"
@@ -347,6 +349,9 @@ void AStylePart::activePartChanged ( KParts::Part *part )
 
 QString AStylePart::formatSource( const QString text, AStyleWidget * widget, const QMap<QString, QVariant>& options  )
 {
+#ifdef DEBUG
+  kdDebug(9009) << "[ ASTYLE ]: test: " << text << endl;
+#endif
 	ASStringIterator is(text);
 	KDevFormatter * formatter = ( widget)? new KDevFormatter( widget ) : new KDevFormatter(options);
 

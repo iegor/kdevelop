@@ -59,15 +59,15 @@ public:
   virtual ~ASStringIterator();
 
   virtual bool hasMoreLines() const;
-  virtual std::string nextLine(bool emptyLineWasDeleted = false);
-    virtual std::string peekNextLine();
-    virtual void peekReset();
+  virtual std::string nextLine(bool emptyLineWasDeleted=false);
+  virtual std::string peekNextLine();
+  virtual void peekReset();
 
 private:
-
-  QString _content;
-  QTextStream *_is;
-
+  QString text;
+  QStringList contents;
+  QStringList::const_iterator fetch;
+  QStringList::const_iterator peek;
 };
 
 class AStyleWidget;
