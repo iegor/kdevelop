@@ -192,7 +192,9 @@ Environment variables and make arguments can be specified in the project setting
 #define glue2(a,b) a ## b
 #define glue3(a,b,c) a ## b ## c
 
-#define check_bit(flags, bit) static_cast<bool>((flags&bit) == bit)
+#define check_bit(flags, mask) (flags&mask) == mask
+#define set_bit(flags, mask) ((flags)|=(mask))
+#define clear_bit(flags, mask) ((flags)&=~(mask))
 
 #ifdef USE_BOOST
 #define predeclare_vs_tl_iters(pname, citer, iter) \
@@ -222,22 +224,9 @@ Environment variables and make arguments can be specified in the project setting
   predeclare_vs_tl_vector(shortname); \
 
 #ifdef USE_BOOST
-#define BOOSTVEC_FOR(ityp, i, v) \
-  for(ityp i=v.begin(); i!=v.end(); ++i)
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
-
-#ifdef USE_BOOST
-#define BOOSTVEC_OFOR(iter, v) \
-  for(; iter!=v.end(); ++iter)
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement later
-#endif
-
-#ifdef USE_BOOST
-#define BOOSTVEC_PUSHBACK(vector, value) \
-  (vector).push_back((value));
+#define BOOSTVEC_FOR(ityp, i, v) for(ityp i=v.begin(); i!=v.end(); ++i)
+#define BOOSTVEC_OFOR(iter, v) for(; iter!=v.end(); ++iter)
+#define BOOSTVEC_PUSHBACK(vector, value) (vector).push_back((value));
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
@@ -252,6 +241,7 @@ namespace VStudio {
   // VS model representation classes pre-declaration
   //===========================================================================
   predeclare_vs_typ(VSRefcountable, vsr); // Predeclaration for VS Refcountable model representation
+  predeclare_vs_typ(VSFSStored, vsfs); // Predeclaration for VS FSStored model representation
   predeclare_vs_typ(VSEntity, vse); // Predeclaration for VS entity model representation
   predeclare_vs_typ(VSSolution, vss); // Predeclaration for VS solution model representation
   predeclare_vs_typ(VSProject, vsp); // Predeclaration for VS project model representation

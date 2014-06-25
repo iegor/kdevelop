@@ -131,6 +131,7 @@ namespace VStudio {
 #ifdef DEBUG
         kddbg << g_msg_entselected.arg(type2String(flt->getType())).arg(flt->getName());
 #endif
+        // ent->setOpen(!ent->isOpen());
         break; }
       case vs_file: {
         vsfl_p fl = static_cast<vsfl_p>(ent->getModel());
@@ -300,7 +301,7 @@ namespace VStudio {
     }
   }
 
-  void VSExplorer::slotHighlightContextMenuItem(int id) {
+  void VSExplorer::slotHighlightContextMenuItem(int /*id*/) {
   }
 
   void VSExplorer::slotSaveEntity() {
@@ -445,14 +446,14 @@ namespace VStudio {
   void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
     switch(getType()) {
       case vs_project: {
-        if(static_cast<vsp_p>(this->getModel())->isActive()) {
+        if(this->getModel()->isActive()) {
           QFont font(p->font());
           font.setBold(true);
           p->setFont(font);
         }
         break; }
       case vs_solution: {
-        if(static_cast<vss_p>(this->getModel())->isActive()) {
+        if(this->getModel()->isActive()) {
           QFont font(p->font());
           font.setBold(true);
           p->setFont(font);
@@ -500,20 +501,20 @@ namespace VStudio {
   void VSSlnNode::slotRefreshText() {
     if(!sln->isReachable()) {
       setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [Unreachable]"));
+      setText(0, QString(sln->getName()).append("\n [unreachable]"));
       return;
     }
 
     if(!sln->isLoaded()) {
       setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [Load error]"));
+      setText(0, QString(sln->getName()).append("\n [load error]"));
       return;
     }
 
     // See if solution in "detached" state (i.e. no config selected for build)
     if(sln->isDetached()) {
       setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [Detached]"));
+      setText(0, QString(sln->getName()).append("\n [detached]"));
     }
     else {
       vcfg_cp cfg = sln->currentCfg();
@@ -531,6 +532,7 @@ namespace VStudio {
   VSPrjNode::VSPrjNode(uivse_p e, vsp_p p)
   : VSExplorerEntity(vs_project, e, p->getName())
   , prj(p) {
+    setMultiLinesEnabled(true);
     slotRefreshText();
   }
 
@@ -546,12 +548,27 @@ namespace VStudio {
   }
 
   void VSPrjNode::slotRefreshText() {
-    if(prj->isLoaded()) {
-      setPixmap(0, SmallIcon("tar"));
-    }
-    else {
+    if(!static_cast<vsfs_p>(prj)->isReachable()) {
       setPixmap(0, SmallIcon("error"));
+      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("unreachable"));
+      return;
     }
+
+    if(!static_cast<vsfs_p>(prj)->isLoaded()) {
+      setPixmap(0, SmallIcon("error"));
+      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("load error"));
+      return;
+    }
+
+    if(prj->isDetached()) {
+      setPixmap(0, SmallIcon("error"));
+      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("detached"));
+      return;
+    }
+
+    vcfg_cp cfg = prj->currentCfg();
+    setPixmap(0, SmallIcon("tar"));
+    setText(0, QString("%1\n [%2]").arg(prj->getName()).arg(cfg->toString()));
   }
 
   //===========================================================================
@@ -619,7 +636,7 @@ namespace VStudio {
     }
     else {
       setPixmap(0, SmallIcon("error"));
-      setText(0, QString(file->getName()).append("\n [%1]").arg("[Unreachable]"));
+      setText(0, QString(file->getName()).append("\n [%1]").arg("unreachable"));
     }
   }
 };

@@ -74,6 +74,12 @@ namespace VStudio {
 
   class VSFSStored {
     public:
+      enum e_state {
+        IS_REACHABLE = 0x00000001, /*! File can be reached for read|write */
+        IS_IN_SYNC = 0x00000002, /*! File is syncronized with its fs representation */
+        IS_LOADED_OK = 0x00000003, /*! File is found and parsed successfully */
+      };
+    public:
       VSFSStored();
       virtual ~VSFSStored();
 
@@ -84,6 +90,13 @@ namespace VStudio {
 
       bool isInSync() const;
       bool isReachable() const;
+      /** Checks FS based VSEntity for positive load status
+       * <b>e.g.</b>
+       * VSSolution - Tells if solution loading procedure succeded
+       * VSProject - Tells if project loading and parsing procedure succeded
+       * @return \b true if file was found and parsed successfully upon read
+       */
+      bool isLoaded() const;
 
       virtual bool write(bool synchronize=true) = 0;
       virtual bool write(QTextStream &stream, bool synchronize=true) = 0;
@@ -95,18 +108,24 @@ namespace VStudio {
     protected:
       QString path_rlt;
       QString path_abs;
-      bool in_sync;
-      bool reachable; // File can be reached for read|write
+      uint fsflg;
   };
 
   class VSEntity {
     public:
+      enum e_state {
+        IS_ACTIVE = 0x00000001,
+        IS_CONFIGURED = 0x00000002,
+      };
+    public:
       VSEntity(e_VSEntityType typ);
       virtual ~VSEntity();
 
-      e_VSEntityType getType() const { return type; }
+      e_VSEntityType getType() const;
       static void setPart(VSPart* part);
-      inline VSPart* part() const { return sys_part; }
+      VSPart* part() const;
+      bool isConfigured() const;
+      bool isActive() const;
 
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
@@ -119,6 +138,7 @@ namespace VStudio {
     protected:
       e_VSEntityType type;
       uivse_p uient;  // UI entity
+      uint enflg;
 
     private:
       static VSPart *sys_part; // System part
@@ -206,16 +226,10 @@ namespace VStudio {
       vcfg_cp currentCfg() const;
 
       void setActive(bool active=true);
-      bool isActive() const;
       bool setActivePrj(vsp_p project);
       bool setActivePrj(const QString &int_name);
       vsp_p getActivePrj() const;
       vsp_p getProject(const QString &int_name) const;
-      /**
-       * Tells if solution loading procedure succeded
-       * @return \b true if .sln file was found and parsed successfully upon read
-       */
-      bool isLoaded() const;
       bool isDetached() const;
 
       const pv_vsp_cr projs() const;
@@ -225,10 +239,9 @@ namespace VStudio {
       bool __read_parse_uid(QTextIStream &stream, QChar &control_chr, QUuid &uid);
 
     private:
-      uivss_p uisln;  // UI representation
+      uivss_p uisln;  // UI representation TODO: remove in favor of VSEntity::uient
       vsbb_p active_bb; // Active buildbox selected for this solution
       vsp_p active_prj; // Active project for this solution
-#ifdef USE_BOOST
       pv_vsp projects;
       pv_vsf filters;
       pv_vsbb bboxes;  // build boxes, used to buil|clean, etc entire solution
@@ -238,11 +251,6 @@ namespace VStudio {
        * Not filtered and allowed to have a cyclic dependencies
        */
       pv_vsmd mdeps;
-#else
-#error "VStudio: Boost support is no enabled"
-#endif
-      bool active;
-      bool load_ok; // Solution file .sln is found and parsed successfully
       e_VSSlnVersion version;
       int fmt_version; // Format version (something VS internal for .sln)
   };
@@ -296,35 +304,34 @@ namespace VStudio {
       bool selectCfg(const vcfg_cp parent_config);
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_cp parent_config) const;
+      vcfg_cp currentCfg() const;
       /** Get Build-Boxes for this project for non-modifying purposes
        * @return - const ref to vector with Build-Boxes
        */
       pv_vsbb_cr bbs() const;
 
       bool build();
-      /** Tells if project file was read and parsed successfully
-       * @return true if load was successfull
-       */
-      bool isLoaded() const;
+      bool isDetached() const;
 
     private:
-      bool __read_filter(QDomElement filter);
+      // bool __read_file(QDomElement el, vse_p parent);
+      /** Reads project unit file|filter
+       * @param unit dom element representing current parsed unit
+       * @param parent could be project itself, or filter
+       * @return <a>TRUE</a> if everything ok, <a>FALSE</a> if not
+       */
+      bool __read_unit(QDomElement unit, vse_p parent);
 
     private:
       e_VSPrjLangType lang; // Project choosen language
       vss_p sln;  // Parent solution
       uivsp_p uiprj; // UI representation
       vsbb_p active_bb; // Active buildbox
-#ifdef USE_BOOST
       pv_vsp deps; // Projects dependant on this one
       pv_vsp reqs; // Projects required to build this one, i.e. dependencies
       pv_vsf filters;
       pv_vsfl files;
       pv_vsbb bboxes;
-#else
-#endif
-      bool active;
-      bool load_ok; // Project .v*proj file was read and parsed successfully
       e_VSPrjVersion version;
       QDomDocument doc;
   };
@@ -353,10 +360,7 @@ namespace VStudio {
     private:
       vse_p parent; // Parent solution|filter|project
       uivsf_p uiflt; // UI representation
-#ifdef USE_BOOST
       pv_vse chld; // Children
-#else
-#endif
   };
 
   /** VS File model representation
@@ -401,7 +405,6 @@ namespace VStudio {
       QDomElement dom; // VS Dom representation of a file
       vsbb_p active_bb; // Active build-box, represents active configuration for this file
       pv_vsbb bboxes;
-      bool load_ok;
   };
   //END VS basic entities
   //===========================================================================
@@ -620,7 +623,7 @@ namespace VStudio {
 
     // VS Config interface methods:
       e_VSPlatform platform() const { return vspl.platform(); }
-      const QString toString() const;
+      QString toString() const;
       bool operator == (const vcfg_cr config) const;
       bool operator == (const vcfgcr_r cr) const;
 

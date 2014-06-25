@@ -354,6 +354,7 @@ namespace VStudio {
                         << " ]:[ " << slnbb->config().toString() << " ].\n";
 #endif
                     slnbb->setParentCfg(cfg);
+                    slnbb->setEnabled(is_enabled);
                   }
                 }
               } else {
@@ -525,6 +526,7 @@ namespace VStudio {
   }
 
   DomUtil::PairList VSPart::runEnvironmentVars() const {
+    return DomUtil::readPairListEntry ( *projectDom(), VSPART_XML_SECTION"/run/envvars", "envvar", "name", "value" );
   }
 
   QString VSPart::mainProgram() const {

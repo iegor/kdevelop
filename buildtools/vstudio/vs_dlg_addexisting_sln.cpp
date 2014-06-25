@@ -49,8 +49,9 @@ namespace VStudio {
   //===========================================================================
   // Visual studio file selector methods
   //===========================================================================
-  FileSelectorWidget::FileSelectorWidget(VSPart *part, KFile::Mode mode, QWidget *pnt/*=0*/, const char *name/*=0*/)
-  : QWidget(pnt, name) {
+  FileSelectorWidget::FileSelectorWidget(VSPart *p, KFile::Mode mode, QWidget *pnt/*=0*/, const char *name/*=0*/)
+  : QWidget(pnt, name)
+  , part(p) {
     QVBoxLayout *vl = new QVBoxLayout(this);
 
     QHBox *hb = new QHBox(this);
