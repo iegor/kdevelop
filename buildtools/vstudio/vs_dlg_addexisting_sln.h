@@ -21,6 +21,12 @@
 /* KDE */
 #include <kfile.h>
 #include <kdiroperator.h>
+#include <kcombobox.h>
+#include <kurlcombobox.h>
+#include <kurlcompletion.h>
+
+/* KDevelop */
+#include <kimporticonview.h>
 
 /* VStudio */
 #include "vs_model.h"
@@ -57,7 +63,27 @@ namespace VStudio {
 
       KDnDDirOperator* dirOperator() const;
 
+    public slots:
+      void slotFilterChanged(const QString &flt);
+      void setDir(KURL& url);
+      void setDir(const QString &dir);
+
+    private slots:
+      void cmbPathActivated(const KURL &url);
+      void cmbPathReturnPressed(const QString &url);
+      void dirUrlEntered(const KURL &url);
+      void dirFinishedLoading();
+      void filterReturnPressed(const QString &flt);
+
+    protected:
+      void focusInEvent(QFocusEvent *focus_event);
+      void dragEnterEvent(QDragEnterEvent *drag_enter_event);
+      void dropEvent(QDropEvent *drop_event);
+
     private:
+      KURLComboBox *pathcombo;
+      KHistoryCombo *fltcombo;
+      QLabel *fltico;
       QPushButton *home, *up, *back, *forward;
       KDnDDirOperator *dir;
       VSPart *part;
@@ -67,11 +93,23 @@ namespace VStudio {
   };
 
   class AddExistingSlnDlg : public AddExistingDlgBase {
+    Q_OBJECT
     public:
-      AddExistingSlnDlg(VSPart* part);
+      AddExistingSlnDlg(VSPart* part, QWidget *parent=0, const char *name=0, bool modal=TRUE, WFlags fl=0);
+      ~AddExistingSlnDlg();
+
+    protected slots:
+      void slotDropped(QDropEvent* drop_event);
+      void slotOk();
+
+    protected:
+      void importItems();
 
     private:
+      FileSelectorWidget *fselector; // File selector widget
+      KImportIconView *iview; // Import icon-view widget
       VSPart *part;
+      KFileItemList ilist; // List of imported items via drag&drop
   };
 }; /* namespace VStudio */
 //END //VStudio namespace

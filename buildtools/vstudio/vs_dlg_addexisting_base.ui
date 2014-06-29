@@ -34,10 +34,10 @@
             <cstring>unnamed</cstring>
         </property>
         <property name="margin">
-            <number>4</number>
+            <number>2</number>
         </property>
         <property name="spacing">
-            <number>4</number>
+            <number>2</number>
         </property>
         <widget class="QSplitter">
             <property name="name">
@@ -67,6 +67,11 @@
                 <property name="title">
                     <string>&amp;Source Directory</string>
                 </property>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                </vbox>
             </widget>
             <widget class="QGroupBox">
                 <property name="name">
@@ -89,16 +94,38 @@
                 <property name="title">
                     <string>Add &amp;Following</string>
                 </property>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                </vbox>
             </widget>
         </widget>
         <widget class="QLayoutWidget">
             <property name="name">
-                <cstring>layout1</cstring>
+                <cstring>layout2</cstring>
             </property>
             <hbox>
                 <property name="name">
                     <cstring>unnamed</cstring>
                 </property>
+                <property name="margin">
+                    <number>2</number>
+                </property>
+                <property name="spacing">
+                    <number>2</number>
+                </property>
+                <widget class="KProgress">
+                    <property name="name">
+                        <cstring>pbr_adding</cstring>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>480</width>
+                            <height>0</height>
+                        </size>
+                    </property>
+                </widget>
                 <spacer>
                     <property name="name">
                         <cstring>spacer1</cstring>
@@ -111,7 +138,7 @@
                     </property>
                     <property name="sizeHint">
                         <size>
-                            <width>501</width>
+                            <width>100</width>
                             <height>20</height>
                         </size>
                     </property>
@@ -151,4 +178,7 @@
     </connection>
 </connections>
 <layoutdefaults spacing="6" margin="11"/>
+<includehints>
+    <includehint>kprogress.h</includehint>
+</includehints>
 </UI>

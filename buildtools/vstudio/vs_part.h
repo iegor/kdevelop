@@ -109,6 +109,8 @@ namespace VStudio {
     bool createSlnCfg(vss_p sln);
     vcfg_p getCfg(const QString& c) const;
 
+    pv_vse_cr solutions() const;
+
   private slots:
     void slotAddSolution();
     void slotBuildSolution();
@@ -166,8 +168,8 @@ namespace VStudio {
 #else
     QPtrList<vse_p> m_entities;
 #endif
-    QString m_prjpath;
-    QString m_prjname;
+    // QString m_prjpath;
+    // QString m_prjname;
 
   signals:
     void uisync();

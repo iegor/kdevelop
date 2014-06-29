@@ -72,7 +72,7 @@ namespace VStudio {
     mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"), i18n("VS Explorer, manages vs solution files"));
 
     // Add solution action
-    actAddSolution = new KAction(i18n("Insert solution"), "make_kdevelop", 0, this,
+    actAddSolution = new KAction(i18n("Insert solution"), "fileimport.png", 0, this,
                                  SLOT(slotAddSolution()), actionCollection(), VSPART_ACTION_ADD_SOLUTION);
     actAddSolution->setToolTip(i18n(VSPART_ACTION_ADD_SOLUTION_TIP));
     actAddSolution->setWhatsThis(i18n(VSPART_ACTION_ADD_SOLUTION_WIT));
@@ -239,8 +239,8 @@ namespace VStudio {
   }
 
   void VSPart::openProject(const QString &dirName, const QString &projectName) {
-    m_prjpath = dirName;
-    m_prjname = projectName;
+    m_projectPath = dirName;
+    m_projectName = projectName;
 
     QDomDocument &dom = *projectDom();
     QDomElement general = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
@@ -289,7 +289,7 @@ namespace VStudio {
           return;
         }
 
-        sln->setAbsPath(QString(m_prjpath).append("/").append(sln_path));
+        sln->setAbsPath(QString(m_projectPath).append("/").append(sln_path));
         sln->setRelPath(sln_path);
 
         //NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
@@ -561,16 +561,34 @@ namespace VStudio {
     return "";
   }
 
-  void VSPart::addFile(const QString &/*fileName*/) {
+  void VSPart::addFile(const QString &fl) {
+#ifdef DEBUG
+    kddbg << "adding file: " << fl << endl;
+#endif
   }
 
-  void VSPart::addFiles(const QStringList &/*fileList*/) {
+  void VSPart::addFiles(const QStringList &list) {
+#ifdef DEBUG
+    QStringList::const_iterator it;
+    for(it=list.begin(); it!=list.end(); ++it) {
+      kddbg << "[L] adding file: " << (*it) << endl;
+    }
+#endif
   }
 
-  void VSPart::removeFile(const QString &/*fileName*/) {
+  void VSPart::removeFile(const QString &fl) {
+#ifdef DEBUG
+    kddbg << "removing file: " << fl << endl;
+#endif
   }
 
-  void VSPart::removeFiles(const QStringList &/*fileList*/) {
+  void VSPart::removeFiles(const QStringList &list) {
+#ifdef DEBUG
+    QStringList::const_iterator it;
+    for(it=list.begin(); it!=list.end(); ++it) {
+      kddbg << "[L] remove file: " << (*it) << endl;
+    }
+#endif
   }
 
   KDevProject::Options VSPart::options() const {
@@ -585,7 +603,55 @@ namespace VStudio {
     kddbg << VSPART_WARNING"Saving session partially.\n";
   }
 
-  bool VSPart::loadVsSolution(const QString &/*internal_name*/, const QString &/*path*/) {
+  bool VSPart::loadVsSolution(const QString &iname, const QString &path) {
+    // Create model::solution item
+    vss_p sln = new VSSolution(iname);
+    if(sln != 0) {
+      sln->setAbsPath(path);
+      QString r_path;
+      MakeRelative(m_projectPath, sln->getAbsPath(), r_path);
+#ifdef DEBUG
+      kddbg << "Relative path: " << r_path << endl;
+#endif
+      sln->setRelPath(r_path);
+      /* NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
+          stored in .kdevelop file */
+#ifdef USE_BOOST
+      m_entities.push_back(sln);
+#else
+      m_entities.append(sln);
+#endif
+      // Read and parse sln file
+      if(sln->read()) {
+        if(!sln->setActivePrj(active_prj)) {
+          kddbg << VSPART_ERROR"Can't activate a prj: " << active_prj << " in sln: " << sln->getName() << endl;
+        }
+      } else { kddbg << g_err_slnload.arg(iname); }
+
+      // Try to attach to current config
+      vsbb_p slnbb = sln->getBB(active_cfg->toString());
+      if(slnbb != 0) {
+#ifdef DEBUG
+        kddbg << "KPROJ[ " << active_cfg->toString() << " ] <<< SLN[ " << sln->getName()
+            << " ]:[ " << slnbb->config().toString() << " ].\n";
+#endif
+        slnbb->setParentCfg(active_cfg);
+        slnbb->setEnabled(true);
+      }
+
+      // Generate dependencies  from meta-dependency information
+      if(!sln->updateDependencies()) {
+        kddbg << VSPART_ERROR"Can't gen dependencies from meta-dependencies.\n";
+      }
+
+      // Create UI representation
+      if(!sln->populateUI()) {
+        kddbg << VSPART_ERROR"Can't use sln. UI update failed.\n";
+      }
+
+      return true;
+    }
+    else { kddbg << g_err_notenoughmem.arg(VSPART_SOLUTION).arg("VSPart::openProject"); }
     return false;
   }
 
@@ -869,9 +935,16 @@ namespace VStudio {
     return 0;
   }
 
+  /*inline*/ pv_vse_cr VSPart::solutions() const {
+    return m_entities;
+  }
+
   //BEGIN // Slot methods
   void VSPart::slotAddSolution() {
-    kddbg << "slotAddSolution test" << endl;
+    // kddbg << "slotAddSolution test" << endl;
+    AddExistingSlnDlg dlg(this, m_explorer_widget, "add existing sln", FALSE);
+    dlg.setCaption(i18n("Add Existing Solution"));
+    dlg.exec();
   }
 
   void VSPart::slotBuildSolution() {

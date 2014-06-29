@@ -48,11 +48,7 @@ namespace VStudio {
         return false;
       }
 #endif
-#ifdef USE_BOOST
-      pnts.push_back(p);
-#else
-#error "VStudio: Boost support is no enabled" //TODO: Implement this
-#endif
+      BOOSTVEC_PUSHBACK(pnts, p);
       ++rfc;
       return true;
     }
@@ -76,10 +72,10 @@ namespace VStudio {
       BOOSTVEC_OFOR(it, pnts) { if((*it) == p) { break; } }
 #ifdef USE_BOOST
       if(it!=pnts.end()) {
+        pnts.erase(it);
 #else
 #error "VStudio: Boost support is no enabled" //TODO: Implement this
 #endif
-        pnts.erase(it);
       } else {
         kddbg << VSPART_ERROR"Can't release with false parent.\n";
         return *this;

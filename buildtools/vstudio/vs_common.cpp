@@ -294,6 +294,15 @@ namespace VStudio {
     return path;
   }
 
+  bool MakeRelative(QString origin_path, QString path, QString& relative) {
+    // Normalize paths
+    NormalizeSlashes(origin_path);
+    NormalizeSlashes(path);
+
+    relative = path.mid(origin_path.length() + 1);
+    return true;
+  }
+
   //===========================================================================
   // VS Part error message strings:
   //===========================================================================

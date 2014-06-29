@@ -1,6 +1,11 @@
 <!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
 <kpartgui name="kdevpart_vs" version="1">
 <MenuBar>
+    <Menu name="file">
+        <Action name="project_addsolution" />
+        <Action name="project_addproject" />
+        <Action name="project_addfile" />
+    </Menu>
     <Menu name="project" >
         <Action name="project_addsolution" />
         <Action name="project_addproject" />

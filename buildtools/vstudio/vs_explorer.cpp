@@ -401,6 +401,10 @@ namespace VStudio {
     return 0;
   }
 
+  void VSExplorer::emitAddedFiles(const QStringList &list) {
+    // emit m_part->addedFilesToProject(list);
+  }
+
   //===========================================================================
   // Visual studio SetPathWidget methods
   //===========================================================================

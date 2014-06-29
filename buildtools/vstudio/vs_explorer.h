@@ -66,6 +66,8 @@ namespace VStudio {
 
     uivse_p getByUID(const QUuid &uid) const;
 
+    void emitAddedFiles(const QStringList& list);
+
   protected:
     void contentsContextMenuEvent(QContextMenuEvent*);
     void maybeTip(QPoint const &);
