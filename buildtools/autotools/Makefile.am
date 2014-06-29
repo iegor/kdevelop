@@ -23,10 +23,10 @@ libkdevautoproject_la_SOURCES = addapplicationdlg.cpp addapplicationdlgbase.ui \
 	autoprojectpart.cpp autoprojectviewbase.ui autoprojectwidget.cpp autosubprojectview.cpp \
 	autotoolsaction.cpp choosetargetdialog.cpp choosetargetdlgbase.ui \
 	configureoptionswidget.cpp configureoptionswidgetbase.ui fileselectorwidget.cpp \
-	kimporticonview.cpp makefilehandler.cpp managecustomcommand.cpp managecustomcommandsbase.ui \
-	misc.cpp removefiledlg.cpp removefiledlgbase.ui removetargetdlg.cpp \
-	removetargetdlgbase.ui subprojectoptionsdlg.cpp subprojectoptionsdlgbase.ui \
-	targetoptionsdlg.cpp targetoptionsdlgbase.ui
+	makefilehandler.cpp managecustomcommand.cpp managecustomcommandsbase.ui misc.cpp \
+	removefiledlg.cpp removefiledlgbase.ui removetargetdlg.cpp removetargetdlgbase.ui \
+	subprojectoptionsdlg.cpp subprojectoptionsdlgbase.ui targetoptionsdlg.cpp \
+	targetoptionsdlgbase.ui
 
 METASOURCES = AUTO
 
