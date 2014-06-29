@@ -27,10 +27,12 @@ private slots:
   void set_style();
   void set_fill();
   void set_indent();
-  void set_brackets();
-  void set_blocks();
+  void set_blocks_and_brackets();
+  void slotSetBrackets(int brackets_mode);
+  void slotSetIndentMode(int mode);
   void set_oneliners();
   void set_padding();
+  void slotToolsPage(int current);
 
 private:
   void set_example();
@@ -44,6 +46,10 @@ private:
   const context m_context;
   QString m_lastExt;
   bool m_bUseGlobalOpts;
+
+  // Utils:
+  QMap<QString, QVariant>& getContextOptions();
+
 };
 
 #endif

@@ -20,6 +20,8 @@
 #define ASOPTS_FILLFORCE                "FillForce"
 #define ASOPTS_FILLEMPTYLINES           "FillEmptyLines"
 #define ASOPTS_FILL                     "Fill"
+#define ASOPTS_FILL_TABS                "Tabs"
+#define ASOPTS_FILL_SPACES              "Spaces"
 #define ASOPTS_MAXSTATEMENT             "MaxStatement"
 #define ASOPTS_MINCONDITIONAL           "MinConditional"
 // Indentation:
@@ -32,12 +34,20 @@
 #define ASOPTS_INDENTBLOCKS             "IndentBlocks"
 #define ASOPTS_INDENTPREPROCS           "IndentPreprocessors"
 // Brackets style:
-#define ASOPTS_BRACKETS                 "Brackets"
-#define ASOPTS_BRACKETS_CH              "BracketsCloseHeaders"
+#define ASOPTS_BRACKETS                 "bm"
+#define ASOPTS_BRACKETS_NONE            "bm_none"
+#define ASOPTS_BRACKETS_ATTACH          "bm_attach"
+#define ASOPTS_BRACKETS_BREAK           "bm_break"
+#define ASOPTS_BRACKETS_LINUX           "bm_linux"
+#define ASOPTS_BRACKETS_STRAUSTRUP      "bm_straustrup"
+#define ASOPTS_BRACKETS_RUNIN           "bm_runin"
+#define ASOPTS_BRACKETS_CH              "bm_cheaders"
+#define ASOPTS_BRACKETS_ADD             "b_add"
+#define ASOPTS_BRACKETS_ADD_ONELINE     "b_add_oneline"
 // Block brake:
-#define ASOPTS_BLOCK_BREAK              "BlockBreak"
-#define ASOPTS_BLOCK_BREAKALL           "BlockBreakAll"
-#define ASOPTS_BLOCK_BREAKIFELSE        "BlockIfElse"
+#define ASOPTS_BLOCK_BREAK              "blk_break"
+#define ASOPTS_BLOCK_BREAKALL           "blk_breakall"
+#define ASOPTS_BLOCK_BREAKIFELSE        "blk_breakifelse"
 // Oneliners:
 #define ASOPTS_KEEPSTATEMENTS           "KeepStatements"
 #define ASOPTS_KEEPBLOCKS               "KeepBlocks"
@@ -46,10 +56,16 @@
 #define ASOPTS_PADPARENTH_OUT           "PadParenthesesOut"
 #define ASOPTS_PADPARENTH_UN            "PadParenthesesUn"
 #define ASOPTS_PADOPERATORS             "PadOperators"
+#define ASOPTS_PADHEADERS               "pad_header"
 
 #define ASOPTS_PRJCONFIGELEMENT_ROOT            "AStyle"
 #define ASOPTS_PRJCONFIGELEMENT_EXT             "Extensions"
 #define ASOPTS_PRJCONFIGATTR_EXT                "Ext"
+
+enum e_AStyle_IndentWith {
+  AS_SPACES = 0,
+  AS_TABS,
+};
 
 class ASStringIterator : public astyle::ASSourceIterator
 {
@@ -90,15 +106,13 @@ private:
 	QString m_indentString;
 };
 
-/*!
-  Converts astyle enum value to string usable in internal configuration
- */
-QString fmtstyle2string(enum astyle::FormatStyle style);
+QString fmtstyle2string(astyle::FormatStyle style);
+astyle::FormatStyle string2fmtstyle(QString &s);
 
-/**
-  Converts style string from kdevelop config to astyle enum value
- */
-enum astyle::FormatStyle string2fmtstyle(QString &s);
+astyle::BracketMode string2BrackeMode(const QString &mode);
+QString bracketMode2String(astyle::BracketMode mode);
 
+QString indentMode2String(e_AStyle_IndentWith mode);
+e_AStyle_IndentWith string2IndentMode(const QString &str);
 
 #endif

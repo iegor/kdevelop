@@ -91,11 +91,34 @@ void AStylePart::loadGlobal() {
   //   kdDebug(9009) << "Load global"<<endl;
   KConfig *config = kapp->config();
   config->setGroup("AStyle");
-  QString options = config->readEntry("Options","BlockBreak=0,BlockBreakAll=0,BlockIfElse=0,Brackets=Break,"
-    "BracketsCloseHeaders=0,FStyle=UserDefined,Fill=Tabs,FillCount=4,FillEmptyLines=0,FillForce=0,"
-    "IndentBlocks=0,IndentBrackets=0,IndentCases=0,IndentClasses=1,IndentLabels=1,IndentNamespaces=1,"
-    "IndentPreprocessors=0,IndentSwitches=1,KeepBlocks=1,KeepStatements=1,MaxStatement=40,MinConditional=-1,"
-    "PadOperators=0,PadParenthesesIn=1,PadParenthesesOut=1,PadParenthesesUn=1,");
+  QString options = config->readEntry("Options",
+                                      ASOPTS_BLOCK_BREAK"=0,"
+                                      ASOPTS_BLOCK_BREAKALL"=0,"
+                                      ASOPTS_BLOCK_BREAKIFELSE"=0,"
+                                      ASOPTS_BRACKETS"="ASOPTS_BRACKETS_BREAK","
+                                      ASOPTS_BRACKETS_CH"=0,"
+                                      ASOPTS_FSTYLE"=UserDefined,"
+                                      ASOPTS_FILL"="ASOPTS_FILL_SPACES","
+                                      ASOPTS_FILLCOUNT"=4,"
+                                      ASOPTS_FILLEMPTYLINES"=0,"
+                                      ASOPTS_FILLFORCE"=0,"
+                                      ASOPTS_INDENTBLOCKS"=0,"
+                                      ASOPTS_INDENTBRACKETS"=0,"
+                                      ASOPTS_INDENTCASES"=0,"
+                                      ASOPTS_INDENTCLASSES"=1,"
+                                      ASOPTS_INDENTLABELS"=1,"
+                                      ASOPTS_INDENTNAMESPACES"=1,"
+                                      ASOPTS_INDENTPREPROCS"=0,"
+                                      ASOPTS_INDENTSWITCHES"=1,"
+                                      ASOPTS_KEEPBLOCKS"=1,"
+                                      ASOPTS_KEEPSTATEMENTS"=1,"
+                                      ASOPTS_MAXSTATEMENT"=40,"
+                                      ASOPTS_MINCONDITIONAL"=-1,"
+                                      ASOPTS_PADOPERATORS"=0,"
+                                      ASOPTS_PADPARENTH_IN"=1,"
+                                      ASOPTS_PADPARENTH_OUT"=1,"
+                                      ASOPTS_PADPARENTH_UN"=1,"
+                                      ASOPTS_PADHEADERS"=1");
   m_globalExtensions=QStringList::split(",",config->readEntry("Extensions",defaultFormatExtensions));
 
   QStringList pairs = QStringList::split(",", options);
@@ -193,8 +216,8 @@ void AStylePart::beautifySource()
 		}
 	}
 
-	int wsCount = m_project["FillCount"].toInt();
-	if (m_project["Fill"].toString() == "Tabs")
+	int wsCount = m_project[ASOPTS_FILLCOUNT].toInt();
+	if (m_project[ASOPTS_FILL].toString() == ASOPTS_FILL_TABS)
 	{
 		// tabs and wsCount spaces to be a tab
 		QString replace;
@@ -205,7 +228,7 @@ void AStylePart::beautifySource()
 		indentWith=indentWith.remove(' ');
 	} else
 	{
-		if ( m_project["FillForce"].toBool()){
+		if ( m_project[ASOPTS_FILLFORCE].toBool()){
 			//convert tabs to spaces
 			QString replace;
 			for (int i =0;i<wsCount;i++)

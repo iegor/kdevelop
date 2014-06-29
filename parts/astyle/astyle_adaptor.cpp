@@ -5,9 +5,13 @@
 
 #include <string>
 
+/* Qt */
 #include <qradiobutton.h>
 #include <qspinbox.h>
 #include <qcheckbox.h>
+#include <qcombobox.h>
+
+/* KDE */
 #include <kdebug.h>
 #include <kapplication.h>
 #include <kconfig.h>
@@ -54,10 +58,55 @@ QString fmtstyle2string(enum astyle::FormatStyle style) {
   }
 }
 
+/**
+ * Converts QString to astyle::BracketMode
+ */
+astyle::BracketMode string2BrackeMode(const QString &mode) {
+  if(mode == ASOPTS_BRACKETS_ATTACH) { return astyle::ATTACH_MODE; }
+  else if(mode == ASOPTS_BRACKETS_BREAK) { return astyle::BREAK_MODE; }
+  else if(mode == ASOPTS_BRACKETS_LINUX) { return astyle::LINUX_MODE; }
+  else if(mode == ASOPTS_BRACKETS_STRAUSTRUP) { return astyle::STROUSTRUP_MODE; }
+  else if(mode == ASOPTS_BRACKETS_RUNIN) { return astyle::RUN_IN_MODE; }
+  else { return astyle::NONE_MODE; }
+}
+
+/*!
+ * Converts astyle::BracketMode to QString
+ */
+QString bracketMode2String(astyle::BracketMode mode) {
+  switch(mode) {
+    case astyle::ATTACH_MODE: { return ASOPTS_BRACKETS_ATTACH; }
+    case astyle::BREAK_MODE: { return ASOPTS_BRACKETS_BREAK; }
+    case astyle::LINUX_MODE: { return ASOPTS_BRACKETS_LINUX; }
+    case astyle::STROUSTRUP_MODE: { return ASOPTS_BRACKETS_STRAUSTRUP; }
+    case astyle::RUN_IN_MODE: { return ASOPTS_BRACKETS_RUNIN; }
+    default: { return "unknown"; }
+  }
+}
+
+/*!
+ * Converts e_AStyle_IndentWith to QString
+ */
+QString indentMode2String(e_AStyle_IndentWith mode) {
+  switch(mode) {
+    case AS_SPACES: { return ASOPTS_FILL_SPACES; }
+    case AS_TABS: { return ASOPTS_FILL_TABS; }
+    default: { return "unknown"; }
+  }
+}
+
+/*!
+ * Converts QString to e_AStyle_IndentWith
+ */
+e_AStyle_IndentWith string2IndentMode(const QString &str) {
+  if(str.compare(ASOPTS_FILL_SPACES) == 0) { return AS_SPACES; }
+  return AS_TABS;
+}
+
 ASStringIterator::ASStringIterator(const QString &txt)
   : ASSourceIterator(), text(txt)
 {
-  contents = QStringList::split('\n', text);
+  contents = QStringList::split('\n', text, TRUE);
   fetch = contents.begin();
   peek = fetch;
 
@@ -77,13 +126,13 @@ bool ASStringIterator::hasMoreLines() const {
 }
 
 std::string ASStringIterator::nextLine(bool /*deleted*/) {
-  std::string str = (*fetch).ascii();
+  std::string str = (*fetch).utf8().data();
   ++fetch;
   return str;
 }
 
 std::string ASStringIterator::peekNextLine() {
-  std::string str = (*peek).ascii();
+  std::string str = (*peek).utf8().data();
   ++peek;
   return str;
 }
@@ -111,19 +160,22 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
 	}
 
   // fill
-	int wsCount = options[ASOPTS_FILLCOUNT].toInt();
-  if (options[ASOPTS_FILL].toString() == "Tabs")
-  {
-	  setTabIndentation(wsCount, options[ASOPTS_FILLFORCE].toBool() );
-	  m_indentString = "\t";
+  switch(string2IndentMode(options[ASOPTS_FILL].toString())) {
+  case AS_SPACES: {
+    setSpaceIndentation(options[ASOPTS_FILLCOUNT].toInt());
+    m_indentString = "";
+    m_indentString.fill(' ', options[ASOPTS_FILLCOUNT].toInt());
+    setTabSpaceConversionMode(options[ASOPTS_FILLFORCE].toBool());
+    break;
   }
-  else {
-	  setSpaceIndentation(wsCount);
-	  m_indentString = "";
-	  m_indentString.fill(' ', wsCount);
+  case AS_TABS: {
+    setTabIndentation(options[ASOPTS_FILLCOUNT].toInt(), options[ASOPTS_FILLFORCE].toBool());
+    m_indentString = "\t";
+    break;
+  }
+  default: { break; }
   }
 
-  setTabSpaceConversionMode(options[ASOPTS_FILLFORCE].toBool());
   setEmptyLineFill(options[ASOPTS_FILLEMPTYLINES].toBool());
 
   // indent
@@ -152,9 +204,11 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
   else if(s == "Linux") setBracketFormatMode(astyle::LINUX_MODE);
   else setBracketFormatMode(astyle::NONE_MODE);
   */
-  setBracketFormatMode(astyle::LINUX_MODE);
-
+  setBracketFormatMode(string2BrackeMode(options[ASOPTS_BRACKETS].toString()));
+  setAddBracketsMode(options[ASOPTS_BRACKETS_ADD].toBool());
+  setAddOneLineBracketsMode(options[ASOPTS_BRACKETS_ADD_ONELINE].toBool());
   setBreakClosingHeaderBracketsMode(options[ASOPTS_BRACKETS_CH].toBool());
+
   // blocks
   setBreakBlocksMode(options[ASOPTS_BLOCK_BREAK].toBool());
   if (options[ASOPTS_BLOCK_BREAKALL].toBool()){
@@ -168,6 +222,7 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
   setParensInsidePaddingMode(options[ASOPTS_PADPARENTH_IN].toBool());
   setParensOutsidePaddingMode(options[ASOPTS_PADPARENTH_OUT].toBool());
   setParensUnPaddingMode(options[ASOPTS_PADPARENTH_UN].toBool());
+  setParensHeaderPaddingMode(options[ASOPTS_PADHEADERS].toBool());
 
   // oneliner
   setBreakOneLineBlocksMode(!options[ASOPTS_KEEPBLOCKS].toBool());
@@ -175,34 +230,39 @@ KDevFormatter::KDevFormatter(const QMap<QString, QVariant>& options)
 
   /*NOTE: For now this is hardcoded, but in the future this should be initialized from file settings or
    in project settings or in KDevelop settings, somewhere, maybe something ierarchical */
-  setLineEndFormat(astyle::LINEEND_LINUX);
+  //setLineEndFormat(astyle::LINEEND_LINUX);
+
+  setDeleteEmptyLinesMode(false);
 }
 
 KDevFormatter::KDevFormatter( AStyleWidget * widget )
 {
-	setCStyle();
+  setCStyle();
 
   int style = widget->get_selected_style();
   if(style != ASOPTS_FSTYLE_USERDEFINED_ID) {
     setFormattingStyle((enum astyle::FormatStyle)style);
-		return;
-	}
+    return;
+  }
 
-	// fill
-	if ( widget->Fill_Tabs->isChecked() )
-	{
-		setTabIndentation(widget->Fill_TabCount->value(), widget->Fill_ForceTabs->isChecked());
-		m_indentString = "\t";
-	}
-	else
-	{
-		setSpaceIndentation( widget->Fill_SpaceCount->value() );
-		m_indentString = "";
-		m_indentString.fill(' ', widget->Fill_SpaceCount->value());
-	}
+  // fill
+  switch(static_cast<e_AStyle_IndentWith>(widget->cmb_indentwith->currentItem())) {
+    case AS_SPACES: {
+      setSpaceIndentation(widget->sb_count->value());
+      m_indentString = "";
+      m_indentString.fill(' ', widget->sb_count->value());
+      setTabSpaceConversionMode(widget->chb_indentforce->isChecked());
+      break;
+    }
+    case AS_TABS: {
+      setTabIndentation(widget->sb_count->value(), widget->chb_indentforce->isChecked());
+      m_indentString = "\t";
+      break;
+    }
+    default: { break; }
+  }
 
-	setTabSpaceConversionMode(widget->Fill_ConvertTabs->isChecked());
-	setEmptyLineFill(widget->Fill_EmptyLines->isChecked());
+  setEmptyLineFill(widget->Fill_EmptyLines->isChecked());
 
   // indent
   setSwitchIndent( widget->Indent_Switches->isChecked() );
@@ -215,48 +275,39 @@ KDevFormatter::KDevFormatter( AStyleWidget * widget )
   setPreprocDefineIndent(widget->Indent_Preprocessors->isChecked());
   setPreprocConditionalIndent(false);
 
-	// continuation
-	setMaxInStatementIndentLength( widget->Continue_MaxStatement->value() );
-	setMinConditionalIndentOption( widget->Continue_MinConditional->value() );
-    setMinConditionalIndentLength();
+  // Continuation
+  setMaxInStatementIndentLength( widget->Continue_MaxStatement->value() );
+  setMinConditionalIndentOption( widget->Continue_MinConditional->value() );
+  setMinConditionalIndentLength();
 
-	// brackets
-	if ( widget->Brackets_Break->isChecked() )
-	{
-		setBracketFormatMode( astyle::BREAK_MODE );
-	}
-	else if ( widget->Brackets_Attach->isChecked() )
-	{
-		setBracketFormatMode( astyle::ATTACH_MODE );
-	}
-	else if ( widget->Brackets_Linux->isChecked())
-	{
-		setBracketFormatMode( astyle::LINUX_MODE );
-	}
-	else{
-		setBracketFormatMode( astyle::NONE_MODE );
-	}
+  // Brackets
+  setBracketFormatMode(static_cast<astyle::BracketMode>(widget->cmb_brackets->currentItem()));
+  setAddBracketsMode(widget->chb_add_brackets->isChecked());
+  setAddOneLineBracketsMode(widget->chb_add_brackets_oneline->isChecked());
+  setBreakClosingHeaderBracketsMode( widget->Brackets_CloseHeaders->isChecked());
 
-	setBreakClosingHeaderBracketsMode( widget->Brackets_CloseHeaders->isChecked());
+  // Blocks
+  setBreakElseIfsMode(widget->Block_IfElse->isChecked());
+  if(widget->Block_BreakAll->isChecked()) {
+    setBreakBlocksMode(true);
+    setBreakClosingHeaderBlocksMode(true);
+  }
+  else {
+    setBreakBlocksMode(widget->Block_Break->isChecked());
+  }
 
-	// blocks
-	setBreakBlocksMode(widget->Block_Break->isChecked());
-	if (widget->Block_BreakAll->isChecked()){
-		setBreakBlocksMode(true);
-		setBreakClosingHeaderBlocksMode(true);
-	}
-	setBreakElseIfsMode(widget->Block_IfElse->isChecked());
+  // padding
+  setOperatorPaddingMode(widget->Pad_Operators->isChecked());
+  setParensInsidePaddingMode(widget->Pad_ParenthesesIn->isChecked());
+  setParensOutsidePaddingMode(widget->Pad_ParenthesesOut->isChecked());
+  setParensUnPaddingMode(widget->Pad_ParenthesesUn->isChecked());
+  setParensHeaderPaddingMode(widget->chb_parens_header->isChecked());
 
-	// padding
-	setOperatorPaddingMode( widget->Pad_Operators->isChecked() );
+  // oneliner
+  setBreakOneLineBlocksMode(!widget->Keep_Blocks->isChecked());
+  setSingleStatementsMode(!widget->Keep_Statements->isChecked());
 
-	setParensInsidePaddingMode( widget->Pad_ParenthesesIn->isChecked() );
-	setParensOutsidePaddingMode( widget->Pad_ParenthesesOut->isChecked() );
-	setParensUnPaddingMode( widget->Pad_ParenthesesUn->isChecked() );
-
-	// oneliner
-	setBreakOneLineBlocksMode( !widget->Keep_Blocks->isChecked() );
-	setSingleStatementsMode( !widget->Keep_Statements->isChecked() );
+  setDeleteEmptyLinesMode(false);
 }
 
 bool KDevFormatter::predefinedStyle( const QString & style )

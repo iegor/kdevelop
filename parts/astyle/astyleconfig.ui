@@ -8,17 +8,29 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>922</width>
-            <height>644</height>
+            <width>1080</width>
+            <height>678</height>
         </rect>
     </property>
     <property name="sizePolicy">
         <sizepolicy>
-            <hsizetype>7</hsizetype>
+            <hsizetype>0</hsizetype>
             <vsizetype>7</vsizetype>
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
         </sizepolicy>
+    </property>
+    <property name="minimumSize">
+        <size>
+            <width>1080</width>
+            <height>500</height>
+        </size>
+    </property>
+    <property name="maximumSize">
+        <size>
+            <width>1920</width>
+            <height>32767</height>
+        </size>
     </property>
     <property name="caption">
         <string>Artistic Style Configuration</string>
@@ -33,7 +45,820 @@
         <property name="spacing">
             <number>2</number>
         </property>
-        <widget class="QGroupBox" row="0" column="1" rowspan="7" colspan="1">
+        <widget class="QToolBox" row="0" column="0">
+            <property name="name">
+                <cstring>tb_astyle</cstring>
+            </property>
+            <property name="sizePolicy">
+                <sizepolicy>
+                    <hsizetype>0</hsizetype>
+                    <vsizetype>5</vsizetype>
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                </sizepolicy>
+            </property>
+            <property name="minimumSize">
+                <size>
+                    <width>250</width>
+                    <height>500</height>
+                </size>
+            </property>
+            <property name="maximumSize">
+                <size>
+                    <width>250</width>
+                    <height>32767</height>
+                </size>
+            </property>
+            <property name="frameShape">
+                <enum>TabWidgetPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>Sunken</enum>
+            </property>
+            <property name="midLineWidth">
+                <number>5</number>
+            </property>
+            <property name="currentIndex">
+                <number>0</number>
+            </property>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tbp_general</cstring>
+                </property>
+                <property name="backgroundMode">
+                    <enum>PaletteBackground</enum>
+                </property>
+                <attribute name="label">
+                    <string>General</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QComboBox">
+                        <property name="name">
+                            <cstring>qcmb_style</cstring>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>qchb_useglobal</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Use gl&amp;obal</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+O</string>
+                        </property>
+                    </widget>
+                    <widget class="QTextEdit">
+                        <property name="name">
+                            <cstring>qtxe_generalext</cstring>
+                        </property>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>5</hsizetype>
+                                <vsizetype>7</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="text">
+                            <string>*.c *.h
+*.cpp *.hpp 
+*.C *.H 
+*.cxx *.hxx 
+*.cc *.hh 
+*.c++ *.h++
+*.inl *.tlh
+*.moc *.xpm
+*.diff *.patch
+*.java</string>
+                        </property>
+                        <property name="wordWrap">
+                            <enum>WidgetWidth</enum>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Set the file extensions for what the
+formatter will try to reformat. Use a
+space seperated list. eg. *.cpp *.hpp
+Can use * on its own for any file.</string>
+                        </property>
+                        <property name="whatsThis" stdset="0">
+                            <string>Set the file extensions for what the
+formatter will try to reformat. Use a
+space seperated list. eg. *.cpp *.hpp
+Can use * on its own for any file.</string>
+                        </property>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer3</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Expanding</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>31</width>
+                                <height>280</height>
+                            </size>
+                        </property>
+                    </spacer>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tbp_filling</cstring>
+                </property>
+                <property name="backgroundMode">
+                    <enum>PaletteBackground</enum>
+                </property>
+                <attribute name="label">
+                    <string>Filling and continuation</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout5</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QComboBox">
+                                <property name="name">
+                                    <cstring>cmb_indentwith</cstring>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Selects whether to use tabs or spaces to indent things</string>
+                                </property>
+                            </widget>
+                            <widget class="QCheckBox">
+                                <property name="name">
+                                    <cstring>chb_indentforce</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>80</width>
+                                        <height>20</height>
+                                    </size>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>85</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="text">
+                                    <string></string>
+                                </property>
+                                <property name="accel">
+                                    <string></string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Convert tabs to spaces.</string>
+                                </property>
+                            </widget>
+                            <widget class="QSpinBox">
+                                <property name="name">
+                                    <cstring>sb_count</cstring>
+                                </property>
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>40</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="minValue">
+                                    <number>1</number>
+                                </property>
+                                <property name="value">
+                                    <number>2</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Number of spaces to use per indent.</string>
+                                </property>
+                            </widget>
+                        </hbox>
+                    </widget>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout10</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLabel">
+                                <property name="name">
+                                    <cstring>TextLabel2</cstring>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>95</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="text">
+                                    <string>Max in statement:</string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Indent a maximal # spaces in a continuous statement,
+relative to the previous line.</string>
+                                </property>
+                            </widget>
+                            <widget class="QSpinBox">
+                                <property name="name">
+                                    <cstring>Continue_MaxStatement</cstring>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>90</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>120</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="value">
+                                    <number>40</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Indent a maximal # spaces in a continuous statement,
+relative to the previous line.</string>
+                                </property>
+                            </widget>
+                        </hbox>
+                    </widget>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout11</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLabel">
+                                <property name="name">
+                                    <cstring>TextLabel3</cstring>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>95</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="text">
+                                    <string>Min in conditional:</string>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Indent a minimal # spaces in a continuous conditional
+belonging to a conditional header.</string>
+                                </property>
+                            </widget>
+                            <widget class="QSpinBox">
+                                <property name="name">
+                                    <cstring>Continue_MinConditional</cstring>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>90</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>120</width>
+                                        <height>32767</height>
+                                    </size>
+                                </property>
+                                <property name="specialValueText">
+                                    <string>Twice current</string>
+                                </property>
+                                <property name="minValue">
+                                    <number>-1</number>
+                                </property>
+                                <property name="value">
+                                    <number>-1</number>
+                                </property>
+                                <property name="toolTip" stdset="0">
+                                    <string>Indent a minimal # spaces in a continuous conditional
+belonging to a conditional header.</string>
+                                </property>
+                            </widget>
+                        </hbox>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Fill_EmptyLines</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Fill empt&amp;y lines</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+Y</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Fill empty lines with the white space of their previous lines.</string>
+                        </property>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer9</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Expanding</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>21</width>
+                                <height>410</height>
+                            </size>
+                        </property>
+                    </spacer>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tbp_indentation</cstring>
+                </property>
+                <property name="backgroundMode">
+                    <enum>PaletteBackground</enum>
+                </property>
+                <attribute name="label">
+                    <string>Indentation</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Blocks</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Bloc&amp;ks</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+K</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Add extra indentation entire blocks (including brackets).</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Classes</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Cla&amp;sses</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+S</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent 'class' blocks, so that the inner 'public:',
+'protected:' and 'private: headers are indented in
+relation to the class block.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Labels</cstring>
+                        </property>
+                        <property name="text">
+                            <string>L&amp;abels</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+A</string>
+                        </property>
+                        <property name="checked">
+                            <bool>false</bool>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent labels so that they appear one indent less than
+the current indentation level, rather than being
+flushed completely to the left (which is the default).</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Namespaces</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Namespaces</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+N</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent the contents of namespace blocks.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Cases</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Case statements</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+C</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent case blocks from the 'case XXX:' headers.
+Case statements not enclosed in blocks are NOT indented.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Switches</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Switches</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+S</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent 'switch' blocks, so that the inner 'case XXX:'
+headers are indented in relation to the switch block.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Preprocessors</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>true</bool>
+                        </property>
+                        <property name="text">
+                            <string>#Prepr&amp;ocessors</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+O</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Indent multi-line #define statements.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Indent_Brackets</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Brackets</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+B</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Add extra indentation to '{' and '}' block brackets.</string>
+                        </property>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer8</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Expanding</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>21</width>
+                                <height>271</height>
+                            </size>
+                        </property>
+                    </spacer>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tbp_blocks</cstring>
+                </property>
+                <property name="backgroundMode">
+                    <enum>PaletteBackground</enum>
+                </property>
+                <attribute name="label">
+                    <string>Blocks and brackets</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QLayoutWidget">
+                        <property name="name">
+                            <cstring>layout18</cstring>
+                        </property>
+                        <hbox>
+                            <property name="name">
+                                <cstring>unnamed</cstring>
+                            </property>
+                            <widget class="QLabel">
+                                <property name="name">
+                                    <cstring>textLabel1</cstring>
+                                </property>
+                                <property name="sizePolicy">
+                                    <sizepolicy>
+                                        <hsizetype>0</hsizetype>
+                                        <vsizetype>0</vsizetype>
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="text">
+                                    <string>Brackets style</string>
+                                </property>
+                            </widget>
+                            <widget class="QComboBox">
+                                <property name="name">
+                                    <cstring>cmb_brackets</cstring>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>150</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                            </widget>
+                        </hbox>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Block_Break</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Break blocks</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+B</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Insert empty lines around unrelated blocks, labels, classes,...
+Known problems:
+
+1. If a statement is NOT part of a block, 
+the following statements are all double spaced. 
+Statements enclosed in a block are formatted 
+correctly.
+
+2. Comments are broken from the block.
+</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Block_BreakAll</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Break bl&amp;ocks all</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+O</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Like --break-blocks, except also insert empty lines 
+around closing headers (e.g. 'else', 'catch', ...).
+
+Known problems:
+
+1. If a statement is NOT part of a block, 
+the following statements are all double spaced. 
+Statements enclosed in a block are formatted 
+correctly.
+
+2. Comments are broken from the block.
+</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Block_IfElse</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Break i&amp;f-else</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+F</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Break 'else if()' statements into two different lines.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Brackets_CloseHeaders</cstring>
+                        </property>
+                        <property name="enabled">
+                            <bool>false</bool>
+                        </property>
+                        <property name="text">
+                            <string>Brea&amp;k closing headers</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+K</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Break brackets before closing headers (e.g. 'else', 'catch', ...)
+from their immediately preceding closing brackets.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Keep_Blocks</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Keep o&amp;ne-line blocks</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+N</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Don't break blocks residing completely on one line.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Keep_Statements</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Keep one-line statements</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+K</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Don't break lines containing multiple statements into
+multiple single-statement lines.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>chb_add_brackets</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Add brackets</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Add brackets to unbracketed one line conditional statements.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>chb_add_brackets_oneline</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Add one line brackets</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Add one line brackets to unbracketed one line conditional statements.</string>
+                        </property>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer7</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Expanding</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>280</height>
+                            </size>
+                        </property>
+                    </spacer>
+                </vbox>
+            </widget>
+            <widget class="QWidget">
+                <property name="name">
+                    <cstring>tbp_padding</cstring>
+                </property>
+                <property name="backgroundMode">
+                    <enum>PaletteBackground</enum>
+                </property>
+                <attribute name="label">
+                    <string>Padding and placement</string>
+                </attribute>
+                <vbox>
+                    <property name="name">
+                        <cstring>unnamed</cstring>
+                    </property>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Pad_ParenthesesIn</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Add spa&amp;ces inside parentheses</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+C</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Insert space padding around parenthesis on the inside only.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Pad_ParenthesesOut</cstring>
+                        </property>
+                        <property name="text">
+                            <string>A&amp;dd spaces outside parentheses</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+D</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Insert space padding around parenthesis on the outside only.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Pad_ParenthesesUn</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Remove spaces aro&amp;und parentheses</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+U</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Remove unnecessary space padding around parenthesis.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>Pad_Operators</cstring>
+                        </property>
+                        <property name="text">
+                            <string>&amp;Add spaces around operators</string>
+                        </property>
+                        <property name="accel">
+                            <string>Alt+A</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Insert space padding around operators.
+Once padded, operators stay padded.
+There is no unpad operator option.</string>
+                        </property>
+                    </widget>
+                    <widget class="QCheckBox">
+                        <property name="name">
+                            <cstring>chb_parens_header</cstring>
+                        </property>
+                        <property name="text">
+                            <string>Space padding after parent headers</string>
+                        </property>
+                        <property name="toolTip" stdset="0">
+                            <string>Insert space padding after paren headers (e.g. 'if', 'for'...).</string>
+                        </property>
+                    </widget>
+                    <spacer>
+                        <property name="name">
+                            <cstring>spacer6</cstring>
+                        </property>
+                        <property name="orientation">
+                            <enum>Vertical</enum>
+                        </property>
+                        <property name="sizeType">
+                            <enum>Expanding</enum>
+                        </property>
+                        <property name="sizeHint">
+                            <size>
+                                <width>20</width>
+                                <height>420</height>
+                            </size>
+                        </property>
+                    </spacer>
+                </vbox>
+            </widget>
+        </widget>
+        <widget class="QGroupBox" row="0" column="1">
             <property name="name">
                 <cstring>GroupBox4</cstring>
             </property>
@@ -48,7 +873,7 @@
             <property name="minimumSize">
                 <size>
                     <width>470</width>
-                    <height>640</height>
+                    <height>500</height>
                 </size>
             </property>
             <property name="maximumSize">
@@ -60,953 +885,7 @@
             <property name="title">
                 <string>Example</string>
             </property>
-            <vbox>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QMultiLineEdit">
-                    <property name="name">
-                        <cstring>StyleExample</cstring>
-                    </property>
-                    <property name="paletteBackgroundColor">
-                        <color>
-                            <red>209</red>
-                            <green>220</green>
-                            <blue>219</blue>
-                        </color>
-                    </property>
-                    <property name="palette">
-                        <palette>
-                            <active>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>237</red>
-                                    <green>237</green>
-                                    <blue>237</blue>
-                                </color>
-                                <color>
-                                    <red>110</red>
-                                    <green>110</green>
-                                    <blue>110</blue>
-                                </color>
-                                <color>
-                                    <red>146</red>
-                                    <green>146</green>
-                                    <blue>146</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>209</red>
-                                    <green>220</green>
-                                    <blue>219</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>84</red>
-                                    <green>112</green>
-                                    <blue>152</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                            </active>
-                            <disabled>
-                                <color>
-                                    <red>128</red>
-                                    <green>128</green>
-                                    <blue>128</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>253</red>
-                                    <green>253</green>
-                                    <blue>253</blue>
-                                </color>
-                                <color>
-                                    <red>110</red>
-                                    <green>110</green>
-                                    <blue>110</blue>
-                                </color>
-                                <color>
-                                    <red>146</red>
-                                    <green>146</green>
-                                    <blue>146</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>128</red>
-                                    <green>128</green>
-                                    <blue>128</blue>
-                                </color>
-                                <color>
-                                    <red>209</red>
-                                    <green>220</green>
-                                    <blue>219</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>84</red>
-                                    <green>112</green>
-                                    <blue>152</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                            </disabled>
-                            <inactive>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>253</red>
-                                    <green>253</green>
-                                    <blue>253</blue>
-                                </color>
-                                <color>
-                                    <red>110</red>
-                                    <green>110</green>
-                                    <blue>110</blue>
-                                </color>
-                                <color>
-                                    <red>146</red>
-                                    <green>146</green>
-                                    <blue>146</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>209</red>
-                                    <green>220</green>
-                                    <blue>219</blue>
-                                </color>
-                                <color>
-                                    <red>220</red>
-                                    <green>220</green>
-                                    <blue>220</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>84</red>
-                                    <green>112</green>
-                                    <blue>152</blue>
-                                </color>
-                                <color>
-                                    <red>255</red>
-                                    <green>255</green>
-                                    <blue>255</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                                <color>
-                                    <red>0</red>
-                                    <green>0</green>
-                                    <blue>0</blue>
-                                </color>
-                            </inactive>
-                        </palette>
-                    </property>
-                    <property name="font">
-                        <font>
-                            <family>Monospace</family>
-                        </font>
-                    </property>
-                    <property name="frameShape">
-                        <enum>Box</enum>
-                    </property>
-                    <property name="frameShadow">
-                        <enum>Plain</enum>
-                    </property>
-                    <property name="lineWidth">
-                        <number>0</number>
-                    </property>
-                    <property name="text">
-                        <string></string>
-                    </property>
-                    <property name="undoDepth">
-                        <number>0</number>
-                    </property>
-                    <property name="readOnly">
-                        <bool>true</bool>
-                    </property>
-                </widget>
-            </vbox>
-        </widget>
-        <widget class="QButtonGroup" row="3" column="0">
-            <property name="name">
-                <cstring>BracketGroup</cstring>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>50</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>Brackets</string>
-            </property>
             <grid>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <property name="spacing">
-                    <number>5</number>
-                </property>
-                <widget class="QLayoutWidget" row="0" column="0">
-                    <property name="name">
-                        <cstring>layout16</cstring>
-                    </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <widget class="QRadioButton">
-                            <property name="name">
-                                <cstring>Brackets_Attach</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Attach</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+A</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Attach brackets to pre-block code (i.e. Java/K&amp;R style).
-See also Formatting/Blocks/Break if-else</string>
-                            </property>
-                        </widget>
-                        <widget class="QRadioButton">
-                            <property name="name">
-                                <cstring>Brackets_Linux</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Linu&amp;x style</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+X</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Break brackets from class/function declarations, 
-but attach brackets to pre-block command statements.</string>
-                            </property>
-                        </widget>
-                        <widget class="QRadioButton">
-                            <property name="name">
-                                <cstring>Brackets_Break</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Break</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+B</string>
-                            </property>
-                            <property name="checked">
-                                <bool>false</bool>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Break brackets from pre-block code (i.e. ANSI C/C++ style).</string>
-                            </property>
-                        </widget>
-                        <widget class="QRadioButton">
-                            <property name="name">
-                                <cstring>Brackets_None</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;No Change</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+N</string>
-                            </property>
-                            <property name="checked">
-                                <bool>true</bool>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>The brackets will not be changed.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Brackets_CloseHeaders</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>false</bool>
-                            </property>
-                            <property name="text">
-                                <string>Brea&amp;k closing headers</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+K</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Break brackets before closing headers (e.g. 'else', 'catch', ...)
-from their immediately preceding closing brackets.</string>
-                            </property>
-                        </widget>
-                    </hbox>
-                </widget>
-            </grid>
-        </widget>
-        <widget class="QButtonGroup" row="4" column="0">
-            <property name="name">
-                <cstring>BlockGroup</cstring>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>50</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>Blocks</string>
-            </property>
-            <grid>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QLayoutWidget" row="0" column="0">
-                    <property name="name">
-                        <cstring>layout17</cstring>
-                    </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Block_Break</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Break blocks</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+B</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Insert empty lines around unrelated blocks, labels, classes,...
-Known problems:
-
-1. If a statement is NOT part of a block, 
-the following statements are all double spaced. 
-Statements enclosed in a block are formatted 
-correctly.
-
-2. Comments are broken from the block.
-</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Block_BreakAll</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Break bl&amp;ocks all</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+O</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Like --break-blocks, except also insert empty lines 
-around closing headers (e.g. 'else', 'catch', ...).
-
-Known problems:
-
-1. If a statement is NOT part of a block, 
-the following statements are all double spaced. 
-Statements enclosed in a block are formatted 
-correctly.
-
-2. Comments are broken from the block.
-</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Block_IfElse</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Break i&amp;f-else</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+F</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Break 'else if()' statements into two different lines.</string>
-                            </property>
-                        </widget>
-                    </hbox>
-                </widget>
-            </grid>
-        </widget>
-        <widget class="QGroupBox" row="5" column="0">
-            <property name="name">
-                <cstring>OneLinersGroup</cstring>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>50</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>One Liners</string>
-            </property>
-            <grid>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QLayoutWidget" row="0" column="0">
-                    <property name="name">
-                        <cstring>layout18</cstring>
-                    </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Keep_Blocks</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Keep o&amp;ne-line blocks</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+N</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Don't break blocks residing completely on one line.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Keep_Statements</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Keep one-line statements</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+K</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Don't break lines containing multiple statements into
-multiple single-statement lines.</string>
-                            </property>
-                        </widget>
-                    </hbox>
-                </widget>
-            </grid>
-        </widget>
-        <widget class="QButtonGroup" row="6" column="0">
-            <property name="name">
-                <cstring>PaddingGroup</cstring>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>72</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>Padding</string>
-            </property>
-            <grid>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QCheckBox" row="1" column="0">
-                    <property name="name">
-                        <cstring>Pad_ParenthesesOut</cstring>
-                    </property>
-                    <property name="text">
-                        <string>A&amp;dd spaces outside parentheses</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+D</string>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Insert space padding around parenthesis on the outside only.</string>
-                    </property>
-                </widget>
-                <widget class="QCheckBox" row="0" column="0">
-                    <property name="name">
-                        <cstring>Pad_ParenthesesIn</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Add spa&amp;ces inside parentheses</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+C</string>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Insert space padding around parenthesis on the inside only.</string>
-                    </property>
-                </widget>
-                <widget class="QCheckBox" row="0" column="1">
-                    <property name="name">
-                        <cstring>Pad_ParenthesesUn</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Remove spaces aro&amp;und parentheses</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+U</string>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Remove unnecessary space padding around parenthesis.</string>
-                    </property>
-                </widget>
-                <widget class="QCheckBox" row="1" column="1">
-                    <property name="name">
-                        <cstring>Pad_Operators</cstring>
-                    </property>
-                    <property name="text">
-                        <string>&amp;Add spaces around operators</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+A</string>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Insert space padding around operators.
-Once padded, operators stay padded.
-There is no unpad operator option.</string>
-                    </property>
-                </widget>
-            </grid>
-        </widget>
-        <widget class="QGroupBox" row="2" column="0">
-            <property name="name">
-                <cstring>IndentGroup</cstring>
-            </property>
-            <property name="minimumSize">
-                <size>
-                    <width>0</width>
-                    <height>0</height>
-                </size>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>470</width>
-                    <height>80</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>Indented &amp;Entities</string>
-            </property>
-            <vbox>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout6</cstring>
-                    </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Blocks</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Bloc&amp;ks</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+K</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Add extra indentation entire blocks (including brackets).</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Classes</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Cla&amp;sses</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+S</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent 'class' blocks, so that the inner 'public:',
-'protected:' and 'private: headers are indented in
-relation to the class block.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Labels</cstring>
-                            </property>
-                            <property name="text">
-                                <string>L&amp;abels</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+A</string>
-                            </property>
-                            <property name="checked">
-                                <bool>false</bool>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent labels so that they appear one indent less than
-the current indentation level, rather than being
-flushed completely to the left (which is the default).</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Namespaces</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Namespaces</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+N</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent the contents of namespace blocks.</string>
-                            </property>
-                        </widget>
-                    </hbox>
-                </widget>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout7</cstring>
-                    </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Cases</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Case statements</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+C</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent case blocks from the 'case XXX:' headers.
-Case statements not enclosed in blocks are NOT indented.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Switches</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Switches</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+S</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent 'switch' blocks, so that the inner 'case XXX:'
-headers are indented in relation to the switch block.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Preprocessors</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>true</bool>
-                            </property>
-                            <property name="text">
-                                <string>#Prepr&amp;ocessors</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+O</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent multi-line #define statements.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>Indent_Brackets</cstring>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Brackets</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+B</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Add extra indentation to '{' and '}' block brackets.</string>
-                            </property>
-                        </widget>
-                    </hbox>
-                </widget>
-            </vbox>
-        </widget>
-        <widget class="QButtonGroup" row="0" column="0">
-            <property name="name">
-                <cstring>qbgr_general</cstring>
-            </property>
-            <property name="sizePolicy">
-                <sizepolicy>
-                    <hsizetype>5</hsizetype>
-                    <vsizetype>0</vsizetype>
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                </sizepolicy>
-            </property>
-            <property name="minimumSize">
-                <size>
-                    <width>170</width>
-                    <height>0</height>
-                </size>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>32767</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>&amp;General</string>
-            </property>
-            <grid>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <widget class="QTextEdit" row="0" column="1">
-                    <property name="name">
-                        <cstring>qtxe_generalext</cstring>
-                    </property>
-                    <property name="sizePolicy">
-                        <sizepolicy>
-                            <hsizetype>5</hsizetype>
-                            <vsizetype>7</vsizetype>
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                        </sizepolicy>
-                    </property>
-                    <property name="text">
-                        <string>*.c *.h
-*.cpp *.hpp 
-*.C *.H 
-*.cxx *.hxx 
-*.cc *.hh 
-*.c++ *.h++
-*.inl *.tlh
-*.moc *.xpm
-*.diff *.patch
-*.java</string>
-                    </property>
-                    <property name="wordWrap">
-                        <enum>WidgetWidth</enum>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Set the file extensions for what the
-formatter will try to reformat. Use a
-space seperated list. eg. *.cpp *.hpp
-Can use * on its own for any file.</string>
-                    </property>
-                    <property name="whatsThis" stdset="0">
-                        <string>Set the file extensions for what the
-formatter will try to reformat. Use a
-space seperated list. eg. *.cpp *.hpp
-Can use * on its own for any file.</string>
-                    </property>
-                </widget>
-                <widget class="QLayoutWidget" row="0" column="0">
-                    <property name="name">
-                        <cstring>layout9</cstring>
-                    </property>
-                    <vbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <spacer>
-                            <property name="name">
-                                <cstring>spacer2</cstring>
-                            </property>
-                            <property name="orientation">
-                                <enum>Vertical</enum>
-                            </property>
-                            <property name="sizeType">
-                                <enum>Expanding</enum>
-                            </property>
-                            <property name="sizeHint">
-                                <size>
-                                    <width>20</width>
-                                    <height>41</height>
-                                </size>
-                            </property>
-                        </spacer>
-                        <widget class="QComboBox">
-                            <property name="name">
-                                <cstring>qcmb_style</cstring>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox">
-                            <property name="name">
-                                <cstring>qchb_useglobal</cstring>
-                            </property>
-                            <property name="text">
-                                <string>Use gl&amp;obal</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+O</string>
-                            </property>
-                        </widget>
-                        <spacer>
-                            <property name="name">
-                                <cstring>spacer1</cstring>
-                            </property>
-                            <property name="orientation">
-                                <enum>Vertical</enum>
-                            </property>
-                            <property name="sizeType">
-                                <enum>Expanding</enum>
-                            </property>
-                            <property name="sizeHint">
-                                <size>
-                                    <width>20</width>
-                                    <height>71</height>
-                                </size>
-                            </property>
-                        </spacer>
-                    </vbox>
-                </widget>
-            </grid>
-        </widget>
-        <widget class="QButtonGroup" row="1" column="0">
-            <property name="name">
-                <cstring>FillingGroup</cstring>
-            </property>
-            <property name="maximumSize">
-                <size>
-                    <width>510</width>
-                    <height>90</height>
-                </size>
-            </property>
-            <property name="title">
-                <string>&amp;Filling and continuation</string>
-            </property>
-            <vbox>
                 <property name="name">
                     <cstring>unnamed</cstring>
                 </property>
@@ -1016,259 +895,644 @@ Can use * on its own for any file.</string>
                 <property name="spacing">
                     <number>2</number>
                 </property>
-                <widget class="QLayoutWidget">
+                <widget class="QSplitter" row="0" column="0">
                     <property name="name">
-                        <cstring>layout10</cstring>
+                        <cstring>splitter1</cstring>
                     </property>
-                    <grid>
+                    <property name="enabled">
+                        <bool>true</bool>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="focusPolicy">
+                        <enum>WheelFocus</enum>
+                    </property>
+                    <property name="margin">
+                        <number>0</number>
+                    </property>
+                    <property name="midLineWidth">
+                        <number>0</number>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="handleWidth">
+                        <number>5</number>
+                    </property>
+                    <property name="childrenCollapsible">
+                        <bool>false</bool>
+                    </property>
+                    <widget class="QMultiLineEdit">
                         <property name="name">
-                            <cstring>unnamed</cstring>
+                            <cstring>me_formatted</cstring>
                         </property>
-                        <widget class="QCheckBox" row="0" column="2">
-                            <property name="name">
-                                <cstring>Fill_ForceTabs</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>false</bool>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>80</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="text">
-                                <string>F&amp;orce tabs</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+O</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Force tabs to be used in areas Astyle would prefer to use spaces.</string>
-                            </property>
-                        </widget>
-                        <widget class="QLabel" row="0" column="3">
-                            <property name="name">
-                                <cstring>TextLabel2</cstring>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>95</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="text">
-                                <string>Max in statement:</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent a maximal # spaces in a continuous statement,
-relative to the previous line.</string>
-                            </property>
-                        </widget>
-                        <widget class="QSpinBox" row="1" column="1">
-                            <property name="name">
-                                <cstring>Fill_SpaceCount</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>false</bool>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>40</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="minValue">
-                                <number>1</number>
-                            </property>
-                            <property name="value">
-                                <number>2</number>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Number of spaces to use per indent.</string>
-                            </property>
-                        </widget>
-                        <widget class="QRadioButton" row="0" column="0">
-                            <property name="name">
-                                <cstring>Fill_Tabs</cstring>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>80</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="text">
-                                <string>U&amp;se tabs</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+S</string>
-                            </property>
-                            <property name="checked">
-                                <bool>true</bool>
-                            </property>
-                        </widget>
-                        <widget class="QSpinBox" row="0" column="4">
-                            <property name="name">
-                                <cstring>Continue_MaxStatement</cstring>
-                            </property>
-                            <property name="minimumSize">
-                                <size>
-                                    <width>90</width>
-                                    <height>0</height>
-                                </size>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>120</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="value">
-                                <number>40</number>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent a maximal # spaces in a continuous statement,
-relative to the previous line.</string>
-                            </property>
-                        </widget>
-                        <widget class="QCheckBox" row="1" column="2">
-                            <property name="name">
-                                <cstring>Fill_ConvertTabs</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>false</bool>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>85</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="text">
-                                <string>Con&amp;vert tabs</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+V</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Convert tabs to spaces.</string>
-                            </property>
-                        </widget>
-                        <widget class="QSpinBox" row="1" column="4">
-                            <property name="name">
-                                <cstring>Continue_MinConditional</cstring>
-                            </property>
-                            <property name="minimumSize">
-                                <size>
-                                    <width>90</width>
-                                    <height>0</height>
-                                </size>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>120</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="specialValueText">
-                                <string>Twice current</string>
-                            </property>
-                            <property name="minValue">
-                                <number>-1</number>
-                            </property>
-                            <property name="value">
-                                <number>-1</number>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent a minimal # spaces in a continuous conditional
-belonging to a conditional header.</string>
-                            </property>
-                        </widget>
-                        <widget class="QRadioButton" row="1" column="0">
-                            <property name="name">
-                                <cstring>Fill_Spaces</cstring>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>80</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="focusPolicy">
-                                <enum>NoFocus</enum>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Use spaces:</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+U</string>
-                            </property>
-                        </widget>
-                        <widget class="QLabel" row="1" column="3">
-                            <property name="name">
-                                <cstring>TextLabel3</cstring>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>95</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="text">
-                                <string>Min in conditional:</string>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Indent a minimal # spaces in a continuous conditional
-belonging to a conditional header.</string>
-                            </property>
-                        </widget>
-                        <widget class="QSpinBox" row="0" column="1">
-                            <property name="name">
-                                <cstring>Fill_TabCount</cstring>
-                            </property>
-                            <property name="enabled">
-                                <bool>false</bool>
-                            </property>
-                            <property name="maximumSize">
-                                <size>
-                                    <width>40</width>
-                                    <height>32767</height>
-                                </size>
-                            </property>
-                            <property name="minValue">
-                                <number>1</number>
-                            </property>
-                            <property name="value">
-                                <number>4</number>
-                            </property>
-                            <property name="toolTip" stdset="0">
-                                <string>Number of spaces that will be converted to a tab.
-The number of spaces per tab is controled by the editor.</string>
-                            </property>
-                        </widget>
-                    </grid>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>7</hsizetype>
+                                <vsizetype>7</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                            <size>
+                                <width>400</width>
+                                <height>500</height>
+                            </size>
+                        </property>
+                        <property name="paletteBackgroundColor">
+                            <color>
+                                <red>190</red>
+                                <green>200</green>
+                                <blue>199</blue>
+                            </color>
+                        </property>
+                        <property name="palette">
+                            <palette>
+                                <active>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>237</red>
+                                        <green>237</green>
+                                        <blue>237</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>190</red>
+                                        <green>200</green>
+                                        <blue>199</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </active>
+                                <disabled>
+                                    <color>
+                                        <red>128</red>
+                                        <green>128</green>
+                                        <blue>128</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>253</red>
+                                        <green>253</green>
+                                        <blue>253</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>128</red>
+                                        <green>128</green>
+                                        <blue>128</blue>
+                                    </color>
+                                    <color>
+                                        <red>190</red>
+                                        <green>200</green>
+                                        <blue>199</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </disabled>
+                                <inactive>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>253</red>
+                                        <green>253</green>
+                                        <blue>253</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>190</red>
+                                        <green>200</green>
+                                        <blue>199</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </inactive>
+                            </palette>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Ubuntu Mono</family>
+                            </font>
+                        </property>
+                        <property name="frameShape">
+                            <enum>Box</enum>
+                        </property>
+                        <property name="frameShadow">
+                            <enum>Plain</enum>
+                        </property>
+                        <property name="lineWidth">
+                            <number>0</number>
+                        </property>
+                        <property name="text">
+                            <string></string>
+                        </property>
+                        <property name="undoDepth">
+                            <number>0</number>
+                        </property>
+                        <property name="readOnly">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
+                    <widget class="QMultiLineEdit">
+                        <property name="name">
+                            <cstring>me_example</cstring>
+                        </property>
+                        <property name="sizePolicy">
+                            <sizepolicy>
+                                <hsizetype>7</hsizetype>
+                                <vsizetype>7</vsizetype>
+                                <horstretch>0</horstretch>
+                                <verstretch>0</verstretch>
+                            </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                            <size>
+                                <width>400</width>
+                                <height>500</height>
+                            </size>
+                        </property>
+                        <property name="paletteBackgroundColor">
+                            <color>
+                                <red>150</red>
+                                <green>150</green>
+                                <blue>150</blue>
+                            </color>
+                        </property>
+                        <property name="palette">
+                            <palette>
+                                <active>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>237</red>
+                                        <green>237</green>
+                                        <blue>237</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>150</red>
+                                        <green>150</green>
+                                        <blue>150</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </active>
+                                <disabled>
+                                    <color>
+                                        <red>128</red>
+                                        <green>128</green>
+                                        <blue>128</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>253</red>
+                                        <green>253</green>
+                                        <blue>253</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>128</red>
+                                        <green>128</green>
+                                        <blue>128</blue>
+                                    </color>
+                                    <color>
+                                        <red>150</red>
+                                        <green>150</green>
+                                        <blue>150</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </disabled>
+                                <inactive>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>253</red>
+                                        <green>253</green>
+                                        <blue>253</blue>
+                                    </color>
+                                    <color>
+                                        <red>110</red>
+                                        <green>110</green>
+                                        <blue>110</blue>
+                                    </color>
+                                    <color>
+                                        <red>146</red>
+                                        <green>146</green>
+                                        <blue>146</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>150</red>
+                                        <green>150</green>
+                                        <blue>150</blue>
+                                    </color>
+                                    <color>
+                                        <red>220</red>
+                                        <green>220</green>
+                                        <blue>220</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>84</red>
+                                        <green>112</green>
+                                        <blue>152</blue>
+                                    </color>
+                                    <color>
+                                        <red>255</red>
+                                        <green>255</green>
+                                        <blue>255</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                    <color>
+                                        <red>0</red>
+                                        <green>0</green>
+                                        <blue>0</blue>
+                                    </color>
+                                </inactive>
+                            </palette>
+                        </property>
+                        <property name="font">
+                            <font>
+                                <family>Ubuntu Mono</family>
+                            </font>
+                        </property>
+                        <property name="frameShape">
+                            <enum>Box</enum>
+                        </property>
+                        <property name="frameShadow">
+                            <enum>Plain</enum>
+                        </property>
+                        <property name="lineWidth">
+                            <number>0</number>
+                        </property>
+                        <property name="text">
+                            <string></string>
+                        </property>
+                        <property name="undoDepth">
+                            <number>0</number>
+                        </property>
+                        <property name="readOnly">
+                            <bool>true</bool>
+                        </property>
+                    </widget>
                 </widget>
-                <widget class="QCheckBox">
-                    <property name="name">
-                        <cstring>Fill_EmptyLines</cstring>
-                    </property>
-                    <property name="text">
-                        <string>Fill empt&amp;y lines</string>
-                    </property>
-                    <property name="accel">
-                        <string>Alt+Y</string>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string>Fill empty lines with the white space of their previous lines.</string>
-                    </property>
-                </widget>
-            </vbox>
+            </grid>
         </widget>
     </grid>
 </widget>
 <tabstops>
-    <tabstop>StyleExample</tabstop>
+    <tabstop>me_formatted</tabstop>
 </tabstops>
 <includes>
     <include location="global" impldecl="in implementation">kdialog.h</include>
