@@ -277,10 +277,10 @@ namespace VStudio {
       virtual vse_p getParent() const;
 
     // VS FSStored interface methods:
-      virtual bool write(bool synchronize=true);
-      virtual bool write(QTextStream &stream, bool synchronize=true);
-      virtual bool read(bool synchronize=true);
-      virtual bool read(QTextStream &stream, bool synchronize=true);
+      virtual bool write(bool synchronize=true) = 0;
+      virtual bool write(QTextStream &stream, bool synchronize=true) = 0;
+      virtual bool read(bool synchronize=true) = 0;
+      virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
 
     // VS Project methods:
       bool dumpLayout(QTextStream &stream);
@@ -313,16 +313,7 @@ namespace VStudio {
       bool build();
       bool isDetached() const;
 
-    private:
-      // bool __read_file(QDomElement el, vse_p parent);
-      /** Reads project unit file|filter
-       * @param unit dom element representing current parsed unit
-       * @param parent could be project itself, or filter
-       * @return <a>TRUE</a> if everything ok, <a>FALSE</a> if not
-       */
-      bool __read_unit(QDomElement unit, vse_p parent);
-
-    private:
+    protected:
       e_VSPrjLangType lang; // Project choosen language
       vss_p sln;  // Parent solution
       uivsp_p uiprj; // UI representation
@@ -416,8 +407,33 @@ namespace VStudio {
       VSProject_c(const QString &name, const QUuid &uid);
       virtual ~VSProject_c();
 
+    //VS FSStored intefrace methods:
+      virtual bool write(bool synchronize=true);
+      virtual bool write(QTextStream &stream, bool synchronize=true);
+      virtual bool read(bool synchronize=true);
+      virtual bool read(QTextStream &stream, bool synchronize=true);
     //VSProject intergace methods:
     //VSProject_c methods:
+    private:
+      // bool __read_file(QDomElement el, vse_p parent);
+      /** Reads project unit file|filter
+     * @param unit dom element representing current parsed unit
+     * @param parent could be project itself, or filter
+     * @return <a>TRUE</a> if everything ok, <a>FALSE</a> if not
+       */
+      bool __read_unit(QDomElement unit, vse_p parent);
+  };
+
+  class VSProject_cs : public VSProject {
+    public:
+      VSProject_cs(const QString &name, const QUuid &uid);
+      virtual ~VSProject_cs();
+
+    // VS FSStored interface methods:
+      virtual bool write(bool synchronize=true);
+      virtual bool write(QTextStream &stream, bool synchronize=true);
+      virtual bool read(bool synchronize=true);
+      virtual bool read(QTextStream &stream, bool synchronize=true);
   };
   //END VS derived entities
   //===========================================================================
@@ -607,8 +623,8 @@ namespace VStudio {
       bool sync_subs;
   };
 
-  class VSConfig : public VSEntity
-  , public VSNameable {
+  class VSConfig : public VSEntity,
+  public VSNameable {
     public:
       VSConfig(const QString &name, e_VSPlatform vspl);
       VSConfig(const QString &name, const QString &vspl);
@@ -632,7 +648,7 @@ namespace VStudio {
   };
 
   /*! \class VSBuildBox
-   * \brief Contains configurations and tools necessary for \a vs_entity to be build|cleaned|re-builded, etc
+   * \brief Contains configurations and tools necessary for \a vs_entity to be built|cleaned|re-builded, etc
    *
    * - Connects configurations of entity's parent to self.
    * - Tunes and setup build tools to work with them

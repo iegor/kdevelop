@@ -679,7 +679,7 @@ namespace VStudio {
                       prj_active->setRelPath(prjpath_rlt);
                       prj_active->setAbsPath(RebasePath_Win(path_abs, prjpath_rlt));
 #ifdef DEBUG
-                      kddbg << "Project abs path: " << prj_active->getAbsPath() << endl;
+                      kddbg << "Project [c/c++] abs path: " << prj_active->getAbsPath() << endl;
 #endif
                       insert(static_cast<vsp_p>(prj_active));
                       // Read project .vcproj file
@@ -693,9 +693,18 @@ namespace VStudio {
                     }
                     break; }
                   case vs_prjlang_cs: {
-                    kddbg << "VS Project for C# \"" << guid2String(puid) << "\" is not supported\n";
-                    ln = str.readLine();
-                    continue; }
+                    prj_active = new VSProject_cs(prjname, puid);
+                    if(prj_active != 0) {
+                      prj_active->setRelPath(prjpath_rlt);
+                      prj_active->setAbsPath(RebasePath_Win(path_abs, prjpath_rlt));
+#ifdef DEBUG
+                      kddbg << "Project [c#] abs path: " << prj_active->getAbsPath() << endl;
+#endif
+                      insert(static_cast<vsp_p>(prj_active));
+
+                      //TODO: Reading of C# project
+                    }
+                    break; }
                   default:
                     kddbg << "Error! " << type2String(typ) << " \"" << prjname << "\": language ["
                         << prjLangType2String(ltyp) << "] support is not implemented\n";
@@ -1492,165 +1501,6 @@ namespace VStudio {
     return sln;
   }
 
-  bool VSProject::write(bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
-    return true;
-  }
-
-  bool VSProject::write(QTextStream &/*stream*/, bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
-    return true;
-  }
-
-  bool VSProject::read(bool /*sync=true*/) {
-    //Check paths:
-    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSProject::read"); return false; }
-    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSProject::read"); return false; }
-
-    QFile fl;
-
-    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
-    fl.setName(path_abs);
-    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open project file" << endl; return false; }
-    if(!fl.isReadable()) { kddbg << g_err_fileread.arg(path_abs).arg("VSProject::read"); return false; }
-    if(!fl.isWritable()) { kddbg << g_err_filewrite.arg(path_abs).arg("VSProject::read"); return false; }
-    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
-
-    QTextStream stream(&fl);
-
-    if(!read(stream, true)) {
-      kddbg << VSPART_ERROR"Failed to parse prj: " << name << " file \"" << path_abs << "\"\n";
-      return false;
-    }
-
-    fl.close();
-    return true;
-  }
-
-  bool VSProject::read(QTextStream &stream, bool sync/*=true*/) {
-    if(FALSE == doc.setContent(stream.read())) {
-      kddbg << VSPART_ERROR"Can't set content for DOM element in project: " << name << endl;
-      return false;
-    }
-
-    // Acquire all necessary elements
-    QDomElement prj_e = doc.documentElement();
-    QDomElement cfg_e = prj_e.namedItem(VSPRJ_DOM_CONFIGS).toElement();
-    QDomElement fil_e = prj_e.namedItem(VSPRJ_DOM_FILES).toElement();
-
-    // Check all elements
-    if(prj_e.isNull()) {
-      kddbg << g_err_domelemnotpresent.arg("Project root").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    }
-    if(cfg_e.isNull()) {
-      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_CONFIGS).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    }
-    if(fil_e.isNull()) {
-      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_FILES).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    }
-
-    //BEGIN: Read project configurations
-#ifdef DEBUG
-    kddbg << "VSPROJ: [" << name << "] Reading configs.\n";
-    // QDomElement q = doc.documentElement();
-    // QDomNode n = q.firstChild();
-    // while(!n.isNull()) {
-    //   QDomElement e = n.toElement();
-    //   kddbg << "Tag: " << e.tagName() << endl;
-    //   n = n.nextSibling();
-    // }
-#endif
-    // DomUtil::elementByPath(doc, VSPART_DOM_PROJECT"/"VSPART_DOM_PROJECT_CONFIGS);
-    QDomElement it_e = cfg_e.firstChild().toElement();
-    if(it_e.isNull()) {
-      kddbg << g_err_domelemnotpresent.arg("it_e:configuration").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    }
-
-    while(!it_e.isNull()) {
-#ifdef DEBUG
-      kddbg << "Parsing: " << it_e.tagName() << QString(" in {VSProject[%1]::read}.\n").arg(name);
-#endif
-      if(it_e.tagName() == "Configuration") {
-        QString cfg_name = it_e.attribute("Name");
-        QString outdir = it_e.attribute("OutputDirectory");
-
-        VSConfigCreate cr;
-        cr.name = cfg_name.left(cfg_name.find('|'));
-        cr.platform = string2Platform(cfg_name.mid(cfg_name.find('|')+1));
-
-        if(!createCfg(0, cr)) {
-          kddbg << VSPART_ERROR"Can't create config: " << name << " for: " << name << endl;
-          return false;
-        }
-#ifdef DEBUG
-        else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject[%1]::read").arg(name); }
-#endif
-      }
-      else {
-        kddbg << VSPART_WARNING"Wrong tag: " << it_e.tagName() << endl;
-      }
-      it_e = it_e.nextSibling().toElement();
-    }
-    //END: Read project configurations
-
-    /* NOTE: upon reaching this point project is considered as configured
-        To make sure that configurations will be parented and upon saving there will be no crash because of that. */
-    if(bboxes.size() > 0) { set_bit(enflg, IS_CONFIGURED); }
-
-    //BEGIN: Read project files
-    /* it_e = fil_e.firstChild().toElement();
-    if(it_e.isNull()) {
-      kddbg << g_err_domelemnotpresent.arg("it_e = Files").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    } */
-
-    if(!__read_unit(fil_e, static_cast<vse_p>(this))) {
-      kddbg << QString("Failed to read Files in {%1}").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
-      return false;
-    }
-
-    /* while(!it_e.isNull()) {
-      // "Unfiltered" file
-      if(it_e.tagName() == "File") {
-#ifdef DEBUG
-        kddbg << "Parsing: " << QString("[File]:[%1]").arg(it_e.attribute("RelativePath"))
-            << QString(" in {VSProject[%1]::read}.\n").arg(name);
-#endif
-        vsfl_p fl = new vsfl("unknown", this);
-        if(fl != 0) {
-          if(fl->read(it_e, true)) {
-            insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
-#ifdef DEBUG
-            kddbg << QString("File [%1] inserted into project [%2].\n").arg(fl->getName()).arg(name);
-#endif
-          }
-          else { kddbg << QString(VSPART_ERROR"Failed to read file \"%1\".\n").arg(it_e.attribute("RelativePath")); }
-        }
-        else {
-          kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::read}").arg(name));
-          return false;
-        }
-      }
-      // "Filtered" file
-      else if(it_e.tagName() == "Filter") {
-        if(!__read_filter(it_e)) {
-          kddbg << VSPART_ERROR"Failed to read filter [ " << it_e.attribute("Name") << " ] contents.\n";
-          return false;
-        }
-      }
-      it_e = it_e.nextSibling().toElement();
-    } */
-    //END: Read project files
-
-    set_bit(enflg, IS_LOADED_OK);
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
-    return true;
-  }
-
   vse_p VSProject::getByUID(const QUuid &/*uid*/) const {
     return 0;
   }
@@ -2049,101 +1899,6 @@ namespace VStudio {
       }
     }
     return true;
-  }
-
-  bool VSProject::__read_unit(QDomElement el, vse_p pnt) {
-    if(pnt != 0) {
-      if(!el.isNull()) {
-        // Read unit's children
-        QDomElement chld = el.firstChild().toElement();
-        while(!chld.isNull()) {
-          if(chld.tagName().compare("File") == 0) {
-#ifdef DEBUG
-            QString report;
-            report.append(QString("project [%1] file \"%2\" <found>").arg(name).arg(chld.attribute("RelativePath")));
-#endif
-            vsfl_p fl = new vsfl("this file is not yet loaded", this);
-            if(fl != 0) {
-              if(fl->read(chld, true)) {
-#ifdef DEBUG
-                report.append(" <read>");
-#endif
-              }
-              else { kddbg << QString(VSPART_ERROR"Can't read file \"%1\".\n").arg(chld.attribute("RelativePath")); }
-
-              // Insert file into project, even if it is not loaded or reachable
-              switch(pnt->getType()) {
-                case vs_project: {
-                  insert(fl);
-                  break; }
-                case vs_filter: {
-                  insert(fl);
-                  static_cast<vsf_p>(pnt)->insert(fl); // Add file to filter
-                  break; }
-                default: { break; }
-              }
-#ifdef DEBUG
-              report.append(" <inserted>\n");
-              kddbg << report;
-#endif
-            }
-            else {
-              kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::__read_file}").
-                  arg(name));
-              return false;
-            }
-          }
-          else if(chld.tagName().compare("Filter") == 0) {
-#ifdef DEBUG
-            switch(pnt->getType()) {
-              case vs_project: {
-                kddbg << QString(">>> P:[%1] filter [%2]\n").
-                    arg(static_cast<vsp_p>(pnt)->getName()).
-                    arg(chld.attribute("Name"));
-                break; }
-              case vs_filter: {
-                kddbg << QString(">>> F:[%1] filter [%2]\n").
-                    arg(static_cast<vsf_p>(pnt)->getName()).
-                    arg(chld.attribute("Name"));
-                break; }
-              default: {
-                kddbg << ">>> unknown parent for filter\n";
-                break; }
-            }
-#endif
-            // Create VS filter
-            QUuid flt_uid;
-            if(readGUID(chld.attribute("UniqueIdentifier"), flt_uid)) {
-              vsf_p filter = new vsf(chld.attribute("Name"), flt_uid);
-
-              if(filter != 0) {
-                pnt->insert(filter);
-                // Read filter items
-                if(!__read_unit(chld, static_cast<vse_p>(filter))) {
-                  kddbg << VSPART_ERROR"Failed to read filter [ " << chld.attribute("Name") << " ] contents.\n";
-                }
-                //TODO: make filters to store and work with filtered file extensions
-#ifdef DEBUG
-                kddbg << QString("<<< project [%1] filter [%2] <inserted>\n").arg(name).arg(filter->getName());
-#endif
-              }
-              else {
-                kddbg << g_err_notenoughmem.arg(QString("["VSPART_FILTER"]:[%1]").arg(chld.attribute("Name"))).
-                    arg(QString("in {VSProject[%1]::__read_unit}").arg(name));
-                return false;
-              }
-            }
-            else {
-              kddbg << g_err_guidparse.arg(chld.attribute("UniqueIdentifier")).
-                  arg(QString("in {VSProject[%1]::__read_unit}").arg(name));
-            }
-          }
-          chld = chld.nextSibling().toElement();
-        }
-        return true;
-      }
-    }
-    return false;
   }
 
   vsbb_p VSProject::getBB(const QString &c) const {
@@ -2548,13 +2303,293 @@ namespace VStudio {
   //BEGIN // Inherited entity types
 
   //===========================================================================
-  // Visual studio file methods
+  // VStudio C/C++ project methods
   //===========================================================================
   VSProject_c::VSProject_c(const QString &nm, const QUuid &uid)
   : VSProject(vs_prjlang_c, nm, uid) {
   }
 
   VSProject_c::~VSProject_c() {
+  }
+
+  bool VSProject_c::write(bool sync/*=true*/) {
+    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    return true;
+  }
+
+  bool VSProject_c::write(QTextStream &/*stream*/, bool sync/*=true*/) {
+    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    return true;
+  }
+
+  bool VSProject_c::read(bool /*sync=true*/) {
+    //Check paths:
+    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSProject::read"); return false; }
+    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSProject::read"); return false; }
+
+    QFile fl;
+
+    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
+    fl.setName(path_abs);
+    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open project file" << endl; return false; }
+    if(!fl.isReadable()) { kddbg << g_err_fileread.arg(path_abs).arg("VSProject::read"); return false; }
+    if(!fl.isWritable()) { kddbg << g_err_filewrite.arg(path_abs).arg("VSProject::read"); return false; }
+    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
+
+    QTextStream stream(&fl);
+
+    if(!read(stream, true)) {
+      kddbg << VSPART_ERROR"Failed to parse prj: " << name << " file \"" << path_abs << "\"\n";
+      return false;
+    }
+
+    fl.close();
+    return true;
+  }
+
+  bool VSProject_c::read(QTextStream &stream, bool sync/*=true*/) {
+    if(FALSE == doc.setContent(stream.read())) {
+      kddbg << VSPART_ERROR"Can't set content for DOM element in project: " << name << endl;
+      return false;
+    }
+
+    // Acquire all necessary elements
+    QDomElement prj_e = doc.documentElement();
+    QDomElement cfg_e = prj_e.namedItem(VSPRJ_DOM_CONFIGS).toElement();
+    QDomElement fil_e = prj_e.namedItem(VSPRJ_DOM_FILES).toElement();
+
+    // Check all elements
+    if(prj_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg("Project root").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+    if(cfg_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_CONFIGS).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+    if(fil_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg(VSPRJ_DOM_FILES).arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+
+    //BEGIN: Read project configurations
+#ifdef DEBUG
+    kddbg << "VSPROJ: [" << name << "] Reading configs.\n";
+    // QDomElement q = doc.documentElement();
+    // QDomNode n = q.firstChild();
+    // while(!n.isNull()) {
+    //   QDomElement e = n.toElement();
+    //   kddbg << "Tag: " << e.tagName() << endl;
+    //   n = n.nextSibling();
+    // }
+#endif
+    // DomUtil::elementByPath(doc, VSPART_DOM_PROJECT"/"VSPART_DOM_PROJECT_CONFIGS);
+    QDomElement it_e = cfg_e.firstChild().toElement();
+    if(it_e.isNull()) {
+      kddbg << g_err_domelemnotpresent.arg("it_e:configuration").arg(QString("in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+
+    while(!it_e.isNull()) {
+#ifdef DEBUG
+      kddbg << "Parsing: " << it_e.tagName() << QString(" in {VSProject[%1]::read}.\n").arg(name);
+#endif
+      if(it_e.tagName() == "Configuration") {
+        QString cfg_name = it_e.attribute("Name");
+        QString outdir = it_e.attribute("OutputDirectory");
+
+        VSConfigCreate cr;
+        cr.name = cfg_name.left(cfg_name.find('|'));
+        cr.platform = string2Platform(cfg_name.mid(cfg_name.find('|')+1));
+
+        if(!createCfg(0, cr)) {
+          kddbg << VSPART_ERROR"Can't create config: " << name << " for: " << name << endl;
+          return false;
+        }
+#ifdef DEBUG
+        else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject[%1]::read").arg(name); }
+#endif
+      }
+      else {
+        kddbg << VSPART_WARNING"Wrong tag: " << it_e.tagName() << endl;
+      }
+      it_e = it_e.nextSibling().toElement();
+    }
+    //END: Read project configurations
+
+    /* NOTE: upon reaching this point project is considered as configured
+    To make sure that configurations will be parented and upon saving there will be no crash because of that. */
+    if(bboxes.size() > 0) { set_bit(enflg, IS_CONFIGURED); }
+
+    //BEGIN: Read project files
+    /* it_e = fil_e.firstChild().toElement();
+    if(it_e.isNull()) {
+    kddbg << g_err_domelemnotpresent.arg("it_e = Files").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
+    return false;
+  } */
+
+    if(!__read_unit(fil_e, static_cast<vse_p>(this))) {
+      kddbg << QString("Failed to read Files in {%1}").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
+      return false;
+    }
+
+    /* while(!it_e.isNull()) {
+      // "Unfiltered" file
+    if(it_e.tagName() == "File") {
+#ifdef DEBUG
+    kddbg << "Parsing: " << QString("[File]:[%1]").arg(it_e.attribute("RelativePath"))
+    << QString(" in {VSProject[%1]::read}.\n").arg(name);
+#endif
+    vsfl_p fl = new vsfl("unknown", this);
+    if(fl != 0) {
+    if(fl->read(it_e, true)) {
+    insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
+#ifdef DEBUG
+    kddbg << QString("File [%1] inserted into project [%2].\n").arg(fl->getName()).arg(name);
+#endif
+  }
+    else { kddbg << QString(VSPART_ERROR"Failed to read file \"%1\".\n").arg(it_e.attribute("RelativePath")); }
+  }
+    else {
+    kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::read}").arg(name));
+    return false;
+  }
+  }
+      // "Filtered" file
+    else if(it_e.tagName() == "Filter") {
+    if(!__read_filter(it_e)) {
+    kddbg << VSPART_ERROR"Failed to read filter [ " << it_e.attribute("Name") << " ] contents.\n";
+    return false;
+  }
+  }
+    it_e = it_e.nextSibling().toElement();
+  } */
+    //END: Read project files
+
+    set_bit(enflg, IS_LOADED_OK);
+    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    return true;
+  }
+
+  bool VSProject_c::__read_unit(QDomElement el, vse_p pnt) {
+    if(pnt != 0) {
+      if(!el.isNull()) {
+        // Read unit's children
+        QDomElement chld = el.firstChild().toElement();
+        while(!chld.isNull()) {
+          if(chld.tagName().compare("File") == 0) {
+#ifdef DEBUG
+            QString report;
+            report.append(QString("project [%1] file \"%2\" <found>").arg(name).arg(chld.attribute("RelativePath")));
+#endif
+            vsfl_p fl = new vsfl("this file is not yet loaded", this);
+            if(fl != 0) {
+              if(fl->read(chld, true)) {
+#ifdef DEBUG
+                report.append(" <read>");
+#endif
+              }
+              else { kddbg << QString(VSPART_ERROR"Can't read file \"%1\".\n").arg(chld.attribute("RelativePath")); }
+
+              // Insert file into project, even if it is not loaded or reachable
+              switch(pnt->getType()) {
+                case vs_project: {
+                  insert(fl);
+                  break; }
+                  case vs_filter: {
+                    insert(fl);
+                    static_cast<vsf_p>(pnt)->insert(fl); // Add file to filter
+                    break; }
+                    default: { break; }
+              }
+#ifdef DEBUG
+              report.append(" <inserted>\n");
+              kddbg << report;
+#endif
+            }
+            else {
+              kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::__read_file}").
+                  arg(name));
+              return false;
+            }
+          }
+          else if(chld.tagName().compare("Filter") == 0) {
+#ifdef DEBUG
+            switch(pnt->getType()) {
+              case vs_project: {
+                kddbg << QString(">>> P:[%1] filter [%2]\n").
+                    arg(static_cast<vsp_p>(pnt)->getName()).
+                    arg(chld.attribute("Name"));
+                break; }
+                case vs_filter: {
+                  kddbg << QString(">>> F:[%1] filter [%2]\n").
+                      arg(static_cast<vsf_p>(pnt)->getName()).
+                      arg(chld.attribute("Name"));
+                  break; }
+                  default: {
+                    kddbg << ">>> unknown parent for filter\n";
+                    break; }
+            }
+#endif
+            // Create VS filter
+            QUuid flt_uid;
+            if(readGUID(chld.attribute("UniqueIdentifier"), flt_uid)) {
+              vsf_p filter = new vsf(chld.attribute("Name"), flt_uid);
+
+              if(filter != 0) {
+                pnt->insert(filter);
+                // Read filter items
+                if(!__read_unit(chld, static_cast<vse_p>(filter))) {
+                  kddbg << VSPART_ERROR"Failed to read filter [ " << chld.attribute("Name") << " ] contents.\n";
+                }
+                //TODO: make filters to store and work with filtered file extensions
+#ifdef DEBUG
+                kddbg << QString("<<< project [%1] filter [%2] <inserted>\n").arg(name).arg(filter->getName());
+#endif
+              }
+              else {
+                kddbg << g_err_notenoughmem.arg(QString("["VSPART_FILTER"]:[%1]").arg(chld.attribute("Name"))).
+                    arg(QString("in {VSProject[%1]::__read_unit}").arg(name));
+                return false;
+              }
+            }
+            else {
+              kddbg << g_err_guidparse.arg(chld.attribute("UniqueIdentifier")).
+                  arg(QString("in {VSProject[%1]::__read_unit}").arg(name));
+            }
+          }
+          chld = chld.nextSibling().toElement();
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  //===========================================================================
+  // VStudio C# project methods
+  //===========================================================================
+  VSProject_cs::VSProject_cs(const QString &nm, const QUuid &uid)
+  : VSProject(vs_prjlang_cs, nm, uid) {
+  }
+
+  VSProject_cs::~VSProject_cs() {
+  }
+
+  bool VSProject_cs::write(bool sync/*=true*/) {
+    return false;
+  }
+
+  bool VSProject_cs::write(QTextStream &/*s*/, bool sync/*=true*/) {
+    return false;
+  }
+
+  bool VSProject_cs::read(bool sync/*=true*/) {
+    return false;
+  }
+
+  bool VSProject_cs::read(QTextStream &/*s*/, bool sync/*=true*/) {
+    return false;
   }
   //END // Inherited entity types
 
