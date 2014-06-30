@@ -973,16 +973,24 @@ namespace VStudio {
     return true;
   }
 
-  vse_p VSSolution::getByUID(const QUuid &uid) const {
+  /** \fn VSSolution::getByUID
+   * \brief Gets project withi this solution by it's UID
+   * @param uid uid of the project
+   * @return project ptr
+   */
+  vsp_p VSSolution::getByUID(const QUuid &uid) const {
     BOOSTVEC_FOR(vsp_ci, it, projects) {
-      if((*it) != 0) {
-        if((*it)->getUID() == uid) { return (*it); }
+      vsp_p prj(*it);
+      if(prj != 0) {
+        if(prj->getUID() == uid) { return prj; }
       }
       else { kddbg << g_err_list_corrupted.arg(VSPART_PROJECT).arg("VSSolution::getByUID"); return 0; }
     }
     kddbg << g_err_ent_notfound.arg(VSPART_PROJECT).arg(guid2String(uid)).arg(name);
     return 0;
   }
+
+  /*inline*/ uivss_p VSSolution::getUI() const { return uisln; }
 
   bool VSSolution::createUI(uivse_p /*pnt*/) {
     if(uisln == 0) {
@@ -1501,9 +1509,16 @@ namespace VStudio {
     return sln;
   }
 
-  vse_p VSProject::getByUID(const QUuid &/*uid*/) const {
+  /** \fn VSProject::getByUID
+   * \brief Gets file by it's UID
+   * @param uid uid of file
+   * @return ptr to file in project
+   */
+  /* vsfl_p VSProject::getByUID(const QUuid &uid) const {
     return 0;
-  }
+  } */
+
+  /*inline*/ uivsp_p VSProject::getUI() const { return uiprj; }
 
   bool VSProject::createUI(uivse_p p) {
     if(uiprj==0) {
@@ -2008,20 +2023,22 @@ namespace VStudio {
   //   return false;
   // }
 
+  /** \fn VSFilter::getByUID(const QUuid &uid)
+   * \brief Retrieves project|filter contained in this filter
+   * @p uid uid of filter|project that is being searched for
+   * @return vse_p of filter|project
+   */
   vse_p VSFilter::getByUID(const QUuid &uid) const {
-#ifdef USE_BOOST
     vse_ci it=chld.begin();
-    for(; it!=chld.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      if((*it) != 0) {
-        switch((*it)->getType()) {
+    BOOSTVEC_OFOR(it, chld) {
+      vse_p ent(*it);
+      if(ent != 0) {
+        switch(ent->getType()) {
           case vs_project: {
-            if(static_cast<vsp_p>(*it)->getUID() == uid) { break; }
+            if(static_cast<vsp_p>(ent)->getUID() == uid) { break; }
             break; }
           case vs_filter: {
-            if(static_cast<vsf_p>(*it)->getUID() == uid) { break; }
+            if(static_cast<vsf_p>(ent)->getUID() == uid) { break; }
             break; }
           default: {
             break; }
@@ -2036,12 +2053,11 @@ namespace VStudio {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
-    else {
-      kddbg << "Child " << guid2String(uid) << " not found.\n";
-      return 0;
-    }
+    else { kddbg << "Child " << guid2String(uid) << " not found.\n"; }
     return 0;
   }
+
+  /*inline*/ uivsf_p VSFilter::getUI() const { return uiflt; }
 
   bool VSFilter::createUI(uivse_p pnt) {
     if(uiflt == 0) {
@@ -2257,21 +2273,20 @@ namespace VStudio {
   /*inline*/ void VSFile::setDom(QDomElement el) { dom = el; }
   /*inline*/ vsp_p VSFile::getProject() const { return project; }
 
+  /** \fn VSFile::getByUID(const QUuid &uid)
+   * \brief Retrieves parent project of this file by it's UID
+   * @p uid QUuid of parent project that is being looked for
+   * @return vsp_p to parent project, or 0 no parent found
+   */
   vsp_p VSFile::getByUID(const QUuid &uid) const {
-#ifdef USE_BOOST
     vse_ci it=pnts.begin();
-    for(; it!=pnts.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      if((*it) != 0) {
-        if((*it)->getType() == vs_project) {
-          if(static_cast<vsp_p>(*it)->getUID() == uid) { break; }
+    BOOSTVEC_OFOR(it, pnts) {
+      vse_p ent(*it);
+      if(ent != 0) {
+        if(ent->getType() == vs_project) {
+          if(static_cast<vsp_p>(ent)->getUID() == uid) { break; }
         }
-      } else {
-        kddbg << g_err_list_corrupted.arg("VSEntity").arg("VSFile::getByUID");
-        return 0;
-      }
+      } else { kddbg << g_err_list_corrupted.arg("VSEntity").arg("VSFile::getByUID"); return 0; }
     }
 #ifdef USE_BOOST
     if(it!=pnts.end()) { return static_cast<vsp_p>(*it); }
@@ -2279,13 +2294,13 @@ namespace VStudio {
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
     else {
-      kddbg << "Can't find parent: " << guid2String(uid) << "\n";
-      return 0;
+      kddbg << QString("Can't find project [%1] in {%2}.\n").arg(guid2String(uid)).
+          arg(QString("VSFile[%1]::getByUID").arg(name));
     }
     return 0;
   }
 
-  /*inline*/ uivse_p VSFile::getUI() const { return static_cast<uivse_p>(uifl); }
+  /*inline*/ uivsfl_p VSFile::getUI() const { return uifl; }
 
   bool VSFile::createUI(uivse_p pnt) {
     if(uifl==0) {
@@ -2615,15 +2630,6 @@ namespace VStudio {
   VSToolCompiler::~VSToolCompiler() {
   }
 
-  vse_p VSToolCompiler::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSToolCompiler::getUI() const {
-    //TODO: Implement UI for MSVC compiler build tool
-    return 0;
-  }
-
   void VSToolCompiler::setParent(vse_p /*parent*/) {
   }
 
@@ -2641,15 +2647,6 @@ namespace VStudio {
   VSToolLinker::~VSToolLinker() {
   }
 
-  vse_p VSToolLinker::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSToolLinker::getUI() const {
-    //TODO: Implement UI for MSVC linker build tool
-    return 0;
-  }
-
   void VSToolLinker::setParent(vse_p /*parent*/) {
   }
 
@@ -2665,15 +2662,6 @@ namespace VStudio {
   }
 
   VSToolMidl::~VSToolMidl() {
-  }
-
-  vse_p VSToolMidl::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSToolMidl::getUI() const {
-    //TODO: Implement UI for MS midl compiler build tool
-    return 0;
   }
 
   void VSToolMidl::setParent(vse_p /*parent*/) {
@@ -2718,15 +2706,6 @@ namespace VStudio {
   VSPlWin32::~VSPlWin32() {
   }
 
-  vse_p VSPlWin32::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSPlWin32::getUI() const {
-    //TODO: Implement UI for Win32 Platform build tool
-    return 0;
-  }
-
   void VSPlWin32::setParent(vse_p /*parent*/) {
   }
 
@@ -2742,15 +2721,6 @@ namespace VStudio {
   }
 
   VSPlWin64::~VSPlWin64() {
-  }
-
-  vse_p VSPlWin64::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSPlWin64::getUI() const {
-    //TODO: Implement UI for x64 Platform build tool
-    return 0;
   }
 
   void VSPlWin64::setParent(vse_p /*parent*/) {
@@ -2789,19 +2759,6 @@ namespace VStudio {
   }
 
   VSConfig::~VSConfig() {
-  }
-
-  vse_p VSConfig::getByUID(const QUuid &/*uid*/) const {
-#ifdef DEBUG
-    kddbg << "Error! It is impossible to get anything by UID from configuration.\n"
-        << "\tPlease remove call to this method from your code.\n";
-#endif
-    return 0;
-  }
-
-  /*inline*/ uivse_p VSConfig::getUI() const {
-    //TODO: Implement UI for VS configuration
-    return 0;
   }
 
   void VSConfig::setParent(vse_p /*parent*/) {
@@ -2848,14 +2805,6 @@ namespace VStudio {
 
   VSBuildBox::~VSBuildBox() {
     pcfg = 0;
-  }
-
-  vse_p VSBuildBox::getByUID(const QUuid &/*uid*/) const {
-    return 0;
-  }
-
-  uivse_p VSBuildBox::getUI() const {
-    return 0; //TODO: Think about implementing UI for buildbox
   }
 
   void VSBuildBox::setParent(const vse_p /*p*/) {

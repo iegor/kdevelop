@@ -130,8 +130,6 @@ namespace VStudio {
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
 
-      virtual vse_p getByUID(const QUuid &uid) const = 0;
-      virtual uivse_p getUI() const = 0;
       virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
 
@@ -185,12 +183,6 @@ namespace VStudio {
     // VS Entity interface methods:
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
-      /**
-       * @param uid
-       * @return project ptr
-       */
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const { return (uivse_p)uisln; }
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -201,6 +193,8 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS Solution methods:
+      vsp_p getByUID(const QUuid &uid) const;
+      uivss_p getUI() const;
       bool dumpLayout(QTextStream &layout);
       vsf_p getFltByUID(const QUuid &uid) const;
       void forEachProj(entityFunctor functor);
@@ -268,12 +262,6 @@ namespace VStudio {
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent);
-      /**
-       * @param uid uid of lookup file
-       * @return file in project
-       */
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const { return (uivse_p)uiprj; }
       virtual vse_p getParent() const;
 
     // VS FSStored interface methods:
@@ -283,6 +271,7 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
 
     // VS Project methods:
+      uivsp_p getUI() const;
       bool dumpLayout(QTextStream &stream);
       bool dumpConfigLayout(QTextStream &stream);
       vsp_p getReqByUID(const QUuid &uid) const;
@@ -338,11 +327,11 @@ namespace VStudio {
       virtual void insert(vse_p item);
       virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent); //NOTE: Inserts this filter into parent's filters
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const { return (uivse_p)uiflt; }
       virtual vse_p getParent() const;
 
     // VS Filter methods:
+      vse_p getByUID(const QUuid &uid) const;
+      uivsf_p getUI() const;
       bool dumpLayout(QTextStream &layout);
       e_VSEntityType getParentType() const { return parent->getType(); }
       bool getParentUID(QUuid* uid) const;
@@ -374,8 +363,6 @@ namespace VStudio {
     // VS Entity interface methods:
       virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent_prj);
-      virtual vsp_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual vse_p getParent() const;
 
     // VS FSStored interface methods:
@@ -385,6 +372,8 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true);
 
     // VS File methods:
+      vsp_p getByUID(const QUuid &uid) const;
+      uivsfl_p getUI() const;
       bool read(QDomElement dom, bool synchronize=true);
       void setDom(QDomElement el);
       vsp_p getProject() const;
@@ -446,8 +435,6 @@ namespace VStudio {
       virtual ~VSTool();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const = 0;
-      virtual uivse_p getUI() const = 0;
       virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
 
@@ -511,8 +498,6 @@ namespace VStudio {
       virtual ~VSToolCompiler();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -526,8 +511,6 @@ namespace VStudio {
       virtual ~VSToolLinker();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -540,8 +523,6 @@ namespace VStudio {
       virtual ~VSToolMidl();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -554,8 +535,6 @@ namespace VStudio {
       virtual ~VSPlatform();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const = 0;
-      virtual uivse_p getUI() const = 0;
       virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
 
@@ -575,8 +554,6 @@ namespace VStudio {
       virtual ~VSPlWin32();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
   };
@@ -587,8 +564,6 @@ namespace VStudio {
       virtual ~VSPlWin64();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
   };
@@ -632,8 +607,6 @@ namespace VStudio {
       virtual ~VSConfig();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -680,8 +653,6 @@ namespace VStudio {
       virtual ~VSBuildBox();
 
     // VS Entity interface methods:
-      virtual vse_p getByUID(const QUuid &uid) const;
-      virtual uivse_p getUI() const;
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
