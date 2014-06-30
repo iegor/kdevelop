@@ -184,7 +184,7 @@ namespace VStudio {
   VSPart *VSEntity::sys_part = 0;
   VSEntity::VSEntity(e_VSEntityType typ)
   : type(typ)
-  , uient(0)
+  // , uient(0)
   , enflg(0) {
   }
 

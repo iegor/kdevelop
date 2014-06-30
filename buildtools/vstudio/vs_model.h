@@ -135,7 +135,7 @@ namespace VStudio {
 
     protected:
       e_VSEntityType type;
-      uivse_p uient;  // UI entity
+      //uivse_p uient;  // UI entity
       uint enflg;
 
     private:
