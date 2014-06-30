@@ -1124,6 +1124,16 @@ namespace VStudio {
     return true;
   }
 
+  /** \fn VSProject::createCfg(const vcfg_cp parent_config, const vcfgcr_r cr)
+   * \brief Will create a new config using \a parent_config as it's parent.
+   * - will not set new config as \a selected.
+   * - will check internally so that configs wouldn't doublicate.
+   * - if any config will have the same parent as the new one being created, it will be disabled for action and
+   *   new one will be enabled instead.
+   * @param parent_config configuration to use as \b parent
+   * @param cr is a pointer to \a VSConfig::VSConfigCreate struct containing params for config creation
+   * @return \b true if all work is done perfectly well
+   */
   bool VSSolution::createCfg(const vcfg_p p, const vcfgcr_r pc) {
     // Check if we already have a build box with this config as parent
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
@@ -1778,6 +1788,9 @@ namespace VStudio {
     return addRequirement(static_cast<vsp_p>(sln->getByUID(uid)));
   }
 
+  /** \fn VSProject::populateUI
+   * \brief This will populate/update UI items tree
+   */
   bool VSProject::populateUI() {
     BOOSTVEC_FOR(vsf_ci, it, filters) {
       if(!(*it)->populateUI(static_cast<uivse_p>(uiprj))) { return false; }
@@ -1809,6 +1822,16 @@ namespace VStudio {
     else { clear_bit(enflg, IS_ACTIVE); }
   }
 
+  /** \fn VSProject::createCfg(const vcfg_cp parent_config, const vcfgcr_r cr)
+   * \brief Will create a new config using \a parent_config as it's parent.
+   * - will not set new config as \a selected.
+   * - will check internally so that configs wouldn't doublicate.
+   * - if any config will have the same parent as the new one being created, it will be disabled for action and
+   *   new one will be enabled instead.
+   * @param parent_config configuration to use as \b parent
+   * @param cr is a pointer to \a VSConfig::VSConfigCreate struct containing params for config creation
+   * @return \b true if all work is done perfectly well
+   */
   bool VSProject::createCfg(const vcfg_cp p, const vcfgcr_r cr) {
     // Check configs list for duplications and ambiguities
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
@@ -1957,6 +1980,11 @@ namespace VStudio {
       return 0;
     }
   }
+
+  /** \fn VSProject::bbs()
+   * \brief Get Build-Boxes for this project for non-modifying purposes
+   * @return const ref to vector with Build-Boxes
+   */
   /*inline*/ pv_vsbb_cr VSProject::bbs() const { return bboxes; }
 
   //===========================================================================

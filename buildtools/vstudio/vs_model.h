@@ -199,20 +199,9 @@ namespace VStudio {
       vsf_p getFltByUID(const QUuid &uid) const;
       void forEachProj(entityFunctor functor);
       void forEachFilter(entityFunctor functor);
-      bool populateUI(); // This will populate/update UI items tree
+      bool populateUI();
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
-
-      /*!
-       * Will create a new config using \a parent_config as it's parent.
-       * - will not set new config as \a selected.
-       * - will check internally so that configs wouldn't doublicate.
-       * - if any config will have the same parent as the new one being created, it will be disabled for action and
-       *   new one will be enabled instead.
-       * @param parent_config configuration to use as \b parent
-       * @param pc is a pointer to \a VSConfig::VSConfigCreate struct containing params for config creation
-       * @return \b true if all work is done perfectly well
-       */
       bool createCfg(const vcfg_p parent_config, const vcfgcr_r pc);
       bool selectCfg(const vcfg_p parent_config);
       vsbb_p getBB(const QString &config) const;
@@ -287,16 +276,11 @@ namespace VStudio {
       e_VSPrjLangType getLang() { return lang; }
       void setActive(bool active=true);
       bool isActive() const;
-
-      // Configuraion works
       bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
       bool selectCfg(const vcfg_cp parent_config);
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_cp parent_config) const;
       vcfg_cp currentCfg() const;
-      /** Get Build-Boxes for this project for non-modifying purposes
-       * @return - const ref to vector with Build-Boxes
-       */
       pv_vsbb_cr bbs() const;
 
       bool build();
