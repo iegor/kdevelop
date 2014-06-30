@@ -231,6 +231,14 @@ Environment variables and make arguments can be specified in the project setting
 #error "VStudio: Boost support is not enabled" //TODO: Implement later
 #endif
 
+#ifndef DEBUG
+#define vsinline inline
+#define vsinline_attrib __attribute__((always_inline))
+#else
+#undef vsinline
+#undef vsinline_attrib
+#endif
+
 //BEGIN //VStudio namespace
 namespace VStudio {
   class VSPart;
