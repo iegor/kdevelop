@@ -552,6 +552,26 @@ namespace VStudio {
       virtual vse_p getParent() const;
   };
 
+  class VSPlMixed : public VSPlatform {
+    public:
+      VSPlMixed();
+      virtual ~VSPlMixed();
+
+    // VS Entity interface methods:
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+  };
+
+  class VSPlAnyCPU : public VSPlatform {
+    public:
+      VSPlAnyCPU();
+      virtual ~VSPlAnyCPU();
+
+    // VS Entity interface methods:
+      virtual void setParent(vse_p parent);
+      virtual vse_p getParent() const;
+  };
+
   /*!
    * Used to send into vs entities that can act.
    * @param name configuration name

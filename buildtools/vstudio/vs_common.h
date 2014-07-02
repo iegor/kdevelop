@@ -68,6 +68,8 @@
 // VS platform (arch) names
 #define VSPL_WIN32 "Win32"
 #define VSPL_WIN64 "x64"
+#define VSPL_MIXED "Mixed Platforms"
+#define VSPL_ANYCPU "Any CPU"
 
 // Language of project
 #define VSPART_PRJLANG_CPP "vs_prjlang_c"
@@ -254,6 +256,7 @@ namespace VStudio {
   predeclare_vs_typ(VSSolution, vss); // Predeclaration for VS solution model representation
   predeclare_vs_typ(VSProject, vsp); // Predeclaration for VS project model representation
   predeclare_vs_typ(VSProject_c, vspc); // Predeclaration for VS project (C lang) model representation
+  predeclare_vs_typ(VSProject_cs, vspcs); // Predeclaration for VS project (C# lang) model representation
   predeclare_vs_typ(VSFilter, vsf); // Predeclaration for VS filter model representation
   predeclare_vs_typ(VSFile, vsfl); // Predeclaration for VS file model representation
   predeclare_vs_typ(VSConfig, vcfg); //Predeclaration for VS configuration model representation
@@ -329,6 +332,9 @@ namespace VStudio {
     vspl_unknown = 0,
     vspl_win32,
     vspl_win64,
+    // Special cases
+    vspl_mixed,
+    vspl_anycpu, // Mostly used in C# projects
   };
 
   enum e_VSBuildTool {

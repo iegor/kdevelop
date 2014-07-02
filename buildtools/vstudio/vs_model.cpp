@@ -26,6 +26,8 @@
 namespace VStudio {
   static const VSPlWin32 g_Win32Platform;
   static const VSPlWin64 g_Win64Platform;
+  static const VSPlMixed g_MixedPlatform;
+  static const VSPlAnyCPU g_AnyCPUPlatform;
 
   //BEGIN // Basic entity types
 
@@ -2712,13 +2714,12 @@ namespace VStudio {
 
   const VSPlatform* VSPlatform::getVSPlatform(e_VSPlatform p) {
     switch(p) {
-      case vspl_win32: return static_cast<const VSPlatform*>(&g_Win32Platform);
-      case vspl_win64: return static_cast<const VSPlatform*>(&g_Win64Platform);
+      case vspl_win32: { return static_cast<vspl_cp>(&g_Win32Platform); }
+      case vspl_win64: { return static_cast<vspl_cp>(&g_Win64Platform); }
+      case vspl_mixed: { return static_cast<vspl_cp>(&g_MixedPlatform); }
+      case vspl_anycpu: { return static_cast<vspl_cp>(&g_AnyCPUPlatform); }
       default: {
-#ifdef DEBUG
-        kddbg << "Error!!! Unsupported platform \"" << platform2String(p)
-            << "\" is requested, aborting\n";
-#endif
+        kddbg << "Error!!! Unsupported platform \"" << platform2String(p) << "\" is requested, aborting\n";
         return 0;
       }
     }
@@ -2755,6 +2756,40 @@ namespace VStudio {
   }
 
   vse_p VSPlWin64::getParent() const {
+    return 0;
+  }
+
+  //===========================================================================
+  // VS Platform "Mixed Platforms" methods
+  //===========================================================================
+  VSPlMixed::VSPlMixed()
+  :VSPlatform(vspl_mixed) {
+  }
+
+  VSPlMixed::~VSPlMixed() {
+  }
+
+  void VSPlMixed::setParent(vse_p /*parent*/) {
+  }
+
+  vse_p VSPlMixed::getParent() const {
+    return 0;
+  }
+
+  //===========================================================================
+  // VS Platform "Any CPU" methods
+  //===========================================================================
+  VSPlAnyCPU::VSPlAnyCPU()
+  : VSPlatform(vspl_anycpu) {
+  }
+
+  VSPlAnyCPU::~VSPlAnyCPU() {
+  }
+
+  void VSPlAnyCPU::setParent(vse_p /*parent*/) {
+  }
+
+  vse_p VSPlAnyCPU::getParent() const {
     return 0;
   }
 

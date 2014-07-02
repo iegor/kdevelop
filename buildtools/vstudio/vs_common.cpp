@@ -165,16 +165,20 @@ namespace VStudio {
 
   QString platform2String(e_VSPlatform p) {
     switch(p) {
-      case vspl_win32: return VSPL_WIN32;
-      case vspl_win64: return VSPL_WIN64;
-      default: return "unknown";
+      case vspl_win32: { return VSPL_WIN32; }
+      case vspl_win64: { return VSPL_WIN64; }
+      case vspl_mixed: { return VSPL_MIXED; }
+      case vspl_anycpu: { return VSPL_ANYCPU; }
+      default: { return "unknown"; }
     }
   }
 
   e_VSPlatform string2Platform(const QString &s) {
-    if(s == VSPL_WIN32) return vspl_win32;
-    else if(s == VSPL_WIN64) return vspl_win64;
-    else return vspl_unknown;
+    if(s.compare(VSPL_WIN32) == 0) { return vspl_win32; }
+    else if(s.compare(VSPL_WIN64) == 0) { return vspl_win64; }
+    else if(s.compare(VSPL_MIXED) == 0) { return vspl_mixed; }
+    else if(s.compare(VSPL_ANYCPU) == 0) { return vspl_anycpu; }
+    else { return vspl_unknown; }
   }
 
   bool verifyPlatform(const QString &p) {
