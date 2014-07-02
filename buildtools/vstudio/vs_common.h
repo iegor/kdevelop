@@ -237,8 +237,8 @@ Environment variables and make arguments can be specified in the project setting
 #define vsinline inline
 #define vsinline_attrib __attribute__((always_inline))
 #else
-#undef vsinline
-#undef vsinline_attrib
+#define vsinline
+#define vsinline_attrib
 #endif
 
 //BEGIN //VStudio namespace
