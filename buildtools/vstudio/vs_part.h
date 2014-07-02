@@ -13,15 +13,23 @@
 #ifndef __KDEVPART_VSTUDIOPART_H__
 #define __KDEVPART_VSTUDIOPART_H__
 
+/* Qt */
 #include <qdict.h>
 #include <qguardedptr.h>
 #include <qptrlist.h>
 #include <qmap.h>
 #include <qdatetime.h>
 #include <qdir.h>
+
+/* KDE */
+#include <kurl.h>
+
+/* KDevelop */
 #include <kdevgenericfactory.h>
 #include <klistviewaction.h>
-#include "kdevbuildtool.h"
+#include <kdevbuildtool.h>
+
+/* VStudio */
 #include "vs_common.h"
 #include "vs_explorer.h"  // VS Explorer widget
 #include "vs_dlg_addexisting_sln.h"
@@ -86,7 +94,7 @@ namespace VStudio {
     //===========================================================================
     // Own methods (e.g. vs projects and solutions loading)
     //===========================================================================
-    bool loadVsSolution(const QString &sln_name, const QString &sln_path);
+    bool loadVsSolution(const QString &sln_name, const KURL &sln_path);
     bool unloadVsSolution(const QString &sln_path);
     bool loadVsProject(const QString &prj_path);
     bool unloadVsProject(const QString &prj_path);

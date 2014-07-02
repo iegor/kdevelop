@@ -269,10 +269,10 @@ namespace VStudio {
         // QStringList filelist;
 
         for(; items.current(); ++items) {
-          QString n_path = (*items)->localPath();
-          kddbg << " add sln [" << (*items)->name() << "] \"" << n_path << "\"\n";
+          KURL url((*items)->url());
+          kddbg << " add sln [" << (*items)->name() << "] \"" << url.url() << "\"\n";
           // filelist.append(n_path);
-          if(!part->loadVsSolution((*items)->name(), n_path)) {
+          if(!part->loadVsSolution((*items)->name(), url)) {
             kddbg << QString("Can't load sln [%1] \"%2\".\n").arg((*items)->name()).arg((*items)->localPath());
             KMessageBox::error(this, "Failed to load solution", "Adding fail");
             return;
@@ -300,7 +300,7 @@ namespace VStudio {
         vss_p sln = static_cast<vss_p>(*it);
         if(sln != 0) {
           for(; itemlist.current(); ++itemlist) {
-            if(sln->getAbsPath().compare((*itemlist)->localPath()) == 0) {
+            if(sln->getURL().cmp((*itemlist)->url(), false)) {
               dupslist.append((*itemlist)->name());
               ilist.remove((*itemlist));
             }

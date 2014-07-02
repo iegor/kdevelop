@@ -91,17 +91,9 @@ namespace VStudio {
     return *this;
   }
 
-  /*inline*/ uint VSRefcountable::refs() const {
-    return rfc;
-  }
-
-  /*inline*/ bool VSRefcountable::isfree() const {
-    return static_cast<bool>(rfc==0);
-  }
-
-  /*inline*/ const pv_vse_cr VSRefcountable::parents() const {
-    return pnts;
-  }
+  vsinline uint VSRefcountable::refs() const vsinline_attrib { return rfc; }
+  vsinline bool VSRefcountable::isfree() const vsinline_attrib { return static_cast<bool>(rfc==0); }
+  vsinline const pv_vse_cr VSRefcountable::parents() const vsinline_attrib { return pnts; }
 
   //===========================================================================
   // Visual Studio nameable methods
@@ -113,13 +105,8 @@ namespace VStudio {
   VSNameable::~VSNameable() {
   }
 
-  /*inline*/ const QString& VSNameable::getName() const {
-    return name;
-  }
-
-  /*inline*/ void VSNameable::setName(const QString& n) {
-    name = n;
-  }
+  vsinline const QString& VSNameable::getName() const vsinline_attrib { return name; }
+  vsinline void VSNameable::setName(const QString& n) vsinline_attrib { name = n; }
 
   //===========================================================================
   // Visual Studio indexable methods
@@ -131,53 +118,74 @@ namespace VStudio {
   VSIndexable::~VSIndexable() {
   }
 
-  /*inline*/ const QUuid& VSIndexable::getUID() const {
-    return uid;
-  }
-
-  /*inline*/ void VSIndexable::setUID(const QUuid& u) {
-    uid=u;
-  }
+  vsinline const QUuid& VSIndexable::getUID() vsinline_attrib const { return uid; }
+  vsinline void VSIndexable::setUID(const QUuid& u) vsinline_attrib { uid=u; }
 
   //===========================================================================
   // Visual Studio FS Stored methods
   //===========================================================================
   VSFSStored::VSFSStored()
-  : path_rlt(QString::null)
-  , path_abs(QString::null)
+  : url()
   , fsflg(0) {
   }
 
   VSFSStored::~VSFSStored() {
   }
 
-  /*inline*/ const QString& VSFSStored::getRelPath() const {
-    return path_rlt;
+  vsinline const KURL& VSFSStored::getURL() const vsinline_attrib { return url; }
+  //vsinline KURL& VSFSStored::getURL() vsinline_attrib { return url; }
+
+  /** \fn VSFSStored::setPath(const QString& abp, bool ttr)
+   * \brief Sets the path (or part of it) for entity
+   * @param abp path or URL to the fs resource
+   * @param ttr <b>try to reach</b> flag, if \a true then fresh path is tested for
+   * accessibility.
+   */
+  vsinline void VSFSStored::setPath(const QString& abp, bool ttr/*=true*/) /* vsinline_attrib */ {
+    url = KURL::fromPathOrURL(abp);
+    if(ttr) { __try_reach(); }
   }
 
-  /*inline*/ void VSFSStored::setRelPath(const QString& rlp) {
-    path_rlt = rlp;
-  }
+  vsinline bool VSFSStored::isInSync() const vsinline_attrib { return check_bit(fsflg, IS_IN_SYNC); }
+  vsinline bool VSFSStored::isReachable() const vsinline_attrib { return check_bit(fsflg, IS_REACHABLE); }
 
-  /*inline*/ const QString& VSFSStored::getAbsPath() const {
-    return path_abs;
-  }
+  /** \fn VSFSStored::isLoaded()
+   * \brief Checks FS based VSEntity for positive load status
+  * <b>e.g.</b>
+  * VSSolution - Tells if solution loading procedure succeded
+  * VSProject - Tells if project loading and parsing procedure succeded
+  * @return \b true if file was found and parsed successfully upon read
+  */
+  vsinline bool VSFSStored::isLoaded() vsinline_attrib const { return check_bit(fsflg, IS_LOADED_OK); }
 
-  /*inline*/ void VSFSStored::setAbsPath(const QString& abp) {
-    path_abs = abp;
-    __try_reach();
-  }
-
-  /*inline*/ bool VSFSStored::isInSync() const { return check_bit(fsflg, IS_IN_SYNC); }
-  /*inline*/ bool VSFSStored::isReachable() const { return check_bit(fsflg, IS_REACHABLE); }
-  /*inline*/ bool VSFSStored::isLoaded() const { return check_bit(fsflg, IS_LOADED_OK); }
-
-  /*inline*/ void VSFSStored::__try_reach() {
-    if(!path_abs.isEmpty()) {
+  vsinline void VSFSStored::__try_reach() /*vsinline_attrib*/ {
+#ifdef DEBUG
+    // if(url.isValid()) { kddbg << QString("URL: \"%1\" is valid.\n").arg(url.url()); }
+    // if(url.isLocalFile()) { kddbg << QString("URL: \"%1\" is local.\n").arg(url.url()); }
+#endif
+    if(url.isValid() && url.isLocalFile()) {
       QFile fl;
-      if(fl.exists(path_abs)) { set_bit(fsflg, IS_REACHABLE); return; }
+      if(fl.exists(url.pathOrURL())) { set_bit(fsflg, IS_REACHABLE); return; }
     }
     clear_bit(fsflg, IS_REACHABLE);
+  }
+
+  /** \fn VSFSStored::__synced()
+   * \brief Sets bitmask so that entity is considered to be in syncronized state
+   * @p sync whether entity should be considered <a>syncronized/unsynchronized</a>
+   */
+  vsinline void VSFSStored::__synced(bool sync/*=true*/) {
+    if(sync) { set_bit(fsflg, IS_IN_SYNC); }
+    else { clear_bit(fsflg, IS_IN_SYNC); }
+  }
+
+  /** \fn VSFSStored::__loaded()
+   * \brief Sets bitmask so that entity is considered to be in loaded_ok state
+   * @p load whether entity should be considered <a>loaded_ok or not</a>
+   */
+  vsinline void VSFSStored::__loaded(bool load/*=true*/) {
+    if(load) { set_bit(fsflg, IS_LOADED_OK); }
+    else { clear_bit(fsflg, IS_LOADED_OK); }
   }
 
   //===========================================================================
@@ -196,7 +204,7 @@ namespace VStudio {
 #endif
   }
 
-  /*inline*/ e_VSEntityType VSEntity::getType() const { return type; }
+  vsinline e_VSEntityType VSEntity::getType() const vsinline_attrib { return type; }
 
   void VSEntity::setPart(VSPart *part) {
     if(part==0) {
@@ -210,8 +218,8 @@ namespace VStudio {
   }
 
   /*inline*/ VSPart* VSEntity::part() const { return sys_part; }
-  /*inline*/ bool VSEntity::isConfigured() const { return check_bit(enflg, IS_CONFIGURED); }
-  /*inline*/ bool VSEntity::isActive() const { return check_bit(enflg, IS_ACTIVE); }
+  vsinline bool VSEntity::isConfigured() const vsinline_attrib { return check_bit(enflg, IS_CONFIGURED); }
+  vsinline bool VSEntity::isActive() const vsinline_attrib { return check_bit(enflg, IS_ACTIVE); }
 
   void VSEntity::insert(vse_p /*pnt*/) {
     // kddbg << type2String(getType()) << "'s ::insert method is not implemented. "
@@ -298,13 +306,18 @@ namespace VStudio {
         */
   }
 
-  /*inline*/ vse_p VSSolution::getParent() const {
-    return 0;
-  }
+  /*inline*/ vse_p VSSolution::getParent() const { return 0; }
 
   bool VSSolution::write(bool sync/*=true*/) {
+    if(!url.isValid()) {
+      kddbg << QString(VSPART_ERROR"Sln [%1] Url \"%2\" is not valid.\n").arg(name).arg(url.url());
+      return false;
+    }
+    // Check that we can access to the file
+    if(!isReachable()) { kddbg << VSPART_ERROR"Url \"" << url.url() << "\" can't be reached.\n"; return false; }
+
     /* Check that all necessary for saving points are checked
-        NOTE: Allow save op when we have all projects at least at CONFIGURED state */
+        NOTE: Allow prj::save op when we have all projects at least at CONFIGURED state */
     BOOSTVEC_FOR(vsp_ci, it, projects) {
       vsp_p prj(*it);
       if(prj != 0) {
@@ -329,11 +342,11 @@ namespace VStudio {
       }
     }
 
-    QString path = path_abs.append(".test");
-    QString str;
-    QFile sln_f(path);
-      // if(!sln_f.exists(abspath)) { kddbg << "solution: " << abspath << " will be created from scratch" << endl; }
-    sln_f.setName(path);
+    KURL path(url);
+    path.setFileName(path.fileName(false).append(".test"));
+    // QString str;
+    QFile sln_f;
+    sln_f.setName(path.url());
     if(!sln_f.open(IO_WriteOnly|IO_Raw)) { kddbg << VSPART_ERROR"Can't open \"" << path << "\"\n"; return false; }
     if(!sln_f.isWritable()) { kddbg << VSPART_ERROR"Path \"" << path << "\" is not writable\n"; return false; }
 
@@ -341,7 +354,7 @@ namespace VStudio {
     kddbg << "[" << name << "]========================================: Begin save\n";
 
     if(!write(s, sync)) {
-      kddbg << VSPART_ERROR"Can't save: \"" << path << "\"\n";
+      kddbg << VSPART_ERROR"Can't save: \"" << path.url() << "\"\n";
       sln_f.flush();
       sln_f.close();
       return false;
@@ -451,28 +464,32 @@ namespace VStudio {
 
     s << "EndGlobal" << endl;
     //END //Save solution sections data
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __synced(sync);
     return true;
   }
 
-  bool VSSolution::read(bool /*sync=true*/) {
-    //Check paths:
-    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSSolution::read"); return false; }
-    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSSolution::read"); return false; }
+  bool VSSolution::read(bool sync/*=true*/) {
+    //Check URL
+    if(!url.isValid()) {
+      kddbg << QString(VSPART_ERROR"Sln [%1] Url \"%2\" is not valid.\n").arg(name).arg(url.url());
+      return false;
+    }
+
+    // Check if we can reach the file
+    __try_reach();
+    if(!isReachable()) { kddbg << VSPART_ERROR"URL \"" << url.url() << "\" can't be reached.\n"; return false; }
 
     QFile fl;
-
-    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
-    fl.setName(path_abs);
-    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open solution file" << endl; return false; }
+    fl.setName(url.pathOrURL());
+    if(!fl.open(IO_ReadOnly)) { kddbg << "can't open solution file" << endl; return false; }
     if(!fl.isReadable()) { kddbg << "is not readable" << endl; return false; }
-    if(!fl.isWritable()) { kddbg << "is not writable" << endl; return false; }
-    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
 
     QTextStream stream(&fl);
 
-    if(!read(stream, true)) {
-      kddbg << VSPART_ERROR"Failed to parse sln: " << name << " file \"" << path_abs << "\"\n";
+    if(!read(stream, sync)) {
+#ifdef DEBUG
+      kddbg << QString(VSPART_ERROR"Sln [%1] can't parse file \"%2\".\n").arg(name).arg(url.url());
+#endif
       return false;
     }
 
@@ -485,7 +502,7 @@ namespace VStudio {
     bool nestedprjs_section_loaded = false;
     vsp_p prj_active = 0; // Active project to collect dependencies from project section
     kddbg << "[" << name << "]========================================: Begin parse\n";
-    kddbg << "PATH: " << path_abs << endl;
+    kddbg << "PATH: " << url.url() << endl;
 
     //BEGIN // Read the .sln header and version info
     QString header, guard, ver;
@@ -507,7 +524,7 @@ namespace VStudio {
     kddbg << "VERSION STRING: " << header << endl;
 
     if(header.isEmpty() || header[0].latin1() != '#') {
-      kddbg << VSPART_ERROR"File \"" << path_abs << "\" is not a .sln file.\n";
+      kddbg << VSPART_ERROR"File \"" << url.url() << "\" is not a correct .sln file.\n";
       return false;
     }
 
@@ -520,7 +537,7 @@ namespace VStudio {
     }
 
     if(version == vssln_ver_unknown) {
-      kddbg << VSPART_ERROR"Failed to read version from \"" << path_abs << "\".\n";
+      kddbg << VSPART_ERROR"Failed to read version from \"" << url.url() << "\".\n";
       return false;
     }
     kddbg << "VS VERSION: " << slnVer2String(version) << endl;
@@ -666,8 +683,6 @@ namespace VStudio {
               }
             }
 
-            NormalizeSlashes(path_rlt);
-
             switch(typ) {
               case vs_project: {
                 /* kddbg << "Project [" << prjLangType2String(ltyp) << "] " << puid.toString() << " \"" << prjname
@@ -678,15 +693,20 @@ namespace VStudio {
                     //NOTE: Set most recent "active" project ptr
                     prj_active = new VSProject_c(prjname, puid);
                     if(prj_active != 0) {
-                      prj_active->setRelPath(prjpath_rlt);
-                      prj_active->setAbsPath(RebasePath_Win(path_abs, prjpath_rlt));
+                      KURL path(KURL::fromPathOrURL(url.directory(false)));
+                      NormalizeSlashes(prjpath_rlt);
+                      path.addPath(prjpath_rlt); /* RebasePath_Win(path_abs, prjpath_rlt) */
+                      //path = KURL::relativePath(url.directory(), prjpath_rlt);
+                      prj_active->setPath(path.url());
 #ifdef DEBUG
-                      kddbg << "Project [c/c++] abs path: " << prj_active->getAbsPath() << endl;
+                      kddbg << QString("C/C++ Prj [%1] \"%2\".\n").arg(prjname).arg(prj_active->getURL().url());
 #endif
                       insert(static_cast<vsp_p>(prj_active));
                       // Read project .vcproj file
                       if(!prj_active->read(true)) {
-                        kddbg << VSPART_ERROR"Can't read project file \"" << prj_active->getAbsPath() << "\"\n";
+#ifdef DEBUG
+                        kddbg << QString(VSPART_ERROR"Prj [%1] can't read project.\n").arg(prjname);
+#endif
                       }
                     }
                     else {
@@ -697,18 +717,19 @@ namespace VStudio {
                   case vs_prjlang_cs: {
                     prj_active = new VSProject_cs(prjname, puid);
                     if(prj_active != 0) {
-                      prj_active->setRelPath(prjpath_rlt);
-                      prj_active->setAbsPath(RebasePath_Win(path_abs, prjpath_rlt));
+                      KURL path(url);
+                      NormalizeSlashes(prjpath_rlt);
+                      path.addPath(prjpath_rlt);
+                      prj_active->setPath(path.url()); /* RebasePath_Win(path_abs, prjpath_rlt) */
 #ifdef DEBUG
-                      kddbg << "Project [c#] abs path: " << prj_active->getAbsPath() << endl;
+                      kddbg << QString("C# Prj [%1] \"%2\".\n").arg(prjname).arg(prj_active->getURL().url());
 #endif
                       insert(static_cast<vsp_p>(prj_active));
-
                       //TODO: Reading of C# project
                     }
                     break; }
                   default:
-                    kddbg << "Error! " << type2String(typ) << " \"" << prjname << "\": language ["
+                    kddbg << VSPART_ERROR << type2String(typ) << " \"" << prjname << "\": language ["
                         << prjLangType2String(ltyp) << "] support is not implemented\n";
                     ln = str.readLine();
                     continue; //NOTE: Just skip this unknown project
@@ -849,7 +870,8 @@ namespace VStudio {
                               else if(cfg_init[2].compare("Build") == 0) {
                                 prjbb->setEnabled();
                                 kddbg << "[" << prj->getName() << "]:[" << prjbb->config().toString()
-                                    << "] is enabled to build under it's parent [" << pbb->config().toString() << "].\n";
+                                    << "] is enabled to build under it's parent [" << pbb->config().toString()
+                                    << "].\n";
                               }
                             }
                             else {
@@ -859,7 +881,7 @@ namespace VStudio {
                         }
                         else {
                           kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg_init[1]).arg("VSSolution::read");
-                          return false;
+                          return false; //TODO: Maybe we shouldn't return upon absence of sln::bb
                         }
                       }
                     }
@@ -869,19 +891,6 @@ namespace VStudio {
                     }
 
                     ln = str.readLine();
-                  }
-
-                  // Mark this solution as CONFIGURED
-                  { vsp_ci it = projects.begin();
-                    BOOSTVEC_OFOR(it, projects) {
-                      vsp_p prj(*it);
-                      if(prj != 0) {
-                        if(!prj->isConfigured()) { break; }
-                      }
-                    }
-                    if(it == projects.end()) {
-                      set_bit(enflg, VSEntity::IS_CONFIGURED);
-                    }
                   }
                   break; }
               //END // ProjectConfigurationPlaftorms
@@ -962,22 +971,35 @@ namespace VStudio {
         kddbg << VSPART_ERROR"No nesting was not done, but there are filters in [" << name << "] sln.\n";
           //return false;
       }
-      BOOSTVEC_FOR(vsp_ci, it, projects) {
+      /* BOOSTVEC_FOR(vsp_ci, it, projects) {
         if((*it) != 0) {
             //insert((*it));
         }
+      } */
+    }
+
+    /* Check all required parameters and mark this solution as CONFIGURED */
+    { vsp_ci it = projects.begin();
+      BOOSTVEC_OFOR(it, projects) {
+        vsp_p prj(*it);
+        if(prj != 0) {
+          if(!prj->isConfigured()) { break; }
+        }
+      }
+      if(it == projects.end()) {
+        set_bit(enflg, VSEntity::IS_CONFIGURED);
       }
     }
 
     kddbg << "[" << name << "]========================================: Parsed" << endl;
-    set_bit(enflg, IS_LOADED_OK);
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __loaded(true);
+    __synced(sync);
     return true;
   }
 
-  /** \fn VSSolution::getByUID
+  /** \fn VSSolution::getByUID()
    * \brief Gets project withi this solution by it's UID
-   * @param uid uid of the project
+   * @p uid uid of the project
    * @return project ptr
    */
   vsp_p VSSolution::getByUID(const QUuid &uid) const {
@@ -992,7 +1014,7 @@ namespace VStudio {
     return 0;
   }
 
-  /*inline*/ uivss_p VSSolution::getUI() const { return uisln; }
+  vsinline uivss_p VSSolution::getUI() const vsinline_attrib { return uisln; }
 
   bool VSSolution::createUI(uivse_p /*pnt*/) {
     if(uisln == 0) {
@@ -1003,10 +1025,6 @@ namespace VStudio {
 #endif
     }
     return true;
-  }
-
-  bool VSSolution::dumpLayout(QTextStream &/*s*/) {
-    return false;
   }
 
   vsf_p VSSolution::getFltByUID(const QUuid &uid) const {
@@ -1032,32 +1050,6 @@ namespace VStudio {
          kddbg << g_err_ent_notfound.arg(VSPART_FILTER).arg(guid2String(uid)).arg(name);
     }
     return 0;
-  }
-
-  void VSSolution::forEachProj(entityFunctor fctr) {
-#ifdef USE_BOOST
-    for(vsp_ci it=projects.begin(); it!=projects.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      if(!fctr(*it)) {
-        kddbg << "forEachProject: project \"" << (*it)->getName() << "\" failed in functor\n";
-        return;
-      }
-    }
-  }
-
-  void VSSolution::forEachFilter(entityFunctor fctr) {
-#ifdef USE_BOOST
-    for(vsf_ci it=filters.begin(); it!=filters.end(); ++it) {
-#else
-#error "VStudio: Boost support is not enabled" //TODO: Implement this
-#endif
-      if(!fctr(*it)) {
-        kddbg << "forEachFilter: filter \"" << (*it)->getName() << "\" failed in functor\n";
-        return;
-      }
-    }
   }
 
   bool VSSolution::populateUI() {
@@ -1287,7 +1279,7 @@ namespace VStudio {
     return false;
   }
 
-  /*inline*/ vsp_p VSSolution::getActivePrj() const { return active_prj; }
+  vsinline vsp_p VSSolution::getActivePrj() const vsinline_attrib { return active_prj; }
 
   /*inline*/ vsp_p VSSolution::getProject(const QString &n) const {
     if(n != QString::null) {
@@ -1318,8 +1310,9 @@ namespace VStudio {
     return 0;
   }
 
-  /*inline*/ bool VSSolution::isDetached() const { return active_bb == 0; }
-  /*inline*/ const pv_vsp_cr VSSolution::projs() const { return projects; }
+  vsinline bool VSSolution::isDetached() const vsinline_attrib { return active_bb == 0; }
+  vsinline pv_vsp_cr VSSolution::projs() const vsinline_attrib { return projects; }
+  vsinline pv_vsf_cr VSSolution::filts() const vsinline_attrib { return filters; }
 
   vsbb_p VSSolution::getBB(const QString &c) const {
     if(c != QString::null) {
@@ -1559,7 +1552,7 @@ namespace VStudio {
             << "\" is not handled\n";
         return false;
     }
-    s << "\") = \"" << getName() << "\", \"" << getRelPath() << "\", \"";
+    s << "\") = \"" << getName() << "\", \"" << KURL::relativeURL(sln->getURL(), url) << "\", \"";
     s << guid2String(getUID()) << "\"\n";
 
     // Write project requirements
@@ -2222,39 +2215,31 @@ namespace VStudio {
   /*inline*/ vse_p VSFile::getParent() const { return parent; }
 
   bool VSFile::write(bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __synced(sync);
     return true;
   }
 
   bool VSFile::write(QTextStream &/*s*/, bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __synced(sync);
     return true;
   }
 
   bool VSFile::read(bool sync/*=true*/) {
     if(!dom.isNull()) {
-      //QString fl_name("<not loaded>");
+      setPath(project->getURL().directory(false), false); // Inherit project URL, because it's our "base" URL
       QString fl_path_r = dom.attribute("RelativePath");
       NormalizeSlashes(fl_path_r);
-      setRelPath(fl_path_r);
+      url.addPath(fl_path_r);
 
       // Retrieve name from relative path
-      setName(path_rlt.mid(path_rlt.findRev(g_slash)+1));
+      setName(url.fileName(true)); /* path_rlt.mid(path_rlt.findRev(g_slash)+1) */
 #ifdef DEBUG
       // kddbg << "Filename condidate: " << name << endl;
 #endif
 
-      // Retrieve absolute path
-      setAbsPath(RebasePath_Win(project->getAbsPath(), path_rlt));  //NOTE: This tests inside if file is reachable
-#ifdef DEBUG
-      // kddbg << "PATH: " << path_abs << endl;
-#endif
-
       //NOTE: This can be the place where the problem with case sensitive names is detected upon loading
-      if(!isReachable()) {
-        kddbg << QString("File [%1] is not reachable.\n").arg(name);
-        return true;
-      }
+      __try_reach();
+      if(!isReachable()) { kddbg << QString("File [%1] is not reachable.\n").arg(name); return true; }
 
       // Check for file configurations
       //TODO: Make something like initBBFromDom()
@@ -2264,8 +2249,8 @@ namespace VStudio {
         it_cfg_e = it_cfg_e.nextSibling().toElement();
       }
 
-      set_bit(fsflg, IS_LOADED_OK);
-      if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+      __loaded(true);
+      __synced(sync);
       return true;
     }
     else {
@@ -2300,8 +2285,8 @@ namespace VStudio {
     }
   }
 
-  /*inline*/ void VSFile::setDom(QDomElement el) { dom = el; }
-  /*inline*/ vsp_p VSFile::getProject() const { return project; }
+  vsinline void VSFile::setDom(const QDomElement& el) vsinline_attrib { dom = el; }
+  vsinline vsp_p VSFile::getProject() const vsinline_attrib { return project; }
 
   /** \fn VSFile::getByUID(const QUuid &uid)
    * \brief Retrieves parent project of this file by it's UID
@@ -2330,7 +2315,7 @@ namespace VStudio {
     return 0;
   }
 
-  /*inline*/ uivsfl_p VSFile::getUI() const { return uifl; }
+  vsinline uivsfl_p VSFile::getUI() const vsinline_attrib { return uifl; }
 
   bool VSFile::createUI(uivse_p pnt) {
     if(uifl==0) {
@@ -2358,33 +2343,36 @@ namespace VStudio {
   }
 
   bool VSProject_c::write(bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __synced(sync);
     return true;
   }
 
   bool VSProject_c::write(QTextStream &/*stream*/, bool sync/*=true*/) {
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __synced(sync);
     return true;
   }
 
-  bool VSProject_c::read(bool /*sync=true*/) {
-    //Check paths:
-    if(path_rlt.isEmpty()) { kddbg << g_err_emptypath.arg("Relative").arg("VSProject::read"); return false; }
-    if(path_abs.isEmpty()) { kddbg << g_err_emptypath.arg("Absolute").arg("VSProject::read"); return false; }
+  bool VSProject_c::read(bool sync/*=true*/) {
+    //Check URL
+    if(!url.isValid()) {
+      kddbg << QString(VSPART_ERROR"Prj [%1] Url \"%2\" is not valid.\n").arg(name).arg(url.url());
+      return false;
+    }
+
+    // Check if file is reachable
+    __try_reach();
+    if(!isReachable()) { kddbg << VSPART_ERROR"Url \"" << url.url() << "\" can't be reached.\n"; return false; }
 
     QFile fl;
-
-    if(!fl.exists(path_abs)) { kddbg << VSPART_ERROR"File \"" << path_abs << "\" not found.\n"; return false; }
-    fl.setName(path_abs);
-    if(!fl.open(IO_ReadWrite|IO_Raw)) { kddbg << "can't open project file" << endl; return false; }
-    if(!fl.isReadable()) { kddbg << g_err_fileread.arg(path_abs).arg("VSProject::read"); return false; }
-    if(!fl.isWritable()) { kddbg << g_err_filewrite.arg(path_abs).arg("VSProject::read"); return false; }
-    if(!fl.isReadWrite()) { kddbg << "can't read and write" << endl; return false; }
+    fl.setName(url.pathOrURL());
+    if(!fl.open(IO_ReadOnly)) { kddbg << "can't open project file" << endl; return false; }
+    if(!fl.isReadable()) { kddbg << g_err_fileread.arg(url.url()).arg("VSProject::read"); return false; }
 
     QTextStream stream(&fl);
-
-    if(!read(stream, true)) {
-      kddbg << VSPART_ERROR"Failed to parse prj: " << name << " file \"" << path_abs << "\"\n";
+    if(!read(stream, sync)) {
+#ifdef DEBUG
+      kddbg << QString(VSPART_ERROR"Prj [%1] can't parse file \"%2\".\n").arg(name).arg(url.url());
+#endif
       return false;
     }
 
@@ -2420,13 +2408,6 @@ namespace VStudio {
     //BEGIN: Read project configurations
 #ifdef DEBUG
     kddbg << "VSPROJ: [" << name << "] Reading configs.\n";
-    // QDomElement q = doc.documentElement();
-    // QDomNode n = q.firstChild();
-    // while(!n.isNull()) {
-    //   QDomElement e = n.toElement();
-    //   kddbg << "Tag: " << e.tagName() << endl;
-    //   n = n.nextSibling();
-    // }
 #endif
     // DomUtil::elementByPath(doc, VSPART_DOM_PROJECT"/"VSPART_DOM_PROJECT_CONFIGS);
     QDomElement it_e = cfg_e.firstChild().toElement();
@@ -2466,53 +2447,14 @@ namespace VStudio {
     To make sure that configurations will be parented and upon saving there will be no crash because of that. */
     if(bboxes.size() > 0) { set_bit(enflg, IS_CONFIGURED); }
 
-    //BEGIN: Read project files
-    /* it_e = fil_e.firstChild().toElement();
-    if(it_e.isNull()) {
-    kddbg << g_err_domelemnotpresent.arg("it_e = Files").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
-    return false;
-  } */
-
+    // Read roject files and filters
     if(!__read_unit(fil_e, static_cast<vse_p>(this))) {
       kddbg << QString("Failed to read Files in {%1}").arg(QString(" in {VSProject[%1]::read}.\n").arg(name));
       return false;
     }
 
-    /* while(!it_e.isNull()) {
-      // "Unfiltered" file
-    if(it_e.tagName() == "File") {
-#ifdef DEBUG
-    kddbg << "Parsing: " << QString("[File]:[%1]").arg(it_e.attribute("RelativePath"))
-    << QString(" in {VSProject[%1]::read}.\n").arg(name);
-#endif
-    vsfl_p fl = new vsfl("unknown", this);
-    if(fl != 0) {
-    if(fl->read(it_e, true)) {
-    insert(fl); //NOTE: Insert into project, so that file->prj variable was initialized
-#ifdef DEBUG
-    kddbg << QString("File [%1] inserted into project [%2].\n").arg(fl->getName()).arg(name);
-#endif
-  }
-    else { kddbg << QString(VSPART_ERROR"Failed to read file \"%1\".\n").arg(it_e.attribute("RelativePath")); }
-  }
-    else {
-    kddbg << g_err_notenoughmem.arg(QString(VSPART_FILE)).arg(QString("in {VSProject[%1]::read}").arg(name));
-    return false;
-  }
-  }
-      // "Filtered" file
-    else if(it_e.tagName() == "Filter") {
-    if(!__read_filter(it_e)) {
-    kddbg << VSPART_ERROR"Failed to read filter [ " << it_e.attribute("Name") << " ] contents.\n";
-    return false;
-  }
-  }
-    it_e = it_e.nextSibling().toElement();
-  } */
-    //END: Read project files
-
-    set_bit(enflg, IS_LOADED_OK);
-    if(sync) { set_bit(fsflg, IS_IN_SYNC); } else { clear_bit(fsflg, IS_IN_SYNC); }
+    __loaded(true);
+    __synced(sync);
     return true;
   }
 
@@ -2529,12 +2471,12 @@ namespace VStudio {
 #endif
             vsfl_p fl = new vsfl("this file is not yet loaded", this);
             if(fl != 0) {
-              if(fl->read(chld, true)) {
-#ifdef DEBUG
-                report.append(" <read>");
-#endif
+              if(!fl->read(chld, true)) {
+                kddbg << QString(VSPART_ERROR"Can't read file \"%1\".\n").arg(chld.attribute("RelativePath"));
               }
-              else { kddbg << QString(VSPART_ERROR"Can't read file \"%1\".\n").arg(chld.attribute("RelativePath")); }
+#ifdef DEBUG
+              else { report.append(" <read>"); }
+#endif
 
               // Insert file into project, even if it is not loaded or reachable
               switch(pnt->getType()) {

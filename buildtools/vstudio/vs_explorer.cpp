@@ -138,7 +138,7 @@ namespace VStudio {
 #ifdef DEBUG
         kddbg << g_msg_entselected.arg(type2String(fl->getType())).arg(fl->getName());
 #endif
-        m_part->partController()->editDocument(KURL(fl->getAbsPath()));
+        m_part->partController()->editDocument(fl->getURL());
         break; }
       default: {
         break; }

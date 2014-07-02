@@ -17,10 +17,15 @@
 #ifndef __KDEVPART_VSTUDIOPART_SOLUTION_H__
 #define __KDEVPART_VSTUDIOPART_SOLUTION_H__
 
+/* Qt */
 // #include <qfile.h>
 #include <qdom.h>
 #include <qguardedptr.h>
 
+/* KDE */
+#include <kurl.h>
+
+/* VStudio */
 #include "vs_common.h"
 
 //BEGIN //VStudio namespace
@@ -83,19 +88,12 @@ namespace VStudio {
       VSFSStored();
       virtual ~VSFSStored();
 
-      const QString& getRelPath() const;
-      void setRelPath(const QString& rel_path);
-      const QString& getAbsPath() const;
-      void setAbsPath(const QString& abs_path);
+      const KURL& getURL() const;
+      //KURL& getURL();
+      void setPath(const QString& abs_path, bool tryToReach=true);
 
       bool isInSync() const;
       bool isReachable() const;
-      /** Checks FS based VSEntity for positive load status
-       * <b>e.g.</b>
-       * VSSolution - Tells if solution loading procedure succeded
-       * VSProject - Tells if project loading and parsing procedure succeded
-       * @return \b true if file was found and parsed successfully upon read
-       */
       bool isLoaded() const;
 
       virtual bool write(bool synchronize=true) = 0;
@@ -105,9 +103,11 @@ namespace VStudio {
 
     protected:
       void __try_reach();
+      void __synced(bool sync=true);
+      void __loaded(bool load=true);
+
     protected:
-      QString path_rlt;
-      QString path_abs;
+      KURL url;
       uint fsflg;
   };
 
@@ -195,10 +195,7 @@ namespace VStudio {
     // VS Solution methods:
       vsp_p getByUID(const QUuid &uid) const;
       uivss_p getUI() const;
-      bool dumpLayout(QTextStream &layout);
       vsf_p getFltByUID(const QUuid &uid) const;
-      void forEachProj(entityFunctor functor);
-      void forEachFilter(entityFunctor functor);
       bool populateUI();
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
@@ -216,6 +213,7 @@ namespace VStudio {
       bool isDetached() const;
 
       const pv_vsp_cr projs() const;
+      const pv_vsf_cr filts() const;
 
     private:
       bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
@@ -327,7 +325,8 @@ namespace VStudio {
       pv_vse chld; // Children
   };
 
-  /** VS File model representation
+  /** \class VStudio::VSFile
+   * \brief VS file model representation
    * Used to hold almost all (if not all) logic for VS file.
    * NOTE:
    * Since file is a refcountable entity, list of parent projects
@@ -359,7 +358,7 @@ namespace VStudio {
       vsp_p getByUID(const QUuid &uid) const;
       uivsfl_p getUI() const;
       bool read(QDomElement dom, bool synchronize=true);
-      void setDom(QDomElement el);
+      void setDom(const QDomElement& el);
       vsp_p getProject() const;
 
     private:

@@ -12,6 +12,7 @@
 */
 #include <config.h>
 
+/* Qt */
 #include <qdom.h>
 #include <qdir.h>
 #include <qfileinfo.h>
@@ -20,6 +21,7 @@
 #include <qwhatsthis.h>
 #include <qgroupbox.h>
 
+/* KDE */
 #include <kapplication.h>
 #include <kconfig.h>
 #include <kaction.h>
@@ -31,20 +33,21 @@
 #include <kparts/part.h>
 #include <kdeversion.h>
 #include <kprocess.h>
+#include <kurl.h>
 
+/* KDevelop */
 #include <domutil.h>
 #include <kdevcore.h>
 #include <kdevmakefrontend.h>
 #include <kdevappfrontend.h>
 #include <kdevmainwindow.h>
 #include <kdevpartcontroller.h>
-
 #include <configwidgetproxy.h>
 #include <kdevplugininfo.h>
 #include <urlutil.h>
-
 #include <kcomboview.h>
 
+/* VStudio */
 #include "vs_part.h"
 #include "vs_model.h"
 
@@ -278,9 +281,16 @@ namespace VStudio {
         QString active_prj = subEl.attribute("active");
 
         // Check attributes
-        if(sln_iname.isEmpty()) { kddbg << VSPART_ERROR"Sln name is empty.\n"; return; }
-        if(sln_path.isEmpty()) { kddbg << VSPART_ERROR"Sln: " << sln_iname << " relative path is empty.\n"; return; }
-        if(active_prj.isEmpty()) { kddbg << VSPART_WARNING"Sln: " << sln_iname << " no active project.\n"; }
+        if(sln_iname.isEmpty()) {
+          kddbg << VSPART_ERROR"Sln name is empty.\n";
+          subEl = subEl.nextSibling().toElement();
+          continue;
+        }
+        if(sln_path.isEmpty()) {
+          kddbg << VSPART_ERROR"Sln: " << sln_iname << " relative path is empty.\n";
+          subEl = subEl.nextSibling().toElement();
+          continue;
+        }
 
         // Create model::solution item
         vss_p sln = new VSSolution(sln_iname);
@@ -289,8 +299,10 @@ namespace VStudio {
           return;
         }
 
-        sln->setAbsPath(QString(m_projectPath).append("/").append(sln_path));
-        sln->setRelPath(sln_path);
+        KURL url(KURL::fromPathOrURL(m_projectPath));
+        kddbg << url.url() << endl;
+        url.addPath(sln_path);
+        sln->setPath(url.pathOrURL());
 
         //NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
         //  stored in .kdevelop file
@@ -302,9 +314,12 @@ namespace VStudio {
 
         // Read and parse sln file
         if(sln->read()) {
-          if(!sln->setActivePrj(active_prj)) {
-            kddbg << VSPART_ERROR"Can't activate a prj: " << active_prj << " in sln: " << sln->getName() << endl;
+          if(!active_prj.isEmpty()) {
+            if(!sln->setActivePrj(active_prj)) {
+              kddbg << VSPART_ERROR"Can't activate a prj: " << active_prj << " in sln: " << sln->getName() << endl;
+            }
           }
+          else { kddbg << VSPART_WARNING"Sln: " << sln_iname << " no active project.\n"; }
         } else {
           kddbg << g_err_slnload.arg(sln_iname);
           // subEl = subEl.nextSibling().toElement();
@@ -426,12 +441,15 @@ namespace VStudio {
       return;
     }
 
+    KURL prj_url;
+    prj_url.fromPathOrURL(m_projectPath);
+
     // Write included solutions
     BOOSTVEC_FOR(vse_ci, it, m_entities) {
       vss_p sln = static_cast<vss_p>(*it);
       if(sln != 0) {
         QDomElement vssln = dom.createElement(VSPART_SOLUTION);
-        vssln.setAttribute("path", sln->getRelPath());
+        vssln.setAttribute("path", KURL::relativeURL(prj_url, sln->getURL()));
         vssln.setAttribute("name", sln->getName());
         QString active_prj = (sln->isLoaded()) ? sln->getActivePrj()->getName() : QString("");
         vssln.setAttribute("active", active_prj);
@@ -603,17 +621,11 @@ namespace VStudio {
     kddbg << VSPART_WARNING"Saving session partially.\n";
   }
 
-  bool VSPart::loadVsSolution(const QString &iname, const QString &path) {
+  bool VSPart::loadVsSolution(const QString &iname, const KURL &url) {
     // Create model::solution item
     vss_p sln = new VSSolution(iname);
     if(sln != 0) {
-      sln->setAbsPath(path);
-      QString r_path;
-      MakeRelative(m_projectPath, sln->getAbsPath(), r_path);
-#ifdef DEBUG
-      kddbg << "Relative path: " << r_path << endl;
-#endif
-      sln->setRelPath(r_path);
+      sln->setPath(url.url());
       /* NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
           stored in .kdevelop file */
 #ifdef USE_BOOST
