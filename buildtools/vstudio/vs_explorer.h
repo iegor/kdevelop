@@ -22,14 +22,17 @@
 #include <qstring.h>
 #include <qstringlist.h>
 #include <qlistview.h>
+#include <qhbox.h>
+#include <qvbox.h>
+#include <qscrollview.h>
+#include <qlabel.h>
 
 // #include <codemodel.h>
 // #include <fancylistviewitem.h>
 
 /* VStudio */
 #include "vs_model.h"
-
-#include "vs_explorer_widget.h"
+#include "vs_explorer_widget.h" // Base widget class
 
 class QPushButton;
 class QGridLayout;
@@ -42,6 +45,58 @@ class AutoProjectPart;
 
 //BEGIN //VStudio namespace
 namespace VStudio {
+  predeclare_vs_typ(ListWidgetItem, lwi);
+  predeclare_vs_typ(ListWidget, lw);
+
+  class ListWidgetItem : public QHBox {
+    friend class ListWidget;
+
+    Q_OBJECT
+    public:
+      ListWidgetItem(QWidget *parent, const char *name=0, WFlags fl=0);
+      // ListWidgetItem(lw_p parent_list, lwi_p parent, const char *name=0, WFlags f=0);
+      virtual ~ListWidgetItem();
+
+      int totalHeight();
+      virtual void invalidateHeight();
+
+    protected:
+      lwi_p parent;
+      lwi_p sibling;
+      lwi_p child;
+
+      QHBoxLayout *hbl_main;
+
+      lw_p list;
+      int maybeTotalHeight;
+      uint lvl;
+  };
+
+  class ListWidget : public QScrollView {
+    Q_OBJECT
+    Q_PROPERTY( int childCount READ childCount )
+    Q_PROPERTY( int itemMargin READ itemMargin WRITE setItemMargin )
+    Q_PROPERTY( int levelShift READ lvlShift WRITE setLvlShift )
+
+    public:
+      ListWidget(QWidget* parent=0, const char* name=0, WFlags f=0);
+      virtual ~ListWidget();
+
+      int lvlShift() const;
+      virtual void setLvlShift(int shift);
+
+      virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
+
+    protected:
+      // virtual void drawContents(QPainter *p, int cx, int cy, int cw, int ch);
+
+    private:
+      pv_lwi items;
+      // pv_lwi drawqueue;
+
+      int lvl_shift;
+  };
+
   //TODO: A template would look nicer
   // struct FindOp { const FunctionDom& m_dom; };
   // struct FindOp2 { const FunctionDefinitionDom& m_dom; };
@@ -49,60 +104,57 @@ namespace VStudio {
   class VSExplorer : public VsExplorerWidget {
     Q_OBJECT
 
-  public:
-    typedef QPtrList<QListViewItem*>::const_iterator pitems_ci;
-    typedef QPtrList<QListViewItem*>::iterator pitems_i;
-    typedef QPtrList<QListViewItem>::const_iterator items_ci;
-    typedef QPtrList<QListViewItem>::iterator items_i;
+    public:
+      typedef QPtrList<QListViewItem*>::const_iterator pitems_ci;
+      typedef QPtrList<QListViewItem*>::iterator pitems_i;
+      typedef QPtrList<QListViewItem>::const_iterator items_ci;
+      typedef QPtrList<QListViewItem>::iterator items_i;
 
-  public:
-    VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
-    virtual ~VSExplorer();
-  //   bool selectItem(ItemDom item);
-    uivss_p addSolutionNode(vss_p sln);
-    uivsp_p addProjectNode(uivse_p sln, vsp_p prj);
-    uivsf_p addFilterNode(uivse_p parent, vsf_p filter);
-    uivsfl_p addFileNode(uivse_p parent, vsfl_p file);
+    public:
+      VSExplorer(VSPart *part, QWidget *parent=0, const char *name=0);
+      virtual ~VSExplorer();
+      // bool selectItem(ItemDom item);
+      uivss_p addSolutionNode(vss_p sln);
+      uivsp_p addProjectNode(uivse_p sln, vsp_p prj);
+      uivsf_p addFilterNode(uivse_p parent, vsf_p filter);
+      uivsfl_p addFileNode(uivse_p parent, vsfl_p file);
 
-    uivse_p getByUID(const QUuid &uid) const;
+      uivse_p getByUID(const QUuid &uid) const;
 
-    void emitAddedFiles(const QStringList& list);
+      void emitAddedFiles(const QStringList& list);
 
-  protected:
-    void contentsContextMenuEvent(QContextMenuEvent*);
-    void maybeTip(QPoint const &);
+    protected:
+      void contentsContextMenuEvent(QContextMenuEvent*);
+      void maybeTip(QPoint const &);
 
-  private slots:
-    void slotSelectItem(QListViewItem *item);
-    void slotContextMenu(KListView *lv, QListViewItem *item, const QPoint &p);
-    void slotEntityRenamed(QListViewItem *item, const QString &str, int col);
-    void slotProjectOpened();
-    void slotProjectClosed();
-    void slotSetEntityRltPath(); //TODO: Remove that later, that will be part of test only
-    void slotConfigureEntity();
-    void slotRenameEntity();
-    void slotActivateEntity();
-    void slotHighlightContextMenuItem(int id);
-    void slotSaveEntity();
-    void slotSaveEntityAs();
+    private slots:
+      void slotSelectItem(QListViewItem *item);
+      // void slotContextMenu(KListView *lv, QListViewItem *item, const QPoint &p);
+      void slotEntityRenamed(QListViewItem *item, const QString &str, int col);
+      void slotProjectOpened();
+      void slotProjectClosed();
+      void slotSetEntityRltPath(); //TODO: Remove that later, that will be part of test only
+      void slotConfigureEntity();
+      void slotRenameEntity();
+      void slotActivateEntity();
+      void slotHighlightContextMenuItem(int id);
+      void slotSaveEntity();
+      void slotSaveEntityAs();
 
-  public slots:
-    void slotRefreshUI();
+    public slots:
+      void slotRefreshUI();
 
-  private:
-    VSPart *m_part;
-    KActionCollection *actions;
-    KAction *actSetEntityRltPath; //TODO: Remove that later, that will be part of test only
-    KAction *actCfgEntity;
-    KAction *actRenameEntity;
-    QString m_projectDirectory;
-    int m_projectDirectoryLength;
-  //   TextPaintStyleStore m_paintStyles;
-#ifdef USE_BOOST
-    boost::container::vector<uivse_p> uients; // UI entities
-#else
-    //TODO: Implement this
-#endif
+    private:
+      VSPart *m_part;
+      KActionCollection *actions;
+      KAction *actSetEntityRltPath; //TODO: Remove that later, that will be part of test only
+      KAction *actCfgEntity;
+      KAction *actRenameEntity;
+      QString m_projectDirectory;
+      int m_projectDirectoryLength;
+      // TextPaintStyleStore m_paintStyles;
+      pv_uivse uients; // UI entities
+      ListWidget *lw_explorer;
   };
 
   /**
@@ -130,16 +182,16 @@ namespace VStudio {
   /**
   * Base class for all items
   */
-  class VSExplorerEntity : public QListViewItem {
+  class VSExplorerEntity : public ListWidgetItem {
   public:
-    VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text);
-    VSExplorerEntity(e_VSEntityType type, uivse_p parent, const QString &text);
+    VSExplorerEntity(e_VSEntityType type, QWidget *parent=0, const char *name=0, WFlags fl=0);
+    // VSExplorerEntity(e_VSEntityType type, lw_p parent_list=0, lwi_p parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSExplorerEntity();
 
     virtual vse_p getModel() const = 0;
     virtual const QUuid& getUID() const = 0;
 
-    void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
+    // void paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment);
     e_VSEntityType getType() { return typ; }
 
   // private slots:
@@ -154,8 +206,11 @@ namespace VStudio {
   */
   class VSSlnNode : public VSExplorerEntity {
   public:
-    VSSlnNode(QListView *parent, vss_p sln);
+    VSSlnNode(vss_p sln, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSSlnNode();
+
+    //virtual void paintCell(QPainter *p, const QColorGroup &cg, int column, int  width, int alignment);
+    //virtual int width(const QFontMetrics &fnt_mtrx, const QListView *listview, int column) const;
 
   // VSExplorerEntity interface
     virtual vse_p getModel() const;
@@ -170,12 +225,13 @@ namespace VStudio {
 
   private:
     vss_p sln;
-#ifdef USE_BOOST
-    boost::container::vector<uivsp_p> projects;
-    boost::container::vector<uivsf_p> filters;
-#else
-#endif
+    pv_uivsp projects;
+    pv_uivsf filters;
     // QString uiFileLink;
+
+    QLabel *lbl_icon;
+    QLabel *lbl_name;
+    QPushButton *btn_config;
   };
 
   /**
@@ -183,7 +239,7 @@ namespace VStudio {
   */
   class VSPrjNode : public VSExplorerEntity {
   public:
-    VSPrjNode(uivse_p parent, vsp_p prj);
+    VSPrjNode(vsp_p prj, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSPrjNode();
 
   // VSExplorerEntity interface
@@ -200,11 +256,12 @@ namespace VStudio {
   private:
     vsp_p prj;
     uivss_p sln; // Parent solution
-#ifdef USE_BOOST
-    boost::container::vector<uivsfl_p> files;
-    boost::container::vector<uivsf_p> filters;
-#else
-#endif
+    pv_uivsfl files;
+    pv_uivsf filters;
+
+    QLabel *lbl_icon;
+    QLabel *lbl_name;
+    QPushButton *btn_config;
   };
 
   /**
@@ -212,7 +269,7 @@ namespace VStudio {
   */
   class VSFltNode : public VSExplorerEntity {
   public:
-    VSFltNode(uivse_p parent, vsf_p filter);
+    VSFltNode(vsf_p filter, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSFltNode();
 
   // VSExplorerEntity interface
@@ -224,15 +281,15 @@ namespace VStudio {
 
   public:
   // VSFltNode interface
-    uivse_p getParent() const { return parent; }
+    uivse_p getUIContainer() const;
 
   private:
-    vsf_p filter;
-    uivse_p parent; // Parent solution or project
-#ifdef USE_BOOST
-    boost::container::vector<uivse_p> contents;
-#else
-#endif
+    vsf_p flt;  // VSFilter, model representation
+    uivse_p container; // Parent container, solution or project UI
+
+    QLabel *lbl_icon;
+    QLabel *lbl_name;
+    pv_uivse contents;
   };
 
   /**
@@ -240,7 +297,7 @@ namespace VStudio {
   */
   class VSFilNode : public VSExplorerEntity {
   public:
-    VSFilNode(uivse_p parent, vsfl_p file);
+    VSFilNode(vsfl_p file, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSFilNode();
 
   // VSExplorerEntity interface
@@ -252,12 +309,16 @@ namespace VStudio {
 
   public:
   // VSFilNode interface
-    uivse_p getParent() const;
+    uivse_p getUIContainer() const;
     void setState(const QString &state);
 
   private:
     vsfl_p file;
-    uivse_p parent; // Parent filter|project
+    uivse_p container; // Parent filter|project
+
+    QLabel *lbl_icon;
+    QLabel *lbl_name;
+    QPushButton *btn_config;
   };
 };
 //END // VStudio namespace

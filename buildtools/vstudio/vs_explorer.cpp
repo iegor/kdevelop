@@ -12,6 +12,9 @@
 */
 /* Qt */
 #include <qlayout.h>
+#include <qvbox.h>
+#include <qhbox.h>
+#include <qlabel.h>
 #include <qpainter.h>
 #include <qheader.h>
 #include <qdir.h>
@@ -48,28 +51,170 @@ class KPopupMenu;
 
 namespace VStudio {
   //===========================================================================
-  // Visual studio explorer widget methods
+  // ListWidgetItem methods
+  //===========================================================================
+  ListWidgetItem::ListWidgetItem(QWidget *pnt, const char *nm, WFlags fl)
+  : QHBox(pnt, nm, fl)
+  , parent(0)
+  , sibling(0)
+  , child(0)
+  , maybeTotalHeight(0)
+  , lvl(0) {
+    hbl_main = new QHBoxLayout(this);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // setMinimumSize(QSize(100, 32));
+    // resize(QSize(100, 32).expandedTo(minimumSizeHint()));
+  }
+
+  /* ListWidgetItem::ListWidgetItem(lw_p pl, lwi_p p, const char *nm, WFlags fl)
+  : QHBox(pl, nm, fl)
+  , parent(p)
+  , sibling(0)
+  , child(0) {
+    hbl_main = new QHBoxLayout(layout());
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumSize(QSize(100, 32));
+    resize(QSize(100, 32).expandedTo(minimumSizeHint()));
+  } */
+
+  ListWidgetItem::~ListWidgetItem() {
+    if(hbl_main != 0) {
+      delete hbl_main;
+    }
+  }
+
+  int ListWidgetItem::totalHeight() {
+    if(!isVisible()) return 0;
+    if(maybeTotalHeight >= 0) { return maybeTotalHeight; }
+
+    maybeTotalHeight = height();
+
+    lwi_p chi = child;
+    while (chi != 0) {
+      maybeTotalHeight += chi->totalHeight();
+      chi = chi->sibling;
+    }
+
+    return maybeTotalHeight;
+  }
+
+  void ListWidgetItem::invalidateHeight() {
+    if(maybeTotalHeight < 0) { return; }
+    maybeTotalHeight = -1;
+    //if(parent && parent->isOpen()) { parent->invalidateHeight(); }
+  }
+
+  //===========================================================================
+  // ListWidget methods
+  //===========================================================================
+  ListWidget::ListWidget(QWidget *p, const char *nm, WFlags fl)
+  : QScrollView(p, nm, fl)
+  , lvl_shift(10) {
+  }
+
+  ListWidget::~ListWidget() {
+    /*BOOSTVEC_FOR(lwi_ci, it, items) {
+      lwi_p itm(*it);
+      // if(itm != 0) { delete itm; }
+    }*/
+  }
+
+  int ListWidget::lvlShift() const { return lvl_shift; }
+  void ListWidget::setLvlShift(int shift) { lvl_shift = shift; }
+
+  bool ListWidget::insertItem(lwi_p p, lwi_p pnt/*=0*/) {
+    if(p != 0) {
+      BOOSTVEC_PUSHBACK(items, p);
+      addChild(p);
+
+      p->invalidateHeight();
+
+      if(pnt != 0) {
+        p->lvl = pnt->lvl + 1;
+        moveChild(p, lvl_shift*p->lvl, p->y());
+
+        p->sibling = pnt->child;
+        pnt->child = p;
+        p->parent = pnt;
+      }
+
+      int tw=0;
+      int th=0;
+      int max_lvl=0;
+
+      BOOSTVEC_FOR(lwi_ci, it, items) {
+        lwi_p item(*it);
+        if(item != 0) {
+          if(item->lvl == 0) {
+            th += item->totalHeight();
+          }
+          if(item->lvl > max_lvl) {
+            tw = item->rect().right();
+          }
+        }
+      }
+
+      resizeContents(tw, th);
+
+      //NOTE: testing only
+      //TODO: do some sorting, for all "trees" (solutions)
+      int ht_cnt=0;
+      BOOSTVEC_FOR(lwi_ci, it, items) {
+        lwi_p item(*it);
+        if(item != 0) {
+          moveChild(p, p->x(), ht_cnt);
+          ht_cnt += p->height();
+        }
+      }
+
+      p->show();
+      p->setEnabled(true);
+      return true;
+    }
+    return false;
+  }
+
+  /* void ListWidget::drawContents(QPainter *p, int cx, int cy, int cw, int ch) {
+    int hstep = 0;
+    BOOSTVEC_FOR(lwi_ci, it, items) { //TODO: Forming draw queue
+    }
+  } */
+
+  //===========================================================================
+  // VStudio explorer widget methods
   //===========================================================================
   VSExplorer::VSExplorer(VSPart * part, QWidget *parent, const char *name)
     : VsExplorerWidget(parent, name)
     , m_part(part)
     , actions(0) {
-    m_listView->addColumn("");
-    m_listView->header()->hide();
-    m_listView->setSorting(0);
-    m_listView->setRootIsDecorated(true);
-    m_listView->setAllColumnsShowFocus(true);
-    m_listView->setItemsRenameable(true);
+    // m_listView->addColumn("");
+    // m_listView->header()->hide();
+    // m_listView->setSorting(0);
+    // m_listView->setRootIsDecorated(true);
+    // m_listView->setAllColumnsShowFocus(true);
+    // m_listView->setItemsRenameable(true);
 
-  //   connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
+    // m_listView->setColumnWidthMode(0, QListView::Maximum);
+    // m_listView->setSelectionMode(QListView::Multi);
+
+    // connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
 
     //NOTE: kind of "track active item in solution explorer"
-  //   m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
+    // m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
 
     // Configure explorer from config file
-  //   KConfig* config = m_part->instance()->config();
-  //   config->setGroup("General");
-  //   m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
+    // KConfig* config = m_part->instance()->config();
+    // config->setGroup("General");
+    // m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
+
+    lw_explorer = new ListWidget(this, "lw_explorer");
+    VsExplorerWidgetLayout->addWidget(lw_explorer);
+
+    //lw_explorer->enableClipper(TRUE);
+    lw_explorer->setVScrollBarMode(QScrollView::AlwaysOn);
+    lw_explorer->setHScrollBarMode(QScrollView::AlwaysOn);
+
+    //lw_explorer->resizeContents(400, 1000); //TODO: for DEBUG purposes only
 
     actions = new KActionCollection(this);
 
@@ -91,15 +236,18 @@ namespace VStudio {
     actRenameEntity->setWhatsThis(i18n(VSPART_ACTION_RENAME_ENTITY_WIT));
     actRenameEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
-    connect(m_listView, SIGNAL(contextMenu(KListView*, QListViewItem*, const QPoint&)),
-            this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&)));
-    connect(m_listView, SIGNAL(itemRenamed(QListViewItem*, const QString&, int)),
-            this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int)));
-    connect(m_listView, SIGNAL(selectionChanged(QListViewItem*)),
-            this, SLOT(slotSelectItem(QListViewItem*)));
+    /* connect(m_listView, SIGNAL(contextMenu(KListView*, QListViewItem*, const QPoint&)),
+            this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&))); */
+    /* connect(m_listView, SIGNAL(itemRenamed(QListViewItem*, const QString&, int)),
+            this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int))); */
+    /* connect(m_listView, SIGNAL(selectionChanged(QListViewItem*)),
+            this, SLOT(slotSelectItem(QListViewItem*))); */
   }
 
   VSExplorer::~VSExplorer() {
+    if(lw_explorer != 0) {
+      delete lw_explorer;
+    }
   //   KConfig* config = m_part->instance()->config();
   //   config->setGroup("General");
   //   config->writeEntry( "ViewMode", viewMode() );
@@ -110,7 +258,7 @@ namespace VStudio {
   }
 
   void VSExplorer::slotSelectItem(QListViewItem *item) {
-    uivse_p ent = static_cast<uivse_p>(item);
+    /* uivse_p ent = static_cast<uivse_p>(item);
 
     switch(ent->getType()) {
       case vs_solution: {
@@ -158,10 +306,10 @@ namespace VStudio {
         break; }
       default: {
         break; }
-    }
+    } */
   }
 
-  void VSExplorer::slotContextMenu(KListView */*lv*/, QListViewItem *item, const QPoint &p) {
+  /* void VSExplorer::slotContextMenu(KListView lv, QListViewItem *item, const QPoint &p) {
     if(item != 0) {
       KPopupMenu menu(this);
       uivse_p i = static_cast<uivse_p>(item);
@@ -214,10 +362,10 @@ namespace VStudio {
 #ifdef DEBUG
     kddbg << "Warning! no item for context menu.\n";
 #endif
-  }
+  } */
 
   void VSExplorer::slotEntityRenamed(QListViewItem *item, const QString &name, int /*col*/) {
-    if(item != 0) {
+    /* if(item != 0) {
       uivse_p ent = static_cast<uivse_p>(item);
       switch(ent->getType()) {
         case vs_solution: {
@@ -234,7 +382,7 @@ namespace VStudio {
       // kddbg << "Entity is renamed to: " << name << endl;
     } else {
       kddbg << "Error! no item" << endl;
-    }
+    } */
   }
 
   void VSExplorer::slotProjectOpened() {
@@ -253,15 +401,15 @@ namespace VStudio {
   }
 
   void VSExplorer::slotConfigureEntity() {
-    // kddbg << "slotConfigureEntity" << endl;
+    /* kddbg << "slotConfigureEntity" << endl;
     QPtrList<QListViewItem> items = m_listView->selectedItems();
     for(items_ci it=items.begin(); it!=items.end(); ++it) {
       VSExplorerEntity* ent = (VSExplorerEntity*)(*it);
-    }
+    } */
   }
 
   void VSExplorer::slotRenameEntity() {
-    if(!m_listView->itemsRenameable()) {
+    /* if(!m_listView->itemsRenameable()) {
       kddbg << "Items are not renamable" << endl;
       return;
     }
@@ -275,11 +423,11 @@ namespace VStudio {
         m_listView->rename((*it), 0);
         //ent->setText(0, ent->getModel()->getName());
       }
-    }
+    } */
   }
 
   void VSExplorer::slotActivateEntity() {
-    uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
+    /* uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
     if(sel != 0) {
       switch(sel->getType()) {
         case vs_solution: {
@@ -298,14 +446,14 @@ namespace VStudio {
           kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType()));
           break; }
       }
-    }
+    } */
   }
 
   void VSExplorer::slotHighlightContextMenuItem(int /*id*/) {
   }
 
   void VSExplorer::slotSaveEntity() {
-    uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
+    /* uivse_p sel = static_cast<uivse_p>(m_listView->selectedItem());
     switch(sel->getType()) {
       case vs_solution: {
         m_part->saveSln(static_cast<vss_p>(sel->getModel()));
@@ -317,11 +465,10 @@ namespace VStudio {
       default: {
         kddbg << g_wrn_unsupportedtyp.arg(type2String(sel->getType())).arg("VSExplorer::slotSaveEntity");
         break; }
-    }
+    } */
   }
 
   void VSExplorer::slotSaveEntityAs() {
-    m_part->saveSlnAs(0, QString::null);
   }
 
   void VSExplorer::slotRefreshUI() {
@@ -333,24 +480,30 @@ namespace VStudio {
   }
 
   uivss_p VSExplorer::addSolutionNode(vss_p sln) {
-    uivss_p item = new VSSlnNode(m_listView, sln);
-    if(item == 0) { kddbg << "Error! Out of memory" << endl; }
-    BOOSTVEC_PUSHBACK(uients, item);
-    return item;
+    uivss_p item = new VSSlnNode(sln, lw_explorer->viewport());
+    if(item != 0) {
+      BOOSTVEC_PUSHBACK(uients, item);
+      lw_explorer->insertItem(item, 0);
+      return item;
+    }
+    else { kddbg << "Error! Out of memory" << endl; }
+    return 0;
   }
 
   uivsp_p VSExplorer::addProjectNode(uivse_p pnt, vsp_p prj) {
     switch(pnt->getType()) {
       case vs_filter:
       case vs_solution: {
-        uivsp_p item = new VSPrjNode(pnt, prj);
-        if(item == 0) { kddbg << "Error! Out of memory" << endl; }
-        BOOSTVEC_PUSHBACK(uients, item);
-        return item; }
-      default:
-        kddbg << "Can't add project into unsupported parent node of type \""
-            << type2String(pnt->getType()) << "\"\n";
-        return 0;
+        uivsp_p item = new VSPrjNode(prj, lw_explorer->viewport());
+        if(item != 0) {
+          BOOSTVEC_PUSHBACK(uients, item);
+          lw_explorer->insertItem(item, static_cast<lwi_p>(pnt));
+          return item;
+        }
+        else { kddbg << "Error! Out of memory" << endl; }
+        return 0; }
+      default: {
+        return 0; }
     }
   }
 
@@ -359,15 +512,16 @@ namespace VStudio {
       case vs_solution:
       case vs_project:
       case vs_filter: {
-        uivsf_p filter = new VSFltNode(pnt, flt);
-        if(filter == 0) { kddbg << "Error! Out of memory" << endl; }
-        BOOSTVEC_PUSHBACK(uients, filter);
-        return filter; }
-      default:
-        kddbg << "Can't add filter " << flt->getName()
-            << " into unsupported parent node \"" << pnt->text(0)
-            << "\" of type \"" << type2String(pnt->getType()) << "\"\n";
-        return 0;
+        uivsf_p item = new VSFltNode(flt, lw_explorer->viewport());
+        if(item != 0) {
+          BOOSTVEC_PUSHBACK(uients, item);
+          lw_explorer->insertItem(item, static_cast<lwi_p>(pnt));
+          return item;
+        }
+        else { kddbg << "Error! Out of memory" << endl; }
+        return 0; }
+      default: {
+        return 0; }
     }
   }
 
@@ -375,14 +529,16 @@ namespace VStudio {
     switch(pnt->getType()) {
       case vs_project:
       case vs_filter: {
-        uivsfl_p file = new VSFilNode(pnt, fl);
-        if(file == 0) { kddbg << "Error! Out of memory" << endl; }
-        BOOSTVEC_PUSHBACK(uients, file);
-        return file; }
-      default:
-        kddbg << "Can't add file into unsupported parent node of type \""
-            << type2String(pnt->getType()) << "\"\n";
-        return 0;
+        uivsfl_p item = new VSFilNode(fl, lw_explorer->viewport());
+        if(item != 0) {
+          BOOSTVEC_PUSHBACK(uients, item);
+          lw_explorer->insertItem(item, static_cast<lwi_p>(pnt));
+          return item;
+        }
+        else { kddbg << "Error! Out of memory" << endl; }
+        return 0; }
+      default: {
+        return 0; }
     }
   }
 
@@ -434,20 +590,20 @@ namespace VStudio {
   //===========================================================================
   // Visual studio explorer widget entity base class methods
   //===========================================================================
-  VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, QListView *parent, const QString &text)
-  : QListViewItem(parent, text)
+  VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, QWidget *pnt/*=0*/, const char *nm, WFlags fl)
+  : lwi(pnt, nm, fl)
   , typ(type) {
   }
 
-  VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, uivse_p parent, const QString &text)
-  : QListViewItem(parent, text)
+  /* VSExplorerEntity::VSExplorerEntity(e_VSEntityType type, lw_p pl, lwi_p p, const char *nm, WFlags fl)
+  : lwi(pl, nm, fl)
   , typ(type) {
-  }
+  } */
 
   VSExplorerEntity::~VSExplorerEntity () {
   }
 
-  void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
+  /* void VSExplorerEntity::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
     switch(getType()) {
       case vs_project: {
         if(this->getModel()->isActive()) {
@@ -467,28 +623,64 @@ namespace VStudio {
         break; }
     }
     QListViewItem::paintCell(p, cg, column, width, alignment);
-  }
+  } */
 
   //===========================================================================
   // Visual studio explorer widget entity solution class methods
   //===========================================================================
-  VSSlnNode::VSSlnNode(QListView *lv, vss_p s)
-  : VSExplorerEntity(vs_solution, lv, s->getName())
+  VSSlnNode::VSSlnNode(vss_p s, QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
+  : VSExplorerEntity(vs_solution, pnt, nm, fl)
   , sln(s) {
-    setMultiLinesEnabled(true);
+    QVBox *vb = new QVBox(this);
+    hbl_main->addWidget(vb);
+    vb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    lbl_name = new QLabel(this, "lbl_name");
+    hbl_main->addWidget(lbl_name);
+    hbl_main->setStretchFactor(lbl_name, 1);
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    lbl_icon = new QLabel(vb, "lbl_icon");
+    //lbl_icon->setMinimumSize(QSize(32, 32));
+    lbl_icon->setPixmap(BarIcon("filter"));
+    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    btn_config = new QPushButton(vb, "btn_config");
+    btn_config->setText(QString("build"));
+    btn_config->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QToolTip::add(btn_config, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
+
     slotRefreshText();
   }
 
   VSSlnNode::~VSSlnNode() {
   }
 
-  /*inline*/ vse_p VSSlnNode::getModel() const {
-    return sln;
-  }
+  /*int VSSlnNode::width(const QFontMetrics &m, const QListView *plv, int c) const {
+    return 200;
+  }*/
 
-  /*inline*/ const QUuid& VSSlnNode::getUID() const {
-    return uid_null;
-  }
+  /*void VSSlnNode::paintCell(QPainter *p, const QColorGroup &cg, int column, int width, int alignment) {
+    //QListView *lv = listView();
+    //int r = lv->itemMargin();
+
+    // p->save();
+    // p->setClipRegion(hb->frameRect());
+    // hb->drawFrame(p);
+    // p->restore();
+
+    // p->setClipRegion(hb->contentsRect());
+    // hb->drawContents(p);
+
+    //r += 200;
+    // Draw text ----------------------------------------------------
+    //p->translate(r, 0);
+    //p->setPen(QPen(cg.text()));
+    QListViewItem::paintCell(p, cg, column, width, alignment);
+  }*/
+
+  vsinline vse_p VSSlnNode::getModel() const vsinline_attrib { return sln; }
+  vsinline const QUuid& VSSlnNode::getUID() const vsinline_attrib { return uid_null; }
 
   void VSSlnNode::setState(const QString &/*state*/) {
     /* if(state == "detached") { //TODO: enum for states, but think deeper about states concept
@@ -504,27 +696,27 @@ namespace VStudio {
 
   void VSSlnNode::slotRefreshText() {
     if(!sln->isReachable()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [unreachable]"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString(sln->getName()).append("\n [unreachable]"));
       return;
     }
 
     if(!sln->isLoaded()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [load error]"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString(sln->getName()).append("\n [load error]"));
       return;
     }
 
     // See if solution in "detached" state (i.e. no config selected for build)
     if(sln->isDetached()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString(sln->getName()).append("\n [detached]"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString(sln->getName()).append("\n [detached]"));
     }
     else {
       vcfg_cp cfg = sln->currentCfg();
       // The count of projects
-      setPixmap(0, SmallIcon("gohome"));
-      setText(0, QString(sln->getName()).append(" [%1]\n [%2]").
+      lbl_icon->setPixmap(SmallIcon("gohome"));
+      lbl_name->setText(QString(sln->getName()).append(" [%1]\n [%2]").
           arg(static_cast<int>(sln->projs().size()), 3 , 10).
           arg(QString((cfg != 0) ? cfg->toString() : "error")));
     }
@@ -533,114 +725,145 @@ namespace VStudio {
   //===========================================================================
   // Visual studio explorer widget entity project class methods
   //===========================================================================
-  VSPrjNode::VSPrjNode(uivse_p e, vsp_p p)
-  : VSExplorerEntity(vs_project, e, p->getName())
+  VSPrjNode::VSPrjNode(vsp_p p, QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
+  : VSExplorerEntity(vs_project, pnt, nm, fl)
   , prj(p) {
-    setMultiLinesEnabled(true);
+    QVBox *vb = new QVBox(this);
+    vb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(vb);
+
+    lbl_name = new QLabel(this, "lbl_name");
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(lbl_name);
+    hbl_main->setStretchFactor(lbl_name, 1);
+
+    lbl_icon = new QLabel(vb, "lbl_icon");
+    lbl_icon->setPixmap(BarIcon("filter"));
+    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    btn_config = new QPushButton(vb, "btn_config");
+    btn_config->setText(QString("build"));
+    btn_config->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QToolTip::add(btn_config, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
+
     slotRefreshText();
   }
 
   VSPrjNode::~VSPrjNode() {
   }
 
-  /*inline*/ vse_p VSPrjNode::getModel() const {
-    return prj;
-  }
-
-  /*inline*/ const QUuid& VSPrjNode::getUID() const {
-    return prj->getUID();
-  }
+  vsinline vse_p VSPrjNode::getModel() const vsinline_attrib { return prj; }
+  vsinline const QUuid& VSPrjNode::getUID() const vsinline_attrib { return prj->getUID(); }
 
   void VSPrjNode::slotRefreshText() {
     if(!static_cast<vsfs_p>(prj)->isReachable()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("unreachable"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString("%1\n [%2]").arg(prj->getName()).arg("unreachable"));
       return;
     }
 
     if(!static_cast<vsfs_p>(prj)->isLoaded()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("load error"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString("%1\n [%2]").arg(prj->getName()).arg("load error"));
       return;
     }
 
     if(prj->isDetached()) {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString("%1\n [%2]").arg(prj->getName()).arg("detached"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString("%1\n [%2]").arg(prj->getName()).arg("detached"));
       return;
     }
 
     vcfg_cp cfg = prj->currentCfg();
-    setPixmap(0, SmallIcon("tar"));
-    setText(0, QString("%1\n [%2]").arg(prj->getName()).arg(cfg->toString()));
+    lbl_icon->setPixmap(SmallIcon("tar"));
+    lbl_name->setText(QString("%1\n [%2]").arg(prj->getName()).arg(cfg->toString()));
   }
 
   //===========================================================================
   // Visual studio explorer widget entity filter class methods
   //===========================================================================
-  VSFltNode::VSFltNode(uivse_p pnt, vsf_p flt)
-  : VSExplorerEntity(vs_filter, pnt, flt->getName())
-  , filter(flt)
-  , parent(pnt) {
+  VSFltNode::VSFltNode(vsf_p filter, QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
+  : VSExplorerEntity(vs_filter, pnt, nm, fl)
+  , flt(filter)
+  , container(0) {
+    QVBox *vb = new QVBox(this);
+    vb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(vb);
+
+    lbl_name = new QLabel(this, "lbl_name");
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(lbl_name);
+    hbl_main->setStretchFactor(lbl_name, 1);
+
+    lbl_icon = new QLabel(vb, "lbl_icon");
+    lbl_icon->setPixmap(BarIcon("filter"));
+    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
     slotRefreshText();
   }
 
   VSFltNode::~VSFltNode() {
   }
 
-  /*inline*/ vse_p VSFltNode::getModel() const {
-    return filter;
-  }
-
-  /*inline*/ const QUuid& VSFltNode::getUID() const {
-    return filter->getUID();
-  }
+  vsinline vse_p VSFltNode::getModel() const vsinline_attrib { return flt; }
+  vsinline const QUuid& VSFltNode::getUID() const vsinline_attrib { return flt->getUID(); }
+  vsinline uivse_p VSFltNode::getUIContainer() const vsinline_attrib { return container; }
 
   void VSFltNode::slotRefreshText() {
-    setPixmap(0, SmallIcon("folder"));
+    lbl_icon->setPixmap(SmallIcon("folder"));
+    lbl_name->setText(flt->getName());
   }
 
   //===========================================================================
   // Visual studio explorer widget entity file class methods
   //===========================================================================
-  VSFilNode::VSFilNode(uivse_p pnt, vsfl_p fl)
-  : VSExplorerEntity(vs_file, pnt, fl->getName())
-  , file(fl)
-  , parent(pnt) {
-    setMultiLinesEnabled(true);
+  VSFilNode::VSFilNode(vsfl_p fil, QWidget *pnt, const char *nm/*=0*/, WFlags fl/*=0*/)
+  : VSExplorerEntity(vs_file, pnt, nm, fl)
+  , file(fil)
+  , container(0) {
+    QVBox *vb = new QVBox(this);
+    vb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(vb);
+
+    lbl_name = new QLabel(this, "lbl_name");
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hbl_main->addWidget(lbl_name);
+    hbl_main->setStretchFactor(lbl_name, 1);
+
+    lbl_icon = new QLabel(vb, "lbl_icon");
+    lbl_icon->setPixmap(BarIcon("filter"));
+    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    btn_config = new QPushButton(vb, "btn_config");
+    btn_config->setText(QString("build"));
+    btn_config->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QToolTip::add(btn_config, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
+
     slotRefreshText();
   }
 
   VSFilNode::~VSFilNode() {
   }
 
-  /*inline*/ vse_p VSFilNode::getModel() const {
-    return file;
-  }
-
-  /*inline*/ const QUuid& VSFilNode::getUID() const {
-    return uid_null;
-  }
-
-  /*inline*/ uivse_p VSFilNode::getParent() const {
-    return parent;
-  }
+  vsinline vse_p VSFilNode::getModel() const vsinline_attrib { return file; }
+  vsinline const QUuid& VSFilNode::getUID() const vsinline_attrib { return uid_null; }
+  vsinline uivse_p VSFilNode::getUIContainer() const vsinline_attrib { return container; }
 
   /*inline*/ void VSFilNode::setState(const QString &st) {
     if(st == "normal") {
-      setPixmap(0, SmallIcon("file"));
-      setText(0, file->getName());
+      lbl_icon->setPixmap(SmallIcon("file"));
+      lbl_name->setText(file->getName());
     }
   }
 
   void VSFilNode::slotRefreshText() {
     if(file->isReachable()) {
-      setPixmap(0, SmallIcon("file"));
-      setText(0, file->getName());
+      lbl_icon->setPixmap(SmallIcon("file"));
+      lbl_name->setText(file->getName());
     }
     else {
-      setPixmap(0, SmallIcon("error"));
-      setText(0, QString(file->getName()).append("\n [%1]").arg("unreachable"));
+      lbl_icon->setPixmap(SmallIcon("error"));
+      lbl_name->setText(QString(file->getName()).append("\n [%1]").arg("unreachable"));
     }
   }
 };

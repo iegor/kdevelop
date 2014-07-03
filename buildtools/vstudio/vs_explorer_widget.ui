@@ -15,7 +15,7 @@
     <property name="caption">
         <string>Form2</string>
     </property>
-    <grid>
+    <vbox>
         <property name="name">
             <cstring>unnamed</cstring>
         </property>
@@ -25,20 +25,10 @@
         <property name="spacing">
             <number>0</number>
         </property>
-        <widget class="KListView" row="0" column="0">
-            <property name="name">
-                <cstring>m_listView</cstring>
-            </property>
-        </widget>
-    </grid>
+    </vbox>
 </widget>
-<customwidgets>
-</customwidgets>
 <slots>
     <slot>vs_manager_widget_destroyed( QObject * )</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
-<includehints>
-    <includehint>klistview.h</includehint>
-</includehints>
 </UI>
