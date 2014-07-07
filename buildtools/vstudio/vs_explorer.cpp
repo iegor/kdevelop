@@ -190,10 +190,79 @@ namespace VStudio {
   // VStudio::VSExplorerListWidget methods
   //===========================================================================
   VSExplorerListWidget::VSExplorerListWidget(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
-  : ListWidget(pnt, nm, fl) {
+  : ListWidget(pnt, nm, fl)
+  , toolbox(0) {
   }
 
   VSExplorerListWidget::~VSExplorerListWidget() {
+  }
+
+  void VSExplorerListWidget::arrangeToolbox(int x, int y) {
+    // Setup tool box
+    toolbox = new VSExplorerToolBox(viewport(), "vetb_tools");
+    // toolbox->hide();
+    // toolbox->setEnabled(false);
+    toolbox->installEventFilter(this);
+    addChild(toolbox, viewport()->x()+x, viewport()->y()+y);
+    viewport()->setFocusProxy(toolbox);
+    toolbox->setFocus();
+    toolbox->setEnabled(true);
+    toolbox->show();
+  }
+
+  void VSExplorerListWidget::closeToolBox() {
+    const bool hasFocus = toolbox->hasFocus();
+    const bool needToResetFocusProxy = viewport()->focusProxy() == toolbox;
+
+    delete toolbox;
+    toolbox = 0;
+
+    if(needToResetFocusProxy) {
+      viewport()->setFocusProxy(this);
+    }
+
+    if(hasFocus) {
+      setFocus();
+    }
+  }
+
+  vsinline VSExplorerToolBox* VSExplorerListWidget::getToolBox() const vsinline_attrib { return toolbox; }
+
+  //===========================================================================
+  // VStudio::VSExplorerToolBox methods
+  //===========================================================================
+  VSExplorerToolBox::VSExplorerToolBox(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
+  : QHBox(pnt, nm, fl) {
+    setMinimumSize(QSize(50, 16));
+    setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+    btn_cfg = new QPushButton(this, "btn_cfg");
+    btn_cfg->setMinimumSize(QSize(16, 16));
+    btn_cfg->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+    btn_cfg->setPixmap(SmallIcon("package_utilities")); // or "configure"
+    btn_build = new QPushButton(this, "btn_build");
+    btn_build->setMinimumSize(QSize(16, 16));
+    btn_build->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+    btn_build->setPixmap(SmallIcon("build"));
+    btn_clean = new QPushButton(this, "btn_clean");
+    btn_clean->setMinimumSize(QSize(16, 16));
+    btn_clean->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
+    btn_clean->setPixmap(SmallIcon("eraser"));
+
+    setMouseTracking(true);
+  }
+
+  VSExplorerToolBox::~VSExplorerToolBox() {
+  }
+
+  void VSExplorerToolBox::enterEvent(QEvent *e) {
+    // setMicroFocusHint(x(), y(), width(), height(), false);
+    //grabMouse();
+    QHBox::enterEvent(e);
+  }
+
+  void VSExplorerToolBox::leaveEvent(QEvent *e) {
+    //releaseMouse();
+    QHBox::leaveEvent(e);
   }
 
   //===========================================================================
@@ -242,6 +311,9 @@ namespace VStudio {
     btn_build->setEnabled(true);
 
     // list->updateItems();
+
+    // Request toolbox from explorer
+    explorer->arrangeToolbox(x()+2, y()+15);
   }
 
   void VSExplorerEntity::leaveEvent(QEvent *e) {
