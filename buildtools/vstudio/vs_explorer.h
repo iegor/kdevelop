@@ -150,25 +150,6 @@ namespace VStudio {
       QPushButton *btn_clear;
   };
 
-  /** \class VSExplorerToolBox
-   * \brief contains UI controls to manipulate entities in VSExplorer window
-   */
-  class VSExplorerToolBox : public QHBox {
-    Q_OBJECT
-    public:
-      VSExplorerToolBox(QWidget *pnt=0, const char *name=0, WFlags fl=0);
-      virtual ~VSExplorerToolBox();
-
-    protected:
-      virtual void enterEvent(QEvent *event);
-      virtual void leaveEvent(QEvent *event);
-
-    protected:
-      QPushButton *btn_cfg;
-      QPushButton *btn_clean;
-      QPushButton *btn_build;
-  };
-
   /** \class VSExplorerListWidget
    * \brief Lists solutions, projects and files in form of widgets
    */
@@ -177,12 +158,6 @@ namespace VStudio {
       VSExplorerListWidget(QWidget *parent=0, const char *name=0, WFlags fl=0);
       virtual ~VSExplorerListWidget();
 
-      void arrangeToolbox(int x, int y);
-      void closeToolBox();
-      VSExplorerToolBox* getToolBox() const;
-
-    protected:
-      VSExplorerToolBox *toolbox;
   };
 
   //TODO: A template would look nicer
