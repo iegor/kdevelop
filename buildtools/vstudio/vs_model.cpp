@@ -1522,7 +1522,7 @@ namespace VStudio {
     return 0;
   } */
 
-  /*inline*/ uivsp_p VSProject::getUI() const { return uiprj; }
+  vsinline uivsp_p VSProject::getUI() const vsinline_attrib { return uiprj; }
 
   bool VSProject::dumpLayout(QTextStream &s) {
     // Write project header
@@ -1920,7 +1920,7 @@ namespace VStudio {
     return false;
   }
 
-  /*inline*/ bool VSProject::isDetached() const {
+  vsinline bool VSProject::isDetached() const vsinline_attrib {
     if(bboxes.size() > 0) {
       if(active_bb != 0) {
         return false;
@@ -1986,20 +1986,16 @@ namespace VStudio {
     return 0;
   }
 
-  /*inline*/ vcfg_cp VSProject::currentCfg() const {
-    if(active_bb != 0) {
-      return &active_bb->config();
-    }
-    else {
-      return 0;
-    }
+  vsinline vcfg_cp VSProject::currentCfg() const vsinline_attrib {
+    if(active_bb != 0) { return &active_bb->config(); }
+    return 0;
   }
 
   /** \fn VSProject::bbs()
    * \brief Get Build-Boxes for this project for non-modifying purposes
    * @return const ref to vector with Build-Boxes
    */
-  /*inline*/ pv_vsbb_cr VSProject::bbs() const { return bboxes; }
+  vsinline pv_vsbb_cr VSProject::bbs() const vsinline_attrib { return bboxes; }
 
   //===========================================================================
   // Visual studio filter methods
@@ -2099,7 +2095,7 @@ namespace VStudio {
     return 0;
   }
 
-  /*inline*/ uivsf_p VSFilter::getUI() const { return uiflt; }
+  vsinline uivsf_p VSFilter::getUI() const vsinline_attrib { return uiflt; }
 
   bool VSFilter::dumpLayout(QTextStream &s) {
     s << "Project(\"" << guid2String(uid_vs9filter) << "\") = \""
@@ -2501,6 +2497,12 @@ namespace VStudio {
     return true;
   }
 
+  /** \fn VSProject_c::__read_unit(QDomElement el, vse_p pnt)
+   * \brief [UTIL] Reads project unit file|filter
+   * @param unit dom element representing current parsed unit
+   * @param parent could be project itself, or filter
+   * @return <a>TRUE</a> if everything ok, <a>FALSE</a> if not
+   */
   bool VSProject_c::__read_unit(QDomElement el, vse_p pnt) {
     if(pnt != 0) {
       if(!el.isNull()) {
