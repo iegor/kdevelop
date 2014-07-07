@@ -128,7 +128,6 @@ namespace VStudio {
       bool isActive() const;
 
       virtual void insert(vse_p item);
-      virtual bool createUI(uivse_p parent_ui);
 
       virtual void setParent(vse_p parent) = 0;
       virtual vse_p getParent() const = 0;
@@ -182,7 +181,6 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
-      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -216,6 +214,7 @@ namespace VStudio {
       const pv_vsf_cr filts() const;
 
     private:
+      bool __createUI();
       bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
       bool __read_parse_uid(QTextIStream &stream, QChar &control_chr, QUuid &uid);
 
@@ -247,7 +246,6 @@ namespace VStudio {
 
     // VS Entity methods:
       virtual void insert(vse_p item);
-      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent);
       virtual vse_p getParent() const;
 
@@ -269,7 +267,7 @@ namespace VStudio {
       bool addDependency(const QUuid &uid);
       bool addRequirement(vsp_p req);
       bool addRequirement(const QUuid &uid);
-      bool populateUI();
+      bool populateUI(uivse_p parent_ui);
       void setLanguage(e_VSPrjLangType lang);
       e_VSPrjLangType getLang() { return lang; }
       void setActive(bool active=true);
@@ -283,6 +281,9 @@ namespace VStudio {
 
       bool build();
       bool isDetached() const;
+
+    protected:
+      virtual bool __createUI(uivse_p parent_ui);
 
     protected:
       e_VSPrjLangType lang; // Project choosen language
@@ -307,7 +308,6 @@ namespace VStudio {
 
     // VS Entity interface methods:
       virtual void insert(vse_p item);
-      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent); //NOTE: Inserts this filter into parent's filters
       virtual vse_p getParent() const;
 
@@ -317,7 +317,10 @@ namespace VStudio {
       bool dumpLayout(QTextStream &layout);
       e_VSEntityType getParentType() const { return parent->getType(); }
       bool getParentUID(QUuid* uid) const;
-      bool populateUI(uivse_p parent);
+      bool populateUI(uivse_p parent_ui);
+
+    private:
+      bool __createUI(uivse_p parent_ui);
 
     private:
       vse_p parent; // Parent solution|filter|project
@@ -344,7 +347,6 @@ namespace VStudio {
       virtual ~VSFile();
 
     // VS Entity interface methods:
-      virtual bool createUI(uivse_p parent_ui);
       virtual void setParent(vse_p parent_prj);
       virtual vse_p getParent() const;
 
@@ -360,6 +362,9 @@ namespace VStudio {
       bool read(QDomElement dom, bool synchronize=true);
       void setDom(const QDomElement& el);
       vsp_p getProject() const;
+
+    // private:
+      bool __createUI(uivse_p parent_ui);
 
     private:
       vsp_p project; // Current parent project
@@ -386,13 +391,8 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true);
     //VSProject intergace methods:
     //VSProject_c methods:
+
     private:
-      // bool __read_file(QDomElement el, vse_p parent);
-      /** Reads project unit file|filter
-     * @param unit dom element representing current parsed unit
-     * @param parent could be project itself, or filter
-     * @return <a>TRUE</a> if everything ok, <a>FALSE</a> if not
-       */
       bool __read_unit(QDomElement unit, vse_p parent);
   };
 
