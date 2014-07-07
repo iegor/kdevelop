@@ -99,7 +99,10 @@ namespace VStudio {
   //===========================================================================
   ListWidget::ListWidget(QWidget *p, const char *nm, WFlags fl)
   : QScrollView(p, nm, fl)
-  , lvl_shift(10) {
+  , lvl_shift(10)
+  , focusItem(0)
+  , prevFocusItem(0)
+  , selectedItem(0) {
     setMouseTracking(true);
     viewport()->setMouseTracking(true);
     viewport()->setFocusProxy(this);
@@ -127,6 +130,7 @@ namespace VStudio {
     if(p != 0) {
       BOOSTVEC_PUSHBACK(items, p);
       addChild(p);
+      p->list = this;
 
       p->invalidateHeight();
       p->totalHeight(); //HACK: force recalc of p->maybeTotalHeight
@@ -176,6 +180,10 @@ namespace VStudio {
         ht_cnt += item->totalHeight();
       }
     }
+  }
+
+  void ListWidget::setFocused(lwi_p item) {
+    focusItem = item;
   }
 
   ListWidget::RootItem::RootItem(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
@@ -236,6 +244,9 @@ namespace VStudio {
     // VSExplorerListWidget *explorer = static_cast<VSExplorerListWidget*>(list);
     set_bit(enflg, IS_HOVERED_ON);
     setBackgroundMode(Qt::PaletteHighlight);
+
+    explorer->setFocused(this); // Set this item as focused in list
+
     btn_clear->show();
     btn_clear->setEnabled(true);
     btn_build->show();

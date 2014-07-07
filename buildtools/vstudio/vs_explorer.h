@@ -102,9 +102,13 @@ namespace VStudio {
       virtual void setLvlShift(int shift);
       virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
       void updateItems();
+      void setFocused(lwi_p item);
 
     private:
       RootItem *root;
+      lwi_p focusItem;
+      lwi_p selectedItem;
+      lwi_p prevFocusItem;
       pv_lwi items;
       // pv_lwi drawqueue;
       int lvl_shift;
