@@ -210,14 +210,14 @@ namespace VStudio {
   VSExplorerEntity::VSExplorerEntity(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
   : ListWidgetItem(pnt, nm, fl)
   , enflg(0) {
-    setMinimumSize(QSize(100, 16));
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setMinimumSize(QSize(200, 16));
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     hb_main = new QHBox(this);
+    hb_main->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
     //vbl_item->addWidget(hb_main);
     // DEBUG purposes only
     // setMinimumSize(QSize(100, 32));
     // resize(QSize(100, 32).expandedTo(minimumSizeHint()));
-    setMouseTracking(TRUE);
     layout()->setMargin(1); // So that background colorchange would be visible
 
     // Create service layout
@@ -299,7 +299,7 @@ namespace VStudio {
     // config->setGroup("General");
     // m_doFollowEditor = config->readBoolEntry("FollowEditor", false);
 
-    explorer = new VSExplorerListWidget(this, "vsexplorer");
+    explorer = new VSExplorerListWidget(this, "vslw_explorer");
     VsExplorerWidgetLayout->addWidget(explorer);
 
     explorer->enableClipper(true);
@@ -686,12 +686,14 @@ namespace VStudio {
   , sln(s) {
     lbl_icon = new QLabel(hb_main, "lbl_icon");
     lbl_icon->setPixmap(SmallIcon("gohome"));
-    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
     lbl_name = new QLabel(hb_main, "lbl_name");
-    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lbl_name->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     btn_cfg = new QPushButton(hb_main, "btn_cfg");
     btn_cfg->setText(i18n("configuration"));
-    btn_cfg->setMaximumSize(QSize(75,16));
+    btn_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    btn_cfg->setMaximumSize(QSize(100, 16));
+    btn_cfg->setMinimumSize(QSize(50, 16));
     QToolTip::add(btn_cfg, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
 
     hb_main->setStretchFactor(lbl_icon, 0);
@@ -746,13 +748,16 @@ namespace VStudio {
   : VSExplorerEntity(pnt, nm, fl)
   , prj(p) {
     lbl_icon = new QLabel(hb_main, "lbl_icon");
+    lbl_icon->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     lbl_icon->setPixmap(SmallIcon("tar"));
     lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lbl_name = new QLabel(hb_main, "lbl_name");
-    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     btn_cfg = new QPushButton(hb_main, "btn_cfg");
     btn_cfg->setText(i18n("configuration"));
-    btn_cfg->setMaximumSize(QSize(75,16));
+    btn_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    btn_cfg->setMaximumSize(QSize(100, 16));
+    btn_cfg->setMinimumSize(QSize(50, 16));
     QToolTip::add(btn_cfg, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
 
     hb_main->setStretchFactor(lbl_icon, 0);
@@ -802,10 +807,10 @@ namespace VStudio {
   , flt(filter)
   , container(0) {
     lbl_icon = new QLabel(hb_main, "lbl_icon");
-    lbl_icon->setPixmap(BarIcon("filter"));
-    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lbl_icon->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    lbl_icon->setPixmap(SmallIcon("folder"));
     lbl_name = new QLabel(hb_main, "lbl_name");
-    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     slotRefreshText();
   }
@@ -831,13 +836,15 @@ namespace VStudio {
   , file(fil)
   , container(0) {
     lbl_icon = new QLabel(hb_main, "lbl_icon");
-    lbl_icon->setPixmap(BarIcon("filter"));
-    lbl_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lbl_icon->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    lbl_icon->setPixmap(SmallIcon("folder"));
     lbl_name = new QLabel(hb_main, "lbl_name");
-    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lbl_name->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     btn_cfg = new QPushButton(hb_main, "btn_cfg");
     btn_cfg->setText(i18n("configuration"));
-    btn_cfg->setMaximumSize(QSize(75,16));
+    btn_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    btn_cfg->setMaximumSize(QSize(100, 16));
+    btn_cfg->setMinimumSize(QSize(50, 16));
     QToolTip::add(btn_cfg, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
 
     hb_main->setStretchFactor(lbl_icon, 0);
