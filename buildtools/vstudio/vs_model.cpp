@@ -2175,7 +2175,8 @@ namespace VStudio {
     if(uiflt == 0) {
       switch(pnt->getType()) {
         case vs_solution:
-        case vs_project: {
+        case vs_project:
+        case vs_filter: {
           uiflt = part()->explorerWidget()->addFilterNode(pnt, this);
           if(uiflt == 0) { kddbg << "failed to add filter UI node" << endl; return false; }
 #ifdef DEBUG
