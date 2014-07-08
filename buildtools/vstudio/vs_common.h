@@ -266,6 +266,7 @@ namespace VStudio {
   // Visual studio UI representation classes
   //===========================================================================
   class VSExplorer;
+  predeclare_vs_typ(VSExplorerListWidget, vslw); // Predeclaration of VS List widget
   predeclare_vs_typ(VSExplorerEntity, uivse); // Predeclaration for VS entity UI representation
   predeclare_vs_typ(VSSlnNode, uivss); // Predeclaration for VS solution UI representation
   predeclare_vs_typ(VSPrjNode, uivsp); // Predeclaration for VS project UI representation
