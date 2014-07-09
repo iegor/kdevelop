@@ -15,12 +15,14 @@
 
 /* Qt */
 #include <qpushbutton.h>
+#include <qcheckbox.h>
 #include <qptrlist.h>
 #include <qmap.h>
 #include <qtooltip.h>
 #include <qstring.h>
 #include <qstringlist.h>
 #include <qlistview.h>
+#include <qframe.h>
 #include <qhbox.h>
 #include <qvbox.h>
 #include <qscrollview.h>
@@ -50,26 +52,44 @@ namespace VStudio {
   predeclare_vs_typ(ListWidgetItem, lwi);
   predeclare_vs_typ(ListWidget, lw);
 
-  class ListWidgetItem : public QVBox {
+  class ListWidgetItem : public QFrame {
     friend class ListWidget;
 
     Q_OBJECT
     public:
+      enum e_flags {
+        IS_ROOT = 0x00000001,
+        IS_EXPANDED = 0x00000002,
+      };
+    public:
       ListWidgetItem(QWidget *parent, const char *name=0, WFlags fl=0);
       virtual ~ListWidgetItem();
+
+    // QWidget's methods:
+      virtual void enterEvent(QEvent *event);
+      virtual void leaveEvent(QEvent *event);
 
       int totalHeight();
       virtual void invalidateHeight();
 
-      lwi_cp parent() const;
-      lwi_cp sibling() const;
-      lwi_cp child() const;
+      lwi_p parent() const;
+      lwi_p sibling() const;
+      lwi_p child() const;
       void setParent(lwi_cp parent);
       void setChild(lwi_cp child);
       void setSibling(lwi_cp sibling);
 
       int level() const;
       void setLevel(int lvl);
+
+      bool isRoot() const;
+      bool isExpanded() const;
+      bool canExpand() const;
+
+      virtual void expand();
+      virtual void collapse();
+
+      virtual void addChild(lwi_p child);
 
     protected:
       lwi_p pnt; // Parent node
@@ -79,6 +99,8 @@ namespace VStudio {
       lw_p list;
       int maybeTotalHeight;
       int lvl;
+      uint flags;
+      uint numChildren;
   };
 
   class ListWidget : public QScrollView {
@@ -98,24 +120,32 @@ namespace VStudio {
       ListWidget(QWidget *parent=0, const char* name=0, WFlags f=0);
       virtual ~ListWidget();
 
+    // QWidget's methods:
+      virtual void paintEvent(QPaintEvent *event);
+
+    // QScrollView's methods:
+      virtual void drawContents(QPainter *painter, int cx, int cy, int cw, int ch);
+
       int lvlShift() const;
       virtual void setLvlShift(int shift);
       virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
-      void updateItems();
+      void updateItems(lwi_p item=0);
       void setFocused(lwi_p item);
 
-    private:
-      RootItem *root;
+    protected:
       lwi_p focusItem;
       lwi_p selectedItem;
       lwi_p prevFocusItem;
+
+    private:
+      RootItem *root;
       pv_lwi items;
-      // pv_lwi drawqueue;
+      pv_lwi dqueue;
       int lvl_shift;
   };
 
   /** \class VSExplorerEntity
-   * \brief Base class for all items
+   * \brief Base class for all VS UI entities
    */
   class VSExplorerEntity : public ListWidgetItem {
     Q_OBJECT
@@ -123,6 +153,7 @@ namespace VStudio {
       enum e_flags {
         IS_OPEN = 0x00000001,
         IS_HOVERED_ON = 0x00000002,
+        CONTROLS_VISIBLE = 0x00000004,
       };
     public:
       VSExplorerEntity(QWidget *parent=0, const char *name=0, WFlags fl=0);
@@ -134,34 +165,51 @@ namespace VStudio {
 
     // ListWidgetItem's methods:
       virtual void invalidateHeight();
+      virtual void expand();
+      virtual void collapse();
+      virtual void addChild(lwi_p child);
 
     // VStudio UI entity methods:
       virtual vse_p getModel() const = 0;
       virtual const QUuid& getUID() const = 0;
       virtual e_VSEntityType getType() const = 0;
 
-      void open();
-      void close();
+      virtual void showControls();
+      virtual void hideControls();
+      bool controlsVisible() const;
 
   // private slots:
       virtual void slotRefreshText() = 0;
 
     protected:
-      QHBox *hb_main;
-      QHBox *hb_service;
+      QHBoxLayout *hbl_main;
+      QVBoxLayout *vbl_main;
+      QVBoxLayout *vbl_elem;
+      QHBox *hb_top;
+      QCheckBox *chb_select;
+      QPushButton *btn_expand;
+      QLabel *lbl_icon;
+      QLabel *lbl_name;
       uint enflg;
-      QPushButton *btn_build;
-      QPushButton *btn_clear;
   };
 
   /** \class VSExplorerListWidget
    * \brief Lists solutions, projects and files in form of widgets
    */
   class VSExplorerListWidget : public ListWidget {
+    Q_OBJECT
     public:
       VSExplorerListWidget(QWidget *parent=0, const char *name=0, WFlags fl=0);
       virtual ~VSExplorerListWidget();
 
+      // QObject methods:
+      virtual bool eventFilter(QObject *object, QEvent *event);
+
+      // QWidget methods:
+      // virtual void hide();
+      // virtual void show();
+      // virtual void setEnabled(bool enable);
+      // virtual void setDisabled(bool disable);
   };
 
   //TODO: A template would look nicer
@@ -251,35 +299,42 @@ namespace VStudio {
   */
   class VSSlnNode : public VSExplorerEntity {
     Q_OBJECT
-  public:
-    VSSlnNode(vss_p sln, QWidget *parent=0, const char *name=0, WFlags fl=0);
-    virtual ~VSSlnNode();
+    public:
+      VSSlnNode(vss_p sln, QWidget *parent=0, const char *name=0, WFlags fl=0);
+      virtual ~VSSlnNode();
 
-    //virtual void paintCell(QPainter *p, const QColorGroup &cg, int column, int  width, int alignment);
-    //virtual int width(const QFontMetrics &fnt_mtrx, const QListView *listview, int column) const;
+    // QTWidget's methods:
+      virtual void enterEvent(QEvent *event);
+      virtual void leaveEvent(QEvent *event);
+      virtual QSize sizeHint() const;
+      virtual QSize minimumSizeHint() const;
 
-  // VSExplorerEntity interface
-    virtual vse_p getModel() const;
-    virtual const QUuid& getUID() const;
-    virtual e_VSEntityType getType() const;
+    // VSExplorerEntity interface
+      virtual vse_p getModel() const;
+      virtual const QUuid& getUID() const;
+      virtual e_VSEntityType getType() const;
+      virtual void showControls();
+      virtual void hideControls();
 
-  public:
-  // private slots:
-    virtual void slotRefreshText();
+    public:
+    // private slots:
+      virtual void slotRefreshText();
 
-  public:
-    // VSSlnNode interface
-    void setState(const QString &state);
+    public:
+      // VSSlnNode interface
+      void setState(const QString &state);
 
-  private:
-    vss_p sln;
-    pv_uivsp projects;
-    pv_uivsf filters;
-    // QString uiFileLink;
+    private:
+      vss_p sln;
+      pv_uivsp projects;
+      pv_uivsf filters;
+      // QString uiFileLink;
 
-    QLabel *lbl_icon;
-    QLabel *lbl_name;
-    QPushButton *btn_cfg;
+      QHBox *hb_tools;
+      QLabel *lbl_cfg;
+      QPushButton *btn_cfg;
+      QPushButton *btn_bld;
+      QPushButton *btn_clr;
   };
 
   /**
@@ -310,9 +365,9 @@ namespace VStudio {
     pv_uivsfl files;
     pv_uivsf filters;
 
-    QLabel *lbl_icon;
-    QLabel *lbl_name;
     QPushButton *btn_cfg;
+    QPushButton *btn_bld;
+    QPushButton *btn_clr;
   };
 
   /**
@@ -340,8 +395,8 @@ namespace VStudio {
     vsf_p flt;  // VSFilter, model representation
     uivse_p container; // Parent container, solution or project UI
 
-    QLabel *lbl_icon;
-    QLabel *lbl_name;
+    QPushButton *btn_bld;
+    QPushButton *btn_clr;
     pv_uivse contents;
   };
 
@@ -371,9 +426,9 @@ namespace VStudio {
     vsfl_p file;
     uivse_p container; // Parent filter|project
 
-    QLabel *lbl_icon;
-    QLabel *lbl_name;
     QPushButton *btn_cfg;
+    QPushButton *btn_bld; //NOTE: meaning is "compile file"
+    QPushButton *btn_clr;
   };
 };
 //END // VStudio namespace
