@@ -58,14 +58,19 @@ namespace VStudio {
     Q_OBJECT
     public:
       enum e_flags {
-        IS_ROOT = 0x00000001,
+        IS_ROOT     = 0x00000001,
         IS_EXPANDED = 0x00000002,
+        IS_LMB_DOWN = 0x00000010,
+        IS_PRESSED  = 0x00000020,
       };
     public:
       ListWidgetItem(QWidget *parent, const char *name=0, WFlags fl=0);
       virtual ~ListWidgetItem();
 
     // QWidget's methods:
+      virtual void mousePressEvent(QMouseEvent *event);
+      virtual void mouseReleaseEvent(QMouseEvent *event);
+      virtual void mouseDoubleClickEvent(QMouseEvent *event);
       virtual void enterEvent(QEvent *event);
       virtual void leaveEvent(QEvent *event);
 
@@ -90,6 +95,12 @@ namespace VStudio {
       virtual void collapse();
 
       virtual void addChild(lwi_p child);
+
+      virtual bool hit_item(const QPoint &point) const;
+
+    signals:
+      void released();
+      void clicked();
 
     protected:
       lwi_p pnt; // Parent node
@@ -131,11 +142,16 @@ namespace VStudio {
       virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
       void updateItems(lwi_p item=0);
       void setFocused(lwi_p item);
+      void select(lwi_p item);
+
+    signals:
+      void selectionChanged(lwi_p);
 
     protected:
       lwi_p focusItem;
       lwi_p selectedItem;
       lwi_p prevFocusItem;
+      lwi_p prevSelectedItem;
 
     private:
       RootItem *root;
@@ -168,6 +184,7 @@ namespace VStudio {
       virtual void expand();
       virtual void collapse();
       virtual void addChild(lwi_p child);
+      virtual bool hit_item(const QPoint &point) const;
 
     // VStudio UI entity methods:
       virtual vse_p getModel() const = 0;
@@ -243,7 +260,7 @@ namespace VStudio {
       void maybeTip(QPoint const &);
 
     private slots:
-      void slotSelectItem(QListViewItem *item);
+      void slotSelectItem(lwi_p item);
       // void slotContextMenu(KListView *lv, QListViewItem *item, const QPoint &p);
       void slotEntityRenamed(QListViewItem *item, const QString &str, int col);
       void slotProjectOpened();

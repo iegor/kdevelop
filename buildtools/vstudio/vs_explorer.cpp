@@ -67,6 +67,42 @@ namespace VStudio {
   ListWidgetItem::~ListWidgetItem() {
   }
 
+  void ListWidgetItem::mousePressEvent(QMouseEvent *e) {
+    if(hit_item(e->pos())) {
+      set_bit(flags, IS_PRESSED);
+      switch(e->button()) {
+        case Qt::LeftButton: {
+          set_bit(flags, IS_LMB_DOWN);
+          break; }
+        default: {
+          break; }
+      }
+    }
+  }
+
+  void ListWidgetItem::mouseReleaseEvent(QMouseEvent *e) {
+    if(hit_item(e->pos())) {
+      switch(e->button()) {
+        case Qt::LeftButton: {
+          if(check_bit(flags, IS_PRESSED|IS_LMB_DOWN)) {
+            clear_bit(flags, IS_LMB_DOWN);
+            emit released();
+            emit clicked();
+
+            // Make list widget emit it's signals
+            list->select(this);
+          }
+          break; }
+        default: {
+          break; }
+      }
+      clear_bit(flags, IS_PRESSED);
+    }
+  }
+
+  void ListWidgetItem::mouseDoubleClickEvent(QMouseEvent *e) {
+  }
+
   void ListWidgetItem::enterEvent(QEvent *e) {
     setMicroFocusHint(x(), y(), width(), height(), false);
     list->setFocused(this); // Set this item as focused in list
@@ -136,6 +172,10 @@ namespace VStudio {
     }
   }
 
+  bool ListWidgetItem::hit_item(const QPoint &p) const {
+    return rect().contains(p);
+  }
+
   //===========================================================================
   // ListWidget methods
   //===========================================================================
@@ -143,8 +183,9 @@ namespace VStudio {
   : QScrollView(p, nm, fl)
   , lvl_shift(10)
   , focusItem(0)
+  , selectedItem(0)
   , prevFocusItem(0)
-  , selectedItem(0) {
+  , prevSelectedItem(0) {
     setMouseTracking(true);
     viewport()->setMouseTracking(true);
 
@@ -255,6 +296,15 @@ namespace VStudio {
   void ListWidget::setFocused(lwi_p item) {
     prevFocusItem = focusItem;
     focusItem = item;
+  }
+
+  void ListWidget::select(lwi_p itm) {
+    //Deselect previuosly selected item
+    prevSelectedItem = selectedItem;
+
+    selectedItem = itm;
+
+    emit selectionChanged(itm);
   }
 
   ListWidget::RootItem::RootItem(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
@@ -439,6 +489,10 @@ namespace VStudio {
     }
   }
 
+  bool VSExplorerEntity::hit_item(const QPoint &p) const {
+    return hb_top->rect().contains(p);
+  }
+
   void VSExplorerEntity::showControls() {
     set_bit(enflg, CONTROLS_VISIBLE);
   }
@@ -508,8 +562,7 @@ namespace VStudio {
             this, SLOT(slotContextMenu(KListView*, QListViewItem*, const QPoint&))); */
     /* connect(m_listView, SIGNAL(itemRenamed(QListViewItem*, const QString&, int)),
             this, SLOT(slotEntityRenamed(QListViewItem*, const QString&, int))); */
-    /* connect(m_listView, SIGNAL(selectionChanged(QListViewItem*)),
-            this, SLOT(slotSelectItem(QListViewItem*))); */
+    connect(explorer, SIGNAL(selectionChanged(lwi_p)), this, SLOT(slotSelectItem(lwi_p)));
   }
 
   VSExplorer::~VSExplorer() {
@@ -525,8 +578,8 @@ namespace VStudio {
     actions = 0;
   }
 
-  void VSExplorer::slotSelectItem(QListViewItem *item) {
-    /* uivse_p ent = static_cast<uivse_p>(item);
+  void VSExplorer::slotSelectItem(lwi_p itm) {
+    uivse_p ent = static_cast<uivse_p>(itm);
 
     switch(ent->getType()) {
       case vs_solution: {
@@ -574,7 +627,7 @@ namespace VStudio {
         break; }
       default: {
         break; }
-    } */
+    }
   }
 
   /* void VSExplorer::slotContextMenu(KListView lv, QListViewItem *item, const QPoint &p) {
