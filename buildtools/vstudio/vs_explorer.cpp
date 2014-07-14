@@ -166,10 +166,28 @@ namespace VStudio {
       chd = child;
       numChildren++;
       chd->setParent(this);
+
+      // Sort items if expanded
+      //if(isExpanded()) {
+        child->show();
+        child->setEnabled(true);
+      //}
     }
     else {
       kddbg << "lwi child item is 0.\n";
     }
+  }
+
+  void ListWidgetItem::sort() {
+  }
+
+  void ListWidgetItem::updateArrangement() {
+    // Update position of every sibling starting frim this item
+    lwi_p itm = sbl;
+    while(itm != 0) {
+      itm = itm->sbl;
+    }
+    // Update position of every item starting from this item's parent
   }
 
   bool ListWidgetItem::hit_item(const QPoint &p) const {
@@ -239,9 +257,6 @@ namespace VStudio {
       int tw=width();
       int th=0;
       // int max_lvl=0;
-
-      p->show();
-      p->setEnabled(true);
 
       BOOSTVEC_FOR(lwi_ci, it, items) {
         lwi_p item(*it);
@@ -383,6 +398,8 @@ namespace VStudio {
     setMidLineWidth(1);
     // Main layout
     hbl_main = new QHBoxLayout(this, 1, 0, "hbl_main");
+    layout()->setMargin(0);
+    layout()->setSpacing(0);
     // Vertical main layout for side controls
     vbl_main = new QVBoxLayout(hbl_main, 0, "vbl_main");
     // Expand button
@@ -483,10 +500,10 @@ namespace VStudio {
   void VSExplorerEntity::addChild(lwi_p child) {
     ListWidgetItem::addChild(child);
 
-    if(canExpand()) {
+    /* if(canExpand()) {
       btn_expand->setEnabled(true);
       btn_expand->show();
-    }
+    } */
   }
 
   bool VSExplorerEntity::hit_item(const QPoint &p) const {
@@ -502,6 +519,11 @@ namespace VStudio {
   }
 
   vsinline bool VSExplorerEntity::controlsVisible() const vsinline_attrib { return check_bit(enflg, CONTROLS_VISIBLE); }
+
+  void VSExplorerEntity::slotToggleExpand(bool on) {
+    if(on) { expand(); }
+    else { collapse(); }
+  }
 
   //===========================================================================
   // VStudio::explorer widget methods
@@ -957,6 +979,8 @@ namespace VStudio {
     hbl_tools->setStretchFactor(btn_bld, 0);
     hbl_tools->setStretchFactor(btn_clr, 0);
 
+    connect(btn_expand, SIGNAL(toggled(bool)), this, SLOT(slotToggleExpand(bool)));
+
     hb_tools->hide();
     hb_tools->setEnabled(false);
 
@@ -969,41 +993,23 @@ namespace VStudio {
 
   void VSSlnNode::enterEvent(QEvent *e) {
     VSExplorerEntity::enterEvent(e);
-    lbl_icon->setBackgroundMode(Qt::PaletteHighlight);
-    hb_tools->setBackgroundMode(Qt::PaletteHighlight);
-    //hb_top->setBac
+    //lbl_icon->setBackgroundMode(Qt::PaletteHighlight);
+    //hb_tools->setBackgroundMode(Qt::PaletteHighlight);
+
+    updateGeometry();
+    // updateArrangement();
   }
 
   void VSSlnNode::leaveEvent(QEvent *e) {
     VSExplorerEntity::leaveEvent(e);
-    lbl_icon->setBackgroundMode(Qt::PaletteBackground);
+    //lbl_icon->setBackgroundMode(Qt::PaletteBackground);
 
     if(btn_bld->isVisible()) {
       hideControls();
     }
-  }
 
-  QSize VSSlnNode::sizeHint() const {
-    int wt = 0;
-    int ht = 0;
-    QRect rc_main = vbl_main->geometry();
-    QRect rc_elem = vbl_elem->geometry();
-    wt += rc_main.width() + rc_elem.width();
-    //ht = rc_main.height();
-    if(hb_tools->isVisible()) {
-      ht = hb_top->height() + hb_tools->height();
-    }
-    else {
-      ht = QMAX(rc_main.height(), hb_top->height());
-    }
-    return QSize(wt, ht);
-  }
-
-  QSize VSSlnNode::minimumSizeHint() const {
-    /* QRect rc_main = vbl_main->geometry();
-    QRect rc_elem = vbl_elem->geometry();
-    return QSize(rc_main.width() + rc_elem.width(), QMAX(rc_main.height(), rc_elem.height())); */
-    return sizeHint();
+    updateGeometry();
+    // updateArrangement();
   }
 
   vsinline vse_p VSSlnNode::getModel() const vsinline_attrib { return sln; }
@@ -1015,8 +1021,8 @@ namespace VStudio {
     hb_tools->setEnabled(true);
     hb_tools->show();
 
-    resize(minimumSizeHint());
     updateGeometry();
+    updateArrangement();
   }
 
   void VSSlnNode::hideControls() {
@@ -1024,8 +1030,8 @@ namespace VStudio {
     hb_tools->setEnabled(false);
     hb_tools->hide();
 
-    resize(minimumSizeHint());
     updateGeometry();
+    updateArrangement();
   }
 
   void VSSlnNode::setState(const QString &/*state*/) {

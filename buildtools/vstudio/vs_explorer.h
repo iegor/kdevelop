@@ -95,6 +95,8 @@ namespace VStudio {
       virtual void collapse();
 
       virtual void addChild(lwi_p child);
+      virtual void sort();
+      virtual void updateArrangement();
 
       virtual bool hit_item(const QPoint &point) const;
 
@@ -197,6 +199,9 @@ namespace VStudio {
 
   // private slots:
       virtual void slotRefreshText() = 0;
+
+    protected slots:
+      void slotToggleExpand(bool toggle_on);
 
     protected:
       QHBoxLayout *hbl_main;
@@ -323,8 +328,10 @@ namespace VStudio {
     // QTWidget's methods:
       virtual void enterEvent(QEvent *event);
       virtual void leaveEvent(QEvent *event);
-      virtual QSize sizeHint() const;
-      virtual QSize minimumSizeHint() const;
+
+    // ListWidgetItem's methods:
+      virtual void expand();
+      virtual void collapse();
 
     // VSExplorerEntity interface
       virtual vse_p getModel() const;
@@ -414,7 +421,6 @@ namespace VStudio {
 
     QPushButton *btn_bld;
     QPushButton *btn_clr;
-    pv_uivse contents;
   };
 
   /**
