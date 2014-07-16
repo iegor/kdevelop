@@ -1172,7 +1172,7 @@ void TrollProjectWidget::addFiles( QStringList &files, bool relativeToProjectRoo
 
         if ( m_shownSubproject->scope->variableValues( "TEMPLATE" ).findIndex( "subdirs" ) != -1 && !fileName.endsWith(".pro") )
         {
-            ChooseSubprojectDlg dlg( this, false );
+            ChooseSubprojectDlg dlg( this );
             if ( dlg.exec() == QDialog::Accepted )
             {
                 if ( dlg.selectedSubproject() && dlg.selectedSubproject()->scope->variableValues("TEMPLATE").findIndex( "subdirs" ) != -1 )
