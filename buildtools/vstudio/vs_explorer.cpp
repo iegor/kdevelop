@@ -104,7 +104,7 @@ namespace VStudio {
   }
 
   void ListWidgetItem::enterEvent(QEvent *e) {
-    setMicroFocusHint(x(), y(), width(), height(), false);
+    //setMicroFocusHint(x(), y(), width(), height(), false);
     list->setFocused(this); // Set this item as focused in list
     installEventFilter(list);
     list->viewport()->setFocusProxy(this);
@@ -183,10 +183,10 @@ namespace VStudio {
 
   void ListWidgetItem::updateArrangement() {
     // Update position of every sibling starting frim this item
-    lwi_p itm = sbl;
-    while(itm != 0) {
-      itm = itm->sbl;
-    }
+    // lwi_p itm = sbl;
+    // while(itm != 0) {
+    //  itm = itm->sbl;
+    // }
     // Update position of every item starting from this item's parent
   }
 
@@ -199,7 +199,7 @@ namespace VStudio {
   //===========================================================================
   ListWidget::ListWidget(QWidget *p, const char *nm, WFlags fl)
   : QScrollView(p, nm, fl)
-  , lvl_shift(10)
+  //, lvl_shift(10)
   , focusItem(0)
   , selectedItem(0)
   , prevFocusItem(0)
@@ -218,6 +218,9 @@ namespace VStudio {
     viewport()->setFocusPolicy(WheelFocus);
     viewport()->setBackgroundMode(PaletteBase);
     setBackgroundMode(PaletteBackground, PaletteBase);
+
+    // List items mapper
+    imapper = new Tree_LM(this);
   }
 
   ListWidget::~ListWidget() {
@@ -225,6 +228,8 @@ namespace VStudio {
       lwi_p itm(*it);
       // if(itm != 0) { delete itm; }
     }*/
+
+    if(imapper != 0) { delete imapper; imapper=0; }
   }
 
   void ListWidget::paintEvent(QPaintEvent *e) {
@@ -239,8 +244,8 @@ namespace VStudio {
     }
   }
 
-  int ListWidget::lvlShift() const { return lvl_shift; }
-  void ListWidget::setLvlShift(int shift) { lvl_shift = shift; }
+  // int ListWidget::lvlShift() const { return imapper->lvl_shift; }
+  // void ListWidget::setLvlShift(int shift) { lvl_shift = shift; }
 
   bool ListWidget::insertItem(lwi_p p, lwi_p pnt/*=0*/) {
     if(p != 0) {
@@ -264,48 +269,14 @@ namespace VStudio {
       }
 
       resizeContents(tw, th);
-      updateItems();
+      slotRemapItems();
       return true;
     }
     return false;
   }
 
-  void ListWidget::updateItems(lwi_p i/*=0*/) {
-    /* if(i == 0) { i = root->child(); }
-    lwi_p itm = i;
-
-    if(itm->parent()->isExpanded()) {
-      itm->setEnabled(true);
-      itm->show();
-
-      int ht_cnt = 0;
-      while(itm != 0) {
-        moveChild(itm, lvl_shift*itm->lvl, ht_cnt);
-        //itm->resize(200, 20);
-
-        //NOTE: Dive to update item's children
-        if(itm->canExpand() && itm->isExpanded()) { updateItems(itm); }
-
-        ht_cnt += itm->totalHeight();
-        itm = itm->sibling();
-      }
-    }
-    else {
-      itm->setEnabled(false);
-      itm->hide();
-    }*/
-
-    //NOTE: testing only
-    //TODO: do some sorting, for all "trees" (solutions)
-    int ht_cnt=0;
-    BOOSTVEC_FOR(lwi_ci, it, items) {
-      lwi_p item(*it);
-      if(item != 0) {
-        moveChild(item, lvl_shift * item->lvl, ht_cnt);
-        item->resize(200, 20);
-        ht_cnt += item->totalHeight();
-      }
-    }
+  void ListWidget::slotRemapItems() {
+    imapper->map();
   }
 
   void ListWidget::setFocused(lwi_p item) {
@@ -328,6 +299,62 @@ namespace VStudio {
   }
 
   ListWidget::RootItem::~RootItem() {
+  }
+
+  ListWidget::LayoutMapper::LayoutMapper(lw_p hst)
+  : host(hst) {
+  }
+
+  ListWidget::LayoutMapper::~LayoutMapper() {
+  }
+
+  void ListWidget::LayoutMapper::map() {
+  }
+
+  ListWidget::Tree_LM::Tree_LM(lw_p hst)
+  : ListWidget::LayoutMapper(hst) {
+    lvl_shift = 10;
+  }
+
+  ListWidget::Tree_LM::~Tree_LM() {
+  }
+
+  void ListWidget::Tree_LM::map() {
+    /* if(i == 0) { i = root->child(); }
+    lwi_p itm = i;
+
+    if(itm->parent()->isExpanded()) {
+      itm->setEnabled(true);
+      itm->show();
+
+      int ht_cnt = 0;
+      while(itm != 0) {
+        moveChild(itm, lvl_shift*itm->lvl, ht_cnt);
+        //itm->resize(200, 20);
+
+        //NOTE: Dive to update item's children
+        if(itm->canExpand() && itm->isExpanded()) { updateItems(itm); }
+
+        ht_cnt += itm->totalHeight();
+        itm = itm->sibling();
+      }
+    }
+    else {
+      itm->setEnabled(false);
+      itm->hide();
+    } */
+
+    //NOTE: testing only
+    //TODO: do some sorting, for all "trees" (solutions)
+    int ht_cnt=0;
+    BOOSTVEC_FOR(lwi_ci, it, host->items) {
+      lwi_p item(*it);
+      if(item != 0) {
+        host->moveChild(item, lvl_shift * item->lvl, ht_cnt);
+        // item->resize(200, 20);
+        ht_cnt += item->height();
+      }
+    }
   }
 
   //===========================================================================
@@ -390,60 +417,54 @@ namespace VStudio {
   VSExplorerEntity::VSExplorerEntity(QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
   : ListWidgetItem(pnt, nm, fl)
   , enflg(0) {
-    setMinimumSize(QSize(200, 16));
-    setMaximumSize(QSize(500, 100));
-    setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    //setMinimumSize(QSize(200, 16));
+    //setMaximumSize(QSize(500, 100));
+    //setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     setFrameStyle(QFrame::Box|QFrame::Plain);
     setLineWidth(1);
     setMidLineWidth(1);
     // Main layout
     hbl_main = new QHBoxLayout(this, 1, 0, "hbl_main");
-    layout()->setMargin(0);
+    layout()->setMargin(1);
     layout()->setSpacing(0);
     // Vertical main layout for side controls
-    vbl_main = new QVBoxLayout(hbl_main, 0, "vbl_main");
-    // Expand button
-    btn_expand = new QPushButton(this, "btn_expand");
-    btn_expand->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    btn_expand->setMinimumSize(QSize(10,10));
-    btn_expand->setMaximumSize(QSize(16,16));
-    btn_expand->setText("+");
-    vbl_main->addWidget(btn_expand);
-    //btn_expand->hide();
-    //btn_expand->setEnabled(false);
+    vb_ctrl = new QVBox(this, "vb_ctrl");
+    vb_ctrl->setSpacing(0);
+    vb_ctrl->setMargin(0);
+    hbl_main->addWidget(vb_ctrl, 0, Qt::AlignLeft);
+    // Vertical main layout spacer, to keep main controls up
+    spc_vbctrl = new QSpacerItem(10, 2, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    vb_ctrl->layout()->addItem(spc_vbctrl);
     // Select checkbox
-    chb_select = new QCheckBox(this, "chb_select");
+    chb_select = new QCheckBox(vb_ctrl, "chb_select");
     chb_select->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     chb_select->setMinimumSize(QSize(10,10));
     chb_select->setMaximumSize(QSize(16,16));
-    vbl_main->addWidget(chb_select);
     chb_select->hide();
     chb_select->setEnabled(false);
-    // Vertical main layout spacer, to keep main controls up
-    QSpacerItem *vbl_main_spc = new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    vbl_main->addItem(vbl_main_spc);
     // Vertical element layout, used to keep entity name, icon, config, progress, errors, info etc
     vbl_elem = new QVBoxLayout(hbl_main, 0, "vbl_elem");
-    vbl_elem->setResizeMode(QLayout::Minimum);
-    vbl_elem->setAlignment(Qt::AlignTop);
+    vbl_elem->setMargin(0);
+    vbl_elem->setSpacing(0);
+    // vbl_elem->setResizeMode(QLayout::Minimum);
+    // vbl_elem->setAlignment(Qt::AlignTop);
     // HBox to contain icon and name labels, common for all VS UI entities
     hb_top = new QHBox(this, "hbl_top");
-    hb_top->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    //hb_top->setMinimumHeight(16);
+    //hb_top->setMaximumHeight(16);
+    // hb_top->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
     vbl_elem->addWidget(hb_top);
     vbl_elem->setStretchFactor(hb_top, 1);
     // Icon label
     lbl_icon = new QLabel(hb_top, "lbl_icon");
     lbl_icon->setMinimumSize(QSize(10,10));
     lbl_icon->setMaximumSize(QSize(16,16));
-    lbl_icon->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    // lbl_icon->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     // Name label
     lbl_name = new QLabel(hb_top, "lbl_name");
-    lbl_name->setMinimumHeight(10);
+    lbl_name->setMinimumSize(150, 10);
     lbl_name->setMaximumHeight(16);
-    lbl_name->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    // Vertical elem layout spacer
-    QSpacerItem *vbl_elem_spc = new QSpacerItem(10, 10, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    vbl_elem->addItem(vbl_elem_spc);
+    // lbl_name->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
     hb_top->setStretchFactor(lbl_icon, 0);
     hb_top->setStretchFactor(lbl_name, 1);
@@ -461,11 +482,18 @@ namespace VStudio {
     chb_select->setEnabled(true);
     chb_select->show();
 
-    lwi_p chi = chd;
-    while(chi != 0) {
-      chi->setBackgroundMode(Qt::PaletteHighlight);
-      chi = chi->sibling();
-    }
+    invalidateHeight();
+
+    // vb_ctrl->adjustSize();
+    // vb_ctrl->updateGeometry();
+    // hb_top->adjustSize();
+    // hb_top->updateGeometry();
+
+    // lwi_p chi = chd;
+    // while(chi != 0) {
+    //   chi->setBackgroundMode(Qt::PaletteHighlight);
+    //   chi = chi->sibling();
+    // }
   }
 
   void VSExplorerEntity::leaveEvent(QEvent *e) {
@@ -477,11 +505,18 @@ namespace VStudio {
     chb_select->setEnabled(false);
     chb_select->hide();
 
-    lwi_p chi = chd;
-    while(chi != 0) {
-      chi->setBackgroundMode(Qt::PaletteBackground);
-      chi = chi->sibling();
-    }
+    invalidateHeight();
+
+    // vb_ctrl->adjustSize();
+    // vb_ctrl->updateGeometry();
+    // hb_top->adjustSize();
+    // hb_top->updateGeometry();
+
+    // lwi_p chi = chd;
+    // while(chi != 0) {
+    //   chi->setBackgroundMode(Qt::PaletteBackground);
+    //   chi = chi->sibling();
+    // }
   }
 
   void VSExplorerEntity::invalidateHeight() {
@@ -519,11 +554,9 @@ namespace VStudio {
   }
 
   vsinline bool VSExplorerEntity::controlsVisible() const vsinline_attrib { return check_bit(enflg, CONTROLS_VISIBLE); }
+  vsinline bool VSExplorerEntity::isSelected() const vsinline_attrib { return chb_select->isChecked(); }
 
-  void VSExplorerEntity::slotToggleExpand(bool on) {
-    if(on) { expand(); }
-    else { collapse(); }
-  }
+  void VSExplorerEntity::slotToggleExpand(bool on) { if(on) { expand(); } else { collapse(); } }
 
   //===========================================================================
   // VStudio::explorer widget methods
@@ -545,7 +578,8 @@ namespace VStudio {
     // connect(this, SIGNAL(returnPressed(QListViewItem*)), this, SLOT(slotExecuted(QListViewItem*)));
 
     //NOTE: kind of "track active item in solution explorer"
-    // m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()), m_part->actionCollection(), "classview_follow_editor");
+    // m_actionFollowEditor = new KToggleAction(i18n("Follow Editor"), KShortcut(), this, SLOT(slotFollowEditor()),
+    //    m_part->actionCollection(), "classview_follow_editor");
 
     // Configure explorer from config file
     // KConfig* config = m_part->instance()->config();
@@ -563,19 +597,22 @@ namespace VStudio {
     actions = new KActionCollection(this);
 
     //TODO: Remove that later, that will be part of test only ###########
-    actSetEntityRltPath = new KAction(i18n("Set relative path:"), 0, this, SLOT(slotSetEntityRltPath()), actions, "setrelpath");
+    actSetEntityRltPath = new KAction(i18n("Set relative path:"), 0, this, SLOT(slotSetEntityRltPath()),
+                                      actions, "setrelpath");
     actSetEntityRltPath->setToolTip(i18n("Set relative path for entity"));
     actSetEntityRltPath->setWhatsThis(i18n("<qt><b>Set relative path</b>"
         "<p>Change the relative path for selected entity.</p></qt>"));
     actSetEntityRltPath->setGroup(VSPART_ACTION_TOOLS_GROUP);
     //###################################################################
 
-    actCfgEntity = new KAction(i18n("Configure"), 0, this, SLOT(slotConfigureEntity()), actions, VSPART_ACTION_CONFIGURE_ENTITY);
+    actCfgEntity = new KAction(i18n("Configure"), 0, this, SLOT(slotConfigureEntity()), actions,
+                               VSPART_ACTION_CONFIGURE_ENTITY);
     actCfgEntity->setToolTip(i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
     actCfgEntity->setWhatsThis(i18n(VSPART_ACTION_CONFIGURE_ENTITY_WIT));
     actCfgEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
 
-    actRenameEntity = new KAction(i18n("Rename"), 0, this, SLOT(slotRenameEntity()), actions, VSPART_ACTION_RENAME_ENTITY);
+    actRenameEntity = new KAction(i18n("Rename"), 0, this, SLOT(slotRenameEntity()), actions,
+                                  VSPART_ACTION_RENAME_ENTITY);
     actRenameEntity->setToolTip(i18n(VSPART_ACTION_RENAME_ENTITY_TIP));
     actRenameEntity->setWhatsThis(i18n(VSPART_ACTION_RENAME_ENTITY_WIT));
     actRenameEntity->setGroup(VSPART_ACTION_TOOLS_GROUP);
@@ -936,46 +973,55 @@ namespace VStudio {
   VSSlnNode::VSSlnNode(vss_p s, QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
   : VSExplorerEntity(pnt, nm, fl)
   , sln(s) {
+    // vb_ctrl->layout()->remove(chb_select);
+    // vb_ctrl->layout()->removeItem(spc_vbctrl);
+    // Expand button
+    btn_expand = new QPushButton(vb_ctrl, "btn_expand");
+    btn_expand->setToggleButton(true);
+    btn_expand->setText("+");
+    btn_expand->setMinimumSize(QSize(10,10));
+    btn_expand->setMaximumSize(QSize(16,16));
+    btn_expand->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    //btn_expand->setEnabled(false); btn_expand->hide();
+    // vb_ctrl->layout()->add(chb_select);
+    // vb_ctrl->layout()->addItem(spc_vbctrl);
+    // Configure btn
+    btn_cfg = new QPushButton(this, "btn_cfg");
+    btn_cfg->setPixmap(SmallIcon("package_utilities"));
+    btn_cfg->setText("< configuration >");
+    btn_cfg->setMaximumSize(QSize(50, 10));
+    btn_cfg->setMinimumSize(QSize(100, 16));
+    btn_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    QToolTip::add(btn_cfg, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
+    vbl_elem->addWidget(btn_cfg);
+    btn_cfg->setEnabled(false); btn_cfg->hide();
     // Tools layout
     hb_tools = new QHBox(this, "hbl_tools");
-    hb_tools->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    vbl_elem->addWidget(hb_tools);
     QHBoxLayout *hbl_tools = new QHBoxLayout(hb_tools, 1, 0, "hbl_tools");
-    // Configure label
-    lbl_cfg = new QLabel(hb_tools, "lbl_cfg");
-    lbl_cfg->setMinimumSize(QSize(50, 16));
-    lbl_cfg->setMaximumSize(QSize(100, 16));
-    lbl_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    hbl_tools->addWidget(lbl_cfg);
-    QSpacerItem *spc_tools = new QSpacerItem(20, 16, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem *spc_tools = new QSpacerItem(2, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
     hbl_tools->addItem(spc_tools);
-    // Configure btn
-    btn_cfg = new QPushButton(hb_tools, "btn_cfg");
-    btn_cfg->setPixmap(SmallIcon("package_utilities"));
-    btn_cfg->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    btn_cfg->setMaximumSize(QSize(10, 10));
-    btn_cfg->setMinimumSize(QSize(16, 16));
-    QToolTip::add(btn_cfg, i18n(VSPART_ACTION_CONFIGURE_ENTITY_TIP));
-    hbl_tools->addWidget(btn_cfg);
+    vbl_elem->addWidget(hb_tools);
     // Build btn
-    btn_bld = new QPushButton(hb_tools, "btn_bld");
-    btn_bld->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    btn_bld = new QPushButton(this, "btn_bld");
     btn_bld->setPixmap(SmallIcon("build"));
     btn_bld->setMinimumSize(QSize(10,10));
     btn_bld->setMaximumSize(QSize(16,16));
+    btn_bld->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     QToolTip::add(btn_bld, i18n(VSPART_ACTION_BUILD_SOLUTION_TIP));
-    hbl_tools->addWidget(btn_bld);
+    //hbl_tools->addWidget(btn_bld);
+    btn_bld->setEnabled(false); btn_bld->hide();
     // Clear btn
-    btn_clr = new QPushButton(hb_tools, "btn_clr");
-    btn_clr->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    btn_clr = new QPushButton(this, "btn_clr");
     btn_clr->setPixmap(SmallIcon("eraser"));
     btn_clr->setMinimumSize(QSize(10,10));
     btn_clr->setMaximumSize(QSize(16,16));
+    btn_clr->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     QToolTip::add(btn_clr, i18n(VSPART_ACTION_CLEAN_SOLUTION_TIP));
-    hbl_tools->addWidget(btn_clr);
+    //hbl_tools->addWidget(btn_clr);
+    btn_clr->setEnabled(false); btn_clr->hide();
 
-    hbl_tools->setStretchFactor(lbl_cfg, 1);
-    hbl_tools->setStretchFactor(btn_cfg, 0);
+    // hbl_tools->setStretchFactor(lbl_cfg, 1);
+    hbl_tools->setStretchFactor(btn_cfg, 1);
     hbl_tools->setStretchFactor(btn_bld, 0);
     hbl_tools->setStretchFactor(btn_clr, 0);
 
@@ -985,7 +1031,7 @@ namespace VStudio {
     hb_tools->setEnabled(false);
 
     slotRefreshText();
-    hideControls();
+    // hideControls();
   }
 
   VSSlnNode::~VSSlnNode() {
@@ -996,20 +1042,50 @@ namespace VStudio {
     //lbl_icon->setBackgroundMode(Qt::PaletteHighlight);
     //hb_tools->setBackgroundMode(Qt::PaletteHighlight);
 
-    updateGeometry();
+    btn_cfg->setEnabled(true);
+    btn_cfg->show();
+
+    adjustSize();
     // updateArrangement();
+    list->slotRemapItems();
   }
 
   void VSSlnNode::leaveEvent(QEvent *e) {
     VSExplorerEntity::leaveEvent(e);
     //lbl_icon->setBackgroundMode(Qt::PaletteBackground);
 
-    if(btn_bld->isVisible()) {
-      hideControls();
+    if(controlsVisible()) { hideControls(); }
+
+    btn_cfg->setEnabled(false);
+    btn_cfg->hide();
+
+    adjustSize();
+    // updateArrangement();
+    list->slotRemapItems();
+  }
+
+  void VSSlnNode::expand() {
+    VSExplorerEntity::expand();
+
+    lwi_p itm = chd;
+    while(itm != 0) {
+      itm->show();
+      itm = itm->sibling();
     }
 
-    updateGeometry();
-    // updateArrangement();
+    btn_expand->setText("-");
+  }
+
+  void VSSlnNode::collapse() {
+    VSExplorerEntity::collapse();
+
+    lwi_p itm = chd;
+    while(itm != 0) {
+      itm->hide();
+      itm = itm->sibling();
+    }
+
+    btn_expand->setText("+");
   }
 
   vsinline vse_p VSSlnNode::getModel() const vsinline_attrib { return sln; }
@@ -1018,20 +1094,40 @@ namespace VStudio {
 
   void VSSlnNode::showControls() {
     VSExplorerEntity::showControls();
-    hb_tools->setEnabled(true);
-    hb_tools->show();
+    // hb_tools->setEnabled(true);
+    // hb_tools->show();
 
-    updateGeometry();
+    vb_ctrl->layout()->add(btn_bld);
+    btn_bld->setEnabled(true); btn_bld->show();
+    btn_clr->setEnabled(true); btn_clr->show();
+    vb_ctrl->layout()->add(btn_clr);
+    //vb_ctrl->layout()->invalidate();
+    //vb_ctrl->adjustSize();
+
+    adjustSize();
+    //updateGeometry();
     updateArrangement();
+
+    list->slotRemapItems();
   }
 
   void VSSlnNode::hideControls() {
     VSExplorerEntity::hideControls();
-    hb_tools->setEnabled(false);
-    hb_tools->hide();
+    // hb_tools->setEnabled(false);
+    // hb_tools->hide();
 
-    updateGeometry();
+    vb_ctrl->layout()->remove(btn_bld);
+    vb_ctrl->layout()->remove(btn_clr);
+    btn_bld->setEnabled(false); btn_bld->hide();
+    btn_clr->setEnabled(false); btn_clr->hide();
+    //vb_ctrl->layout()->invalidate();
+    //vb_ctrl->adjustSize();
+
+    adjustSize();
+    //updateGeometry();
     updateArrangement();
+
+    list->slotRemapItems();
   }
 
   void VSSlnNode::setState(const QString &/*state*/) {
@@ -1042,26 +1138,26 @@ namespace VStudio {
 
     if(!sln->isReachable()) {
       lbl_icon->setPixmap(SmallIcon("error"));
-      lbl_cfg->setText(i18n("unreachable"));
+      btn_cfg->setText(i18n("unreachable"));
       return;
     }
 
     if(!sln->isLoaded()) {
       lbl_icon->setPixmap(SmallIcon("error"));
-      lbl_cfg->setText(i18n("load error"));
+      btn_cfg->setText(i18n("load error"));
       return;
     }
 
     // See if solution in "detached" state (i.e. no config selected for build)
     if(sln->isDetached()) {
       lbl_icon->setPixmap(SmallIcon("error"));
-      lbl_cfg->setText(i18n("detached"));
+      btn_cfg->setText(i18n("detached"));
     }
     else {
       vcfg_cp cfg = sln->currentCfg();
       // The count of projects
       lbl_icon->setPixmap(SmallIcon("gohome"));
-      lbl_cfg->setText(QString((cfg != 0) ? cfg->toString() : "error"));
+      btn_cfg->setText(QString((cfg != 0) ? cfg->toString() : "error"));
     }
   }
 
@@ -1071,6 +1167,19 @@ namespace VStudio {
   VSPrjNode::VSPrjNode(vsp_p p, QWidget *pnt/*=0*/, const char *nm/*=0*/, WFlags fl/*=0*/)
   : VSExplorerEntity(pnt, nm, fl)
   , prj(p) {
+    // Expand button
+    btn_expand = new QPushButton(vb_ctrl, "btn_expand");
+    btn_expand->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    btn_expand->setToggleButton(true);
+    // btn_expand->setToggleType(QButton::Toggle);
+    btn_expand->setMinimumSize(QSize(16,16));
+    btn_expand->setMaximumSize(QSize(16,16));
+    btn_expand->setText("+");
+    //btn_expand->hide();
+    //btn_expand->setEnabled(false);
+
+    connect(btn_expand, SIGNAL(toggled(bool)), this, SLOT(slotToggleExpand(bool)));
+
     slotRefreshText();
   }
 
@@ -1113,6 +1222,19 @@ namespace VStudio {
   : VSExplorerEntity(pnt, nm, fl)
   , flt(filter)
   , container(0) {
+    // Expand button
+    btn_expand = new QPushButton(vb_ctrl, "btn_expand");
+    btn_expand->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    btn_expand->setToggleButton(true);
+    // btn_expand->setToggleType(QButton::Toggle);
+    btn_expand->setMinimumSize(QSize(16,16));
+    btn_expand->setMaximumSize(QSize(16,16));
+    btn_expand->setText("+");
+    //btn_expand->hide();
+    //btn_expand->setEnabled(false);
+
+    connect(btn_expand, SIGNAL(toggled(bool)), this, SLOT(slotToggleExpand(bool)));
+
     slotRefreshText();
   }
 

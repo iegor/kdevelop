@@ -122,6 +122,30 @@ namespace VStudio {
     Q_PROPERTY( int itemMargin READ itemMargin WRITE setItemMargin )
     Q_PROPERTY( int levelShift READ lvlShift WRITE setLvlShift )
 
+    public:
+      /** \class ListWidget::LayoutMapper
+       * \brief Maps list widget items thus creates layout for widget
+       */
+      class LayoutMapper {
+        public:
+          LayoutMapper(lw_p host);
+          virtual ~LayoutMapper();
+
+          virtual void map();
+
+          const lw_p host;
+      };
+
+      class Tree_LM : public LayoutMapper {
+        public:
+          Tree_LM(lw_p host);
+          virtual ~Tree_LM();
+
+          virtual void map();
+
+          int lvl_shift;
+      };
+
     private:
       class RootItem : public ListWidgetItem {
         public:
@@ -139,12 +163,14 @@ namespace VStudio {
     // QScrollView's methods:
       virtual void drawContents(QPainter *painter, int cx, int cy, int cw, int ch);
 
-      int lvlShift() const;
-      virtual void setLvlShift(int shift);
+      // int lvlShift() const;
+      // virtual void setLvlShift(int shift);
       virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
-      void updateItems(lwi_p item=0);
       void setFocused(lwi_p item);
       void select(lwi_p item);
+
+    public slots:
+      void slotRemapItems();
 
     signals:
       void selectionChanged(lwi_p);
@@ -159,7 +185,8 @@ namespace VStudio {
       RootItem *root;
       pv_lwi items;
       pv_lwi dqueue;
-      int lvl_shift;
+      // int lvl_shift;
+      LayoutMapper *imapper;
   };
 
   /** \class VSExplorerEntity
@@ -197,6 +224,8 @@ namespace VStudio {
       virtual void hideControls();
       bool controlsVisible() const;
 
+      bool isSelected() const;
+
   // private slots:
       virtual void slotRefreshText() = 0;
 
@@ -205,11 +234,11 @@ namespace VStudio {
 
     protected:
       QHBoxLayout *hbl_main;
-      QVBoxLayout *vbl_main;
+      QVBox *vb_ctrl; // UI controls vbox, expand, select, etc.
+      QSpacerItem *spc_vbctrl; // UI controls vbox spacer, to keek controls up
       QVBoxLayout *vbl_elem;
       QHBox *hb_top;
       QCheckBox *chb_select;
-      QPushButton *btn_expand;
       QLabel *lbl_icon;
       QLabel *lbl_name;
       uint enflg;
@@ -355,10 +384,10 @@ namespace VStudio {
       // QString uiFileLink;
 
       QHBox *hb_tools;
-      QLabel *lbl_cfg;
       QPushButton *btn_cfg;
       QPushButton *btn_bld;
       QPushButton *btn_clr;
+      QPushButton *btn_expand;
   };
 
   /**
@@ -392,6 +421,7 @@ namespace VStudio {
     QPushButton *btn_cfg;
     QPushButton *btn_bld;
     QPushButton *btn_clr;
+    QPushButton *btn_expand;
   };
 
   /**
@@ -421,6 +451,7 @@ namespace VStudio {
 
     QPushButton *btn_bld;
     QPushButton *btn_clr;
+    QPushButton *btn_expand;
   };
 
   /**
