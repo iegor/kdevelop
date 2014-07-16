@@ -77,19 +77,19 @@ namespace VStudio {
       int totalHeight();
       virtual void invalidateHeight();
 
-      lwi_p parent() const;
-      lwi_p sibling() const;
-      lwi_p child() const;
-      void setParent(lwi_cp parent);
-      void setChild(lwi_cp child);
-      void setSibling(lwi_cp sibling);
+      vsinline lwi_p parent() const vsinline_attrib;
+      vsinline lwi_p sibling() const vsinline_attrib;
+      vsinline lwi_p child() const vsinline_attrib;
+      vsinline void setParent(lwi_cp parent) vsinline_attrib;
+      vsinline void setChild(lwi_cp child) vsinline_attrib;
+      vsinline void setSibling(lwi_cp sibling) vsinline_attrib;
 
-      int level() const;
-      void setLevel(int lvl);
+      vsinline int level() const vsinline_attrib;
+      vsinline void setLevel(int lvl) vsinline_attrib;
 
-      bool isRoot() const;
-      bool isExpanded() const;
-      bool canExpand() const;
+      vsinline bool isRoot() const vsinline_attrib;
+      vsinline bool isExpanded() const vsinline_attrib;
+      vsinline bool canExpand() const vsinline_attrib;
 
       virtual void expand();
       virtual void collapse();
@@ -222,9 +222,8 @@ namespace VStudio {
 
       virtual void showControls();
       virtual void hideControls();
-      bool controlsVisible() const;
-
-      bool isSelected() const;
+      vsinline bool controlsVisible() const vsinline_attrib;
+      vsinline bool isSelected() const vsinline_attrib;
 
   // private slots:
       virtual void slotRefreshText() = 0;
@@ -443,7 +442,7 @@ namespace VStudio {
 
   public:
   // VSFltNode interface
-    uivse_p getUIContainer() const;
+    vsinline uivse_p getUIContainer() const vsinline_attrib;
 
   private:
     vsf_p flt;  // VSFilter, model representation
@@ -473,7 +472,7 @@ namespace VStudio {
 
   public:
   // VSFilNode interface
-    uivse_p getUIContainer() const;
+    vsinline uivse_p getUIContainer() const vsinline_attrib;
     void setState(const QString &state);
 
   private:

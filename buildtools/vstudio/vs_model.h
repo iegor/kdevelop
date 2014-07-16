@@ -18,7 +18,7 @@
 #define __KDEVPART_VSTUDIOPART_SOLUTION_H__
 
 /* Qt */
-// #include <qfile.h>
+#include <qfile.h>
 #include <qdom.h>
 #include <qguardedptr.h>
 
@@ -27,6 +27,8 @@
 
 /* VStudio */
 #include "vs_common.h"
+
+class QFile;
 
 //BEGIN //VStudio namespace
 namespace VStudio {
@@ -39,9 +41,9 @@ namespace VStudio {
 
       bool acquire(const vse_p parent);
       vsr_r release(const vse_p parent);
-      uint refs() const;
-      bool isfree() const;
-      const pv_vse_cr parents() const;
+      vsinline uint refs() const vsinline_attrib { return rfc; }
+      vsinline bool isfree() const vsinline_attrib { return static_cast<bool>(rfc==0); }
+      vsinline const pv_vse_cr parents() const vsinline_attrib { return pnts; }
 
     protected:
       //TODO: ATTENTION !
@@ -70,8 +72,8 @@ namespace VStudio {
       VSIndexable(const QUuid& uid);
       virtual ~VSIndexable();
 
-      const QUuid& getUID() const;
-      void setUID(const QUuid& uid);
+      vsinline const QUuid& getUID() const vsinline_attrib { return uid; }
+      vsinline void setUID(const QUuid& u) vsinline_attrib { uid=u; }
 
     protected:
       QUuid uid;
@@ -88,13 +90,32 @@ namespace VStudio {
       VSFSStored();
       virtual ~VSFSStored();
 
-      const KURL& getURL() const;
+      //KURL& getURL() { return url; }
+      vsinline const KURL& getURL() const vsinline_attrib { return url; }
       //KURL& getURL();
-      void setPath(const QString& abs_path, bool tryToReach=true);
 
-      bool isInSync() const;
-      bool isReachable() const;
-      bool isLoaded() const;
+      /** \fn VSFSStored::setPath(const QString& abp, bool ttr)
+       * \brief Sets the path (or part of it) for entity
+       * @param abp path or URL to the fs resource
+       * @param ttr <b>try to reach</b> flag, if \a true then fresh path is tested for
+       * accessibility.
+       */
+      vsinline void setPath(const QString& abs_path, bool tryToReach=true) {
+        url = KURL::fromPathOrURL(abs_path);
+        if(tryToReach) { __try_reach(); }
+      }
+
+      vsinline bool isInSync() const vsinline_attrib { return check_bit(fsflg, IS_IN_SYNC); }
+      vsinline bool isReachable() const vsinline_attrib { return check_bit(fsflg, IS_REACHABLE); }
+
+      /** \fn VSFSStored::isLoaded()
+       * \brief Checks FS based VSEntity for positive load status
+       * <b>e.g.</b>
+       * VSSolution - Tells if solution loading procedure succeded
+       * VSProject - Tells if project loading and parsing procedure succeded
+       * @return \b true if file was found and parsed successfully upon read
+       */
+      vsinline bool isLoaded() const vsinline_attrib { return check_bit(fsflg, IS_LOADED_OK); }
 
       virtual bool write(bool synchronize=true) = 0;
       virtual bool write(QTextStream &stream, bool synchronize=true) = 0;
@@ -102,9 +123,35 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
 
     protected:
-      void __try_reach();
-      void __synced(bool sync=true);
-      void __loaded(bool load=true);
+      vsinline void __try_reach() vsinline_attrib {
+#ifdef DEBUG
+    // if(url.isValid()) { kddbg << QString("URL: \"%1\" is valid.\n").arg(url.url()); }
+    // if(url.isLocalFile()) { kddbg << QString("URL: \"%1\" is local.\n").arg(url.url()); }
+#endif
+        if(url.isValid() && url.isLocalFile()) {
+          QFile fl;
+          if(fl.exists(url.pathOrURL())) { set_bit(fsflg, IS_REACHABLE); return; }
+        }
+        clear_bit(fsflg, IS_REACHABLE);
+      }
+
+      /** \fn VSFSStored::__synced()
+       * \brief Sets bitmask so that entity is considered to be in syncronized state
+       * @p sync whether entity should be considered <a>syncronized/unsynchronized</a>
+       */
+      vsinline void __synced(bool sync=true) vsinline_attrib {
+        if(sync) { set_bit(fsflg, IS_IN_SYNC); }
+        else { clear_bit(fsflg, IS_IN_SYNC); }
+      }
+
+      /** \fn VSFSStored::__loaded()
+       * \brief Sets bitmask so that entity is considered to be in loaded_ok state
+       * @p load whether entity should be considered <a>loaded_ok or not</a>
+       */
+      vsinline void __loaded(bool load=true) vsinline_attrib {
+        if(load) { set_bit(fsflg, IS_LOADED_OK); }
+        else { clear_bit(fsflg, IS_LOADED_OK); }
+      }
 
     protected:
       KURL url;
@@ -121,11 +168,11 @@ namespace VStudio {
       VSEntity(e_VSEntityType typ);
       virtual ~VSEntity();
 
-      e_VSEntityType getType() const;
+      vsinline e_VSEntityType getType() const vsinline_attrib { return type; }
       static void setPart(VSPart* part);
-      VSPart* part() const;
-      bool isConfigured() const;
-      bool isActive() const;
+      vsinline VSPart* part() const vsinline_attrib { return sys_part; }
+      vsinline bool isConfigured() const vsinline_attrib { return check_bit(enflg, IS_CONFIGURED); }
+      vsinline bool isActive() const vsinline_attrib { return check_bit(enflg, IS_ACTIVE); }
 
       virtual void insert(vse_p item);
 
@@ -192,7 +239,7 @@ namespace VStudio {
 
     // VS Solution methods:
       vsp_p getByUID(const QUuid &uid) const;
-      uivss_p getUI() const;
+      vsinline uivss_p getUI() const vsinline_attrib { return uisln; }
       vsf_p getFltByUID(const QUuid &uid) const;
       bool populateUI();
       vsmd_p metaDependency(const QUuid &uid);
@@ -206,12 +253,11 @@ namespace VStudio {
       void setActive(bool active=true);
       bool setActivePrj(vsp_p project);
       bool setActivePrj(const QString &int_name);
-      vsp_p getActivePrj() const;
+      vsinline vsp_p getActivePrj() const vsinline_attrib { return active_prj; }
       vsp_p getProject(const QString &int_name) const;
-      bool isDetached() const;
-
-      const pv_vsp_cr projs() const;
-      const pv_vsf_cr filts() const;
+      vsinline bool isDetached() const vsinline_attrib { return active_bb == 0; }
+      vsinline const pv_vsp_cr projs() const vsinline_attrib { return projects; }
+      vsinline const pv_vsf_cr filts() const vsinline_attrib { return filters; }
 
     private:
       bool __createUI();
@@ -256,7 +302,7 @@ namespace VStudio {
       virtual bool read(QTextStream &stream, bool synchronize=true) = 0;
 
     // VS Project methods:
-      uivsp_p getUI() const;
+      vsinline uivsp_p getUI() const vsinline_attrib { return uiprj; }
       bool dumpLayout(QTextStream &stream);
       bool dumpConfigLayout(QTextStream &stream);
       vsp_p getReqByUID(const QUuid &uid) const;
@@ -271,16 +317,28 @@ namespace VStudio {
       void setLanguage(e_VSPrjLangType lang);
       e_VSPrjLangType getLang() { return lang; }
       void setActive(bool active=true);
-      bool isActive() const;
+      vsinline bool isActive() const vsinline_attrib { return check_bit(enflg, IS_ACTIVE); }
       bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
       bool selectCfg(const vcfg_cp parent_config);
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_cp parent_config) const;
-      vcfg_cp currentCfg() const;
-      pv_vsbb_cr bbs() const;
+
+      vsinline vcfg_cp currentCfg() const vsinline_attrib;
+
+      /** \fn VSProject::bbs()
+       * \brief Get Build-Boxes for this project for non-modifying purposes
+       * @return const ref to vector with Build-Boxes
+       */
+      vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
 
       bool build();
-      bool isDetached() const;
+
+      vsinline bool isDetached() const vsinline_attrib {
+        if(bboxes.size() > 0) {
+          if(active_bb != 0) { return false; }
+        }
+        return true;
+      }
 
     protected:
       virtual bool __createUI(uivse_p parent_ui);
@@ -313,7 +371,7 @@ namespace VStudio {
 
     // VS Filter methods:
       vse_p getByUID(const QUuid &uid) const;
-      uivsf_p getUI() const;
+      vsinline uivsf_p getUI() const vsinline_attrib { return uiflt; }
       bool dumpLayout(QTextStream &layout);
       e_VSEntityType getParentType() const { return parent->getType(); }
       bool getParentUID(QUuid* uid) const;
@@ -358,10 +416,11 @@ namespace VStudio {
 
     // VS File methods:
       vsp_p getByUID(const QUuid &uid) const;
-      uivsfl_p getUI() const;
+      vsinline uivsfl_p getUI() const vsinline_attrib { return uifl; }
       bool read(QDomElement dom, bool synchronize=true);
-      void setDom(const QDomElement& el);
-      vsp_p getProject() const;
+
+      vsinline void setDom(const QDomElement& el) vsinline_attrib { dom = el; }
+      vsinline vsp_p getProject() const vsinline_attrib { return project; }
 
     // private:
       bool __createUI(uivse_p parent_ui);
@@ -660,11 +719,11 @@ namespace VStudio {
       virtual vse_p getParent() const;
 
     // VS BuildBox interface methods:
-      bool isEnabled() const;
-      void setEnabled(bool enabled=true);
-      vcfg_cp parentConfig() const;
+      vsinline bool isEnabled() const vsinline_attrib { return enabled; }
+      vsinline void setEnabled(bool e=true) vsinline_attrib { enabled = e; }
+      vsinline vcfg_cp parentConfig() const vsinline_attrib { return pcfg; }
       void setParentCfg(const vcfg_cp config);
-      const vcfg_cr config() const;
+      vsinline const vcfg_cr config() const vsinline_attrib { return cfg; }
       bool belongs(const vcfg_cp parent_cfg) const;
       void setDom(const QDomElement &element) { dom = element; }
 
@@ -686,6 +745,11 @@ namespace VStudio {
 
   //END VS build entities
   //===========================================================================
+
+  vcfg_cp VSProject::currentCfg() const {
+    if(active_bb != 0) { return &active_bb->config(); }
+    return 0;
+  }
 
   /**
    * TODO: Think about compiler-collection object, kind of box where compile, linker, midl, etc are

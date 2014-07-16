@@ -137,17 +137,17 @@ namespace VStudio {
     maybeTotalHeight = -1;
   }
 
-  vsinline lwi_p ListWidgetItem::parent() const vsinline_attrib { return pnt; }
-  vsinline lwi_p ListWidgetItem::sibling() const vsinline_attrib { return sbl; }
-  vsinline lwi_p ListWidgetItem::child() const vsinline_attrib { return chd; }
-  vsinline void ListWidgetItem::setParent(lwi_cp p) vsinline_attrib { pnt = const_cast<lwi_p>(p); }
-  vsinline void ListWidgetItem::setSibling(lwi_cp s) vsinline_attrib { sbl = const_cast<lwi_p>(s); }
-  vsinline void ListWidgetItem::setChild(lwi_cp c) vsinline_attrib { chd = const_cast<lwi_p>(c); }
-  vsinline int ListWidgetItem::level() const vsinline_attrib { return lvl; }
-  vsinline void ListWidgetItem::setLevel(int level) vsinline_attrib { lvl = level; }
-  vsinline bool ListWidgetItem::isRoot() const vsinline_attrib { return check_bit(flags, IS_ROOT); }
-  vsinline bool ListWidgetItem::isExpanded() const vsinline_attrib { return check_bit(flags, IS_EXPANDED); }
-  vsinline bool ListWidgetItem::canExpand() const vsinline_attrib { return (chd == 0) && (numChildren > 0); }
+  lwi_p ListWidgetItem::parent() const { return pnt; }
+  lwi_p ListWidgetItem::sibling() const { return sbl; }
+  lwi_p ListWidgetItem::child() const { return chd; }
+  void ListWidgetItem::setParent(lwi_cp p) { pnt = const_cast<lwi_p>(p); }
+  void ListWidgetItem::setSibling(lwi_cp s) { sbl = const_cast<lwi_p>(s); }
+  void ListWidgetItem::setChild(lwi_cp c) { chd = const_cast<lwi_p>(c); }
+  int ListWidgetItem::level() const { return lvl; }
+  void ListWidgetItem::setLevel(int level) { lvl = level; }
+  bool ListWidgetItem::isRoot() const { return check_bit(flags, IS_ROOT); }
+  bool ListWidgetItem::isExpanded() const { return check_bit(flags, IS_EXPANDED); }
+  bool ListWidgetItem::canExpand() const { return (chd == 0) && (numChildren > 0); }
 
   void ListWidgetItem::expand() {
     set_bit(flags, IS_EXPANDED);
@@ -553,8 +553,8 @@ namespace VStudio {
     clear_bit(enflg, CONTROLS_VISIBLE);
   }
 
-  vsinline bool VSExplorerEntity::controlsVisible() const vsinline_attrib { return check_bit(enflg, CONTROLS_VISIBLE); }
-  vsinline bool VSExplorerEntity::isSelected() const vsinline_attrib { return chb_select->isChecked(); }
+  bool VSExplorerEntity::controlsVisible() const { return check_bit(enflg, CONTROLS_VISIBLE); }
+  bool VSExplorerEntity::isSelected() const { return chb_select->isChecked(); }
 
   void VSExplorerEntity::slotToggleExpand(bool on) { if(on) { expand(); } else { collapse(); } }
 
@@ -1088,9 +1088,9 @@ namespace VStudio {
     btn_expand->setText("+");
   }
 
-  vsinline vse_p VSSlnNode::getModel() const vsinline_attrib { return sln; }
-  vsinline const QUuid& VSSlnNode::getUID() const vsinline_attrib { return uid_null; }
-  vsinline e_VSEntityType VSSlnNode::getType() const vsinline_attrib { return sln->getType(); }
+  vse_p VSSlnNode::getModel() const { return sln; }
+  const QUuid& VSSlnNode::getUID() const { return uid_null; }
+  e_VSEntityType VSSlnNode::getType() const { return sln->getType(); }
 
   void VSSlnNode::showControls() {
     VSExplorerEntity::showControls();
@@ -1186,9 +1186,9 @@ namespace VStudio {
   VSPrjNode::~VSPrjNode() {
   }
 
-  vsinline vse_p VSPrjNode::getModel() const vsinline_attrib { return prj; }
-  vsinline const QUuid& VSPrjNode::getUID() const vsinline_attrib { return prj->getUID(); }
-  vsinline e_VSEntityType VSPrjNode::getType() const vsinline_attrib { return prj->getType(); }
+  vse_p VSPrjNode::getModel() const { return prj; }
+  const QUuid& VSPrjNode::getUID() const { return prj->getUID(); }
+  e_VSEntityType VSPrjNode::getType() const { return prj->getType(); }
 
   void VSPrjNode::slotRefreshText() {
     lbl_name->setText(prj->getName());
@@ -1241,10 +1241,10 @@ namespace VStudio {
   VSFltNode::~VSFltNode() {
   }
 
-  vsinline vse_p VSFltNode::getModel() const vsinline_attrib { return flt; }
-  vsinline const QUuid& VSFltNode::getUID() const vsinline_attrib { return flt->getUID(); }
-  vsinline e_VSEntityType VSFltNode::getType() const vsinline_attrib { return flt->getType(); }
-  vsinline uivse_p VSFltNode::getUIContainer() const vsinline_attrib { return container; }
+  vse_p VSFltNode::getModel() const { return flt; }
+  const QUuid& VSFltNode::getUID() const { return flt->getUID(); }
+  e_VSEntityType VSFltNode::getType() const { return flt->getType(); }
+  uivse_p VSFltNode::getUIContainer() const { return container; }
 
   void VSFltNode::slotRefreshText() {
     lbl_icon->setPixmap(SmallIcon("folder"));
@@ -1264,10 +1264,10 @@ namespace VStudio {
   VSFilNode::~VSFilNode() {
   }
 
-  vsinline vse_p VSFilNode::getModel() const vsinline_attrib { return file; }
-  vsinline const QUuid& VSFilNode::getUID() const vsinline_attrib { return uid_null; }
-  vsinline e_VSEntityType VSFilNode::getType() const vsinline_attrib { return file->getType(); }
-  vsinline uivse_p VSFilNode::getUIContainer() const vsinline_attrib { return container; }
+  vse_p VSFilNode::getModel() const { return file; }
+  const QUuid& VSFilNode::getUID() const { return uid_null; }
+  e_VSEntityType VSFilNode::getType() const { return file->getType(); }
+  uivse_p VSFilNode::getUIContainer() const { return container; }
 
   /*inline*/ void VSFilNode::setState(const QString &st) {
     if(st == "normal") {
