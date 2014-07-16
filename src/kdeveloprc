@@ -16,42 +16,307 @@ PadOperators=false
 PadParentheses=false
 Style=UserDefined
 
+[AppWizard]
+FavNames=
+FavTemplates=
+
+[ArkViewer]
+Height 768=398
+Width 1366=558
+
+[Bookmarks]
+Codeline=0
+Context=5
+Token=//
+ToolTip=true
+
+[BottomToolWindow]
+ViewWidth=179
+
+[CTAGS]
+JumpToFirst=false
+ShowDeclaration=true
+ShowDefinition=true
+ShowLookup=true
+ctags binary=/usr/bin/ctags
+
+
+[DToolDockPosition]
+CTags2WidgetBase=DockBottom
+ClassViewWidget=DockLeft
+VsExplorerWidget=DockRight
+app output widget=DockBottom
+auto project widget=DockRight
+bookmarks widget=DockLeft
+diffWidget=DockBottom
+disassembleWidget=DockBottom
+documentation widget=DockLeft
+file view widget=DockLeft
+filelist widget=DockLeft
+fileselectorwidget=DockLeft
+fileviewpartwidget=DockLeft
+framestackWidget=DockBottom
+gdbBreakpointWidget=DockBottom
+gdbOutputWidget=DockBottom
+grepview widget=DockBottom
+konsole widget=DockBottom
+make widget=DockBottom
+problemReporterWidget=DockBottom
+replace widget=DockBottom
+snippet widget=DockLeft
+unnamed=DockLeft
+valgrind widget=DockBottom
+variablewidget=DockLeft
+viewerWidget=DockLeft
+
+[Diff]
+Highlight=true
+
+[Documentation]
+LastPage=0
+UseAssistant=false
+
 [Editor]
-EmbeddedKTextEditor=Embedded KDE Advanced Text Editor Component
+DirtyAction=alert
+EmbeddedKTextEditor[$e]=katepart
+
+[File List Plugin]
+CloseOpenFiles=true
+OnlyProjectFiles=false
+ToolbarInToolview=true
+
+[General]
+ShowAlternativeShortcutConfig=false
 
 [General Options]
-Read Last Project On Startup=true
+BgParserDelay=500
+DefaultProjectsDir[$e]=$HOME/projects/
+DesignerApp=2
+DesignerSetting=ExternalDesigner
+EnableCppBgParser=true
+EnableProblemReporter=true
+Last Project[$e]=file://$HOME/projects/kde/kdevelop/kdevelop.kdevelop
+OutputViewFont=DejaVu Sans,8,-1,5,50,0,0,0,0,0
+Read Last Project On Startup=false
+SearchDirs=$KDEHOME/share/apps/katepart/script
+
+[Global Settings Dialog]
+Height=709
+Width=1359
+
+[HTML Settings]
+AutomaticDetectionLanguage=0
+
+[KFileDialog Settings]
+Automatic Preview=true
+
+[KListViewAction]
+actConfigName=174
+actConfigPlatform=105
+m_functionsnav_combo=478
+
+[KPrinter Settings]
+ApplicationOptions=
+DialogReduced=true
+PrintCommand[$e]=
+Printer=
+
+[Kate Document Defaults]
+Allow End of Line Detection=true
+Backup Config Flags=1
+Backup Prefix=
+Backup Suffix=~
+Basic Config Flags=786989104
+Encoding=
+End of Line=0
+Indentation Mode=2
+Indentation Width=4
+KTextEditor Plugin ktexteditor_docwordcompletion=true
+KTextEditor Plugin ktexteditor_insertfile=true
+KTextEditor Plugin ktexteditor_isearch=true
+KTextEditor Plugin ktexteditor_kdatatool=true
+Maximal Loaded Blocks=16
+PageUp/PageDown Moves Cursor=true
+Search Dir Config Depth=3
+Tab Width=4
+Undo Steps=0
+Word Wrap=false
+Word Wrap Column=120
+
+[Kate Renderer Defaults]
+Schema=kdevelop - Normal
+Show Indentation Lines=true
+Word Wrap Marker=true
+
+[Kate View Defaults]
+Auto Center Lines=0
+Bookmark Menu Sorting=0
+Command Line=false
+Default Mark Type=2
+Dynamic Word Wrap=true
+Dynamic Word Wrap Align Indent=80
+Dynamic Word Wrap Indicators=1
+Folding Bar=true
+Line Numbers=true
+Persistent Selection=false
+Scroll Bar Marks=true
+Search Config Flags=266
+Text To Search Mode=2
+
+[LeftToolWindow]
+ViewLastWidget=File List
+ViewWidth=261
 
 [Mainwindow]
 Height 768=548
 Width 1024=735
 
-[Mainwindow Toolbar mainToolBar]
-Hidden=false
-IconSize=22
+[Mainwindow Toolbar astyleToolBar]
 IconText=IconOnly
-Index=0
-NewLine=false
+Index=4
+
+[Mainwindow Toolbar browserToolBar]
+Hidden=false
+IconSize=16
+IconText=IconOnly
+Index=2
+NewLine=true
 Offset=-1
 Position=Top
 
+
+[Mainwindow Toolbar buildToolBar]
+IconSize=16
+IconText=IconOnly
+Index=2
+Offset=-2
+Position=Right
+
+[Mainwindow Toolbar debugToolBar]
+IconSize=16
+IconText=IconOnly
+Index=1
+NewLine=true
+Position=Right
+
+[Mainwindow Toolbar extraToolBar]
+IconText=IconOnly
+Index=1
+NewLine=true
+
+[Mainwindow Toolbar isearchToolBar]
+IconText=IconOnly
+Index=5
+
+[Mainwindow Toolbar mainToolBar]
+IconSize=16
+NewLine=true
+Hidden=false
+IconText=IconOnly
+Index=0
+Offset=-1
+Position=Top
+
+[Mainwindow Toolbar viewsession_toolbar]
+IconSize=16
+IconText=IconOnly
+Index=3
+Offset=1222
+
+[MakeOutputView]
+CompilerOutputLevel=1
+ForceCLocale=true
+LineWrapping=true
+ShowDirNavigMsg=false
+
+[Notification Messages]
+No automake manager active target warning=false
+kdevelop_open_project_no_active_target=false
+
+[Open-with settings]
+CompletionMode=5
+History=kwrite
+
+[Project Settings Dialog]
+Height=709
+Width=1268
+
 [Mainwindow Toolbar QextMdiTaskBar]
 Hidden=true
-IconSize=22
+IconSize=16
 IconText=IconOnly
 Index=1
 NewLine=false
 Offset=-1
 Position=Bottom
 
-[Mainwindow Toolbar browserToolBar]
-Hidden=false
-IconSize=22
+[RightToolWindow]
+ViewLastWidget=Automake Manager
+ViewWidth=265
+
+[SimpleMainWindow]
+Height 768=769
+Width 1366=1367
+
+[SimpleMainWindow Toolbar VSToolBar]
+IconText=IconOnly
+Index=4
+
+[SimpleMainWindow Toolbar astyleToolBar]
+IconText=IconOnly
+Index=4
+
+[SimpleMainWindow Toolbar browserToolBar]
+IconSize=16
 IconText=IconOnly
 Index=2
+Offset=352
+
+[SimpleMainWindow Toolbar build]
+IconText=IconOnly
+Index=4
+
+[SimpleMainWindow Toolbar buildToolBar]
+IconSize=16
+IconText=IconOnly
+Index=2
+Offset=-2
+Position=Right
+
+[SimpleMainWindow Toolbar config]
+IconText=IconOnly
+Index=5
+
+[SimpleMainWindow Toolbar debugToolBar]
+IconSize=16
+IconText=IconOnly
+Index=1
 NewLine=true
+Position=Right
+
+[SimpleMainWindow Toolbar extraToolBar]
+IconText=IconOnly
+Index=1
+NewLine=true
+
+[SimpleMainWindow Toolbar isearchToolBar]
+IconText=IconOnly
+Index=5
+
+[SimpleMainWindow Toolbar mainToolBar]
+IconSize=16
+Index=0
 Offset=-1
-Position=Top
+
+[SimpleMainWindow Toolbar viewsession_toolbar]
+IconSize=16
+IconText=IconOnly
+Index=3
+Offset=1222
+
+[TerminalEmulator]
+TerminalApplication=konsole
+UseKDESetting=true
 
 [Plugins]
 KDevScripting=false
@@ -65,6 +330,3 @@ CloseOnHoverDelay=false
 OpenNewTabAfterCurrent=true
 ShowCloseTabsButton=true
 ShowTabIcons=false
-
-[Kate View Defaults]
-Icon Bar=true
