@@ -6,10 +6,11 @@ INCLUDES = -I$(top_srcdir)/buildtools/lib -I$(top_srcdir)/buildtools/lib/base \
 	-I$(top_builddir)/buildtools/lib/widgets
 
 noinst_HEADERS = vs_common.h vs_dlg_addexisting_sln.h vs_errors.h vs_explorer.h \
-	vs_model.h vs_part.h
+	vs_model.h vs_part.h vs_view_variables.h
 kde_module_LTLIBRARIES = libkdevvs.la
 libkdevvs_la_SOURCES = vs_common.cpp vs_dlg_addexisting_base.ui \
-	vs_dlg_addexisting_sln.cpp vs_explorer.cpp vs_explorer_widget.ui vs_model.cpp vs_part.cpp
+	vs_dlg_addexisting_sln.cpp vs_explorer.cpp vs_explorer_widget.ui vs_model.cpp vs_part.cpp \
+	vs_view_variables.cpp
 libkdevvs_la_LDFLAGS = $(all_libraries) $(KDE_PLUGIN)
 libkdevvs_la_LIBADD = $(top_builddir)/buildtools/lib/base/libkdevbuildbase.la \
 	$(top_builddir)/buildtools/lib/widgets/libkdevbuildtoolswidgets.la $(top_builddir)/lib/libkdevelop.la \

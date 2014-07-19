@@ -125,6 +125,14 @@ namespace VStudio {
   VSFSStored::~VSFSStored() {
   }
 
+  QString VSFSStored::getExt(bool ignore/*=false*/) const {
+    QString fl(url.fileName(false));
+    return fl.mid(ignore ? fl.find('.') : fl.find('.')+1);
+  }
+
+  void VSFSStored::setExt(const QString &/*ext*/) {
+  }
+
   //===========================================================================
   // Visual Studio entity methods
   //===========================================================================
@@ -1432,8 +1440,6 @@ namespace VStudio {
     }
   }
 
-  vse_p VSProject::getParent() const { return sln; }
-
   /** \fn VSProject::getByUID
    * \brief Gets file by it's UID
    * @param uid uid of file
@@ -1477,9 +1483,9 @@ namespace VStudio {
     return true;
   }
 
-  bool VSProject::dumpConfigLayout(QTextStream &/*s*/) {
-    return false;
-  }
+  //bool VSProject::dumpConfigLayout(QTextStream &/*s*/) {
+  //  return false;
+  //}
 
   vsp_p VSProject::getReqByUID(const QUuid &uid) const {
 #ifdef USE_BOOST
@@ -1744,7 +1750,7 @@ namespace VStudio {
   bool VSProject::createCfg(const vcfg_cp p, const vcfgcr_r cr) {
     // Check configs list for duplications and ambiguities
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-      vsbb_p pbb = static_cast<vsbb_p>(*it);
+      vsbb_p pbb(*it);
       if(pbb != 0) {
         if(pbb->config() == cr) {
           kddbg << VSPART_ERROR"Config [" << pbb->config().toString() << "] already exists in: " << name << " prj.\n";
@@ -1837,6 +1843,22 @@ namespace VStudio {
       /// Executes build|clear command for a file
       // virtual bool execute_cmd(vsfl_p file) = 0;
     return false;
+  }
+
+  /** \fn VSProject::setOutDir(const KURL &outdir)
+   * \brief Sets the output directory for project
+   * @p odir output directory to interact with project files upon action
+   */
+  void VSProject::setOutDir(const KURL &odir) {
+    outdir = odir;
+  }
+
+  /** \fn VSProject::setIntDit(const KURL &idir)
+   * \brief Sets the intermediate directory for project
+   * @p idir intermediate directory to interact with project files upon action
+   */
+  void VSProject::setIntDir(const KURL &idir) {
+    intdir = idir;
   }
 
   /** \fn VSProject::__createUI(uivse_p pnt)
@@ -2351,8 +2373,29 @@ namespace VStudio {
       kddbg << "Parsing: " << it_e.tagName() << QString(" in {VSProject[%1]::read}.\n").arg(name);
 #endif
       if(it_e.tagName() == "Configuration") {
-        QString cfg_name = it_e.attribute("Name");
-        QString outdir = it_e.attribute("OutputDirectory");
+        bool fetch_ok = false;
+        QString cfg_name = it_e.attribute(VSPART_PCFGATTR_NAME);
+        QString odir = it_e.attribute(VSPART_PCFGATTR_OUTDIR);
+        outdir = KURL::fromPathOrURL(part()->expandPath(odir, this));
+        QString idir = it_e.attribute(VSPART_PCFGATTR_INTDIR);
+        intdir = KURL::fromPathOrURL(part()->expandPath(idir, this));
+        int cfgtyp = it_e.attribute(VSPART_PCFGATTR_CTYPE).toInt(&fetch_ok);
+        if(!fetch_ok) { kddbg << g_err_pcfgattr_read.arg(name).arg(VSPART_PCFGATTR_CTYPE); }
+        int usemfc = it_e.attribute(VSPART_PCFGATTR_USEMFC).toInt(&fetch_ok);
+        if(!fetch_ok) { kddbg << g_err_pcfgattr_read.arg(name).arg(VSPART_PCFGATTR_USEMFC); }
+        int chrset = it_e.attribute(VSPART_PCFGATTR_CHRSET).toInt(&fetch_ok);
+        if(!fetch_ok) { kddbg << g_err_pcfgattr_read.arg(name).arg(VSPART_PCFGATTR_CHRSET); }
+
+        // Read inherited property sheets
+        if(it_e.hasAttribute(VSPART_PCFGATTR_INHPSH)) {
+          QString attr = it_e.attribute(VSPART_PCFGATTR_INHPSH);
+
+          // Expand all varialbes in the path
+
+          // Form url
+          KURL ipsh_url;
+          ipsh_url.fromPathOrURL(attr);
+        }
 
         VSConfigCreate cr;
         cr.name = cfg_name.left(cfg_name.find('|'));
@@ -2366,9 +2409,9 @@ namespace VStudio {
         else { kddbg << g_msg_configapply.arg(cfg_name).arg("VSProject[%1]::read").arg(name); }
 #endif
       }
-      else {
-        kddbg << VSPART_WARNING"Wrong tag: " << it_e.tagName() << endl;
-      }
+#ifdef DEBUG
+      else { kddbg << VSPART_WARNING"Wrong tag in cfg section: " << it_e.tagName() << endl; }
+#endif
       it_e = it_e.nextSibling().toElement();
     }
     //END: Read project configurations
@@ -2702,13 +2745,6 @@ namespace VStudio {
   VSConfig::~VSConfig() {
   }
 
-  void VSConfig::setParent(vse_p /*parent*/) {
-  }
-
-  vse_p VSConfig::getParent() const {
-    return 0;
-  }
-
   bool VSConfig::operator == (const vcfg_cr c) const {
     return ((name == c.getName()) && (vspl.platform() == c.platform()));
   }
@@ -2717,9 +2753,8 @@ namespace VStudio {
     return ((name == cr.name) && (vspl.platform() == cr.platform));
   }
 
-  QString VSConfig::toString() const {
-    return QString("%1|%2").arg(name).arg(platform2String(vspl.platform()));
-  }
+  QString VSConfig::toString() const { return QString("%1|%2").arg(name).arg(platform2String(vspl.platform())); }
+  QString VSConfig::getPlatform() const { return platform2String(vspl.platform()); }
 
   //===========================================================================
   // VS BuildBox::VSToolUnit methods

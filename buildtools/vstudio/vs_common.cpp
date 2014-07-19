@@ -331,4 +331,6 @@ namespace VStudio {
   const QString g_err_fileread(VSPART_ERROR"Can't read file \"%1\", in {%2}.\n");
   const QString g_err_filewrite(VSPART_ERROR"Can't write file \"%1\", in {%2}.\n");
   const QString g_err_domelemnotpresent(VSPART_ERROR"Can't find dom element [ %1 ], in {%2}.\n");
+  // Project params read/write
+  const QString g_err_pcfgattr_read(VSPART_ERROR"PRJ [%1] param \"%2\" read error.\n");
 };

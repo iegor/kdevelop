@@ -57,11 +57,11 @@ namespace VStudio {
 
   class VSNameable {
     public:
-      VSNameable(const QString& name);
+      VSNameable(const QString &name);
       virtual ~VSNameable();
 
-      virtual const QString& getName() const;
-      virtual void setName(const QString& name);
+      virtual const QString &getName() const;
+      virtual void setName(const QString &name);
 
     protected:
       QString name;
@@ -104,6 +104,9 @@ namespace VStudio {
         url = KURL::fromPathOrURL(abs_path);
         if(tryToReach) { __try_reach(); }
       }
+
+      QString getExt(bool ignore_dot=false) const;
+      void setExt(const QString &extension);
 
       vsinline bool isInSync() const vsinline_attrib { return check_bit(fsflg, IS_IN_SYNC); }
       vsinline bool isReachable() const vsinline_attrib { return check_bit(fsflg, IS_REACHABLE); }
@@ -259,6 +262,12 @@ namespace VStudio {
       vsinline const pv_vsp_cr projs() const vsinline_attrib { return projects; }
       vsinline const pv_vsf_cr filts() const vsinline_attrib { return filters; }
 
+      /** \fn VSSolution::bbs()
+       * \brief Get Build-Boxes for this solution for non-modifying purposes
+       * @return const ref to vector with Build-Boxes
+       */
+      vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
+
     private:
       bool __createUI();
       bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
@@ -293,7 +302,7 @@ namespace VStudio {
     // VS Entity methods:
       virtual void insert(vse_p item);
       virtual void setParent(vse_p parent);
-      virtual vse_p getParent() const;
+      virtual vse_p getParent() const { return sln; }
 
     // VS FSStored interface methods:
       virtual bool write(bool synchronize=true) = 0;
@@ -303,27 +312,33 @@ namespace VStudio {
 
     // VS Project methods:
       vsinline uivsp_p getUI() const vsinline_attrib { return uiprj; }
+
       bool dumpLayout(QTextStream &stream);
-      bool dumpConfigLayout(QTextStream &stream);
+      //bool dumpConfigLayout(QTextStream &stream);
+
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
       vsf_p getFltByUID(const QUuid &uid) const;
       vsf_p getFilter(const QString &name) const;
+
       bool addDependency(vsp_p dep);
       bool addDependency(const QUuid &uid);
       bool addRequirement(vsp_p req);
       bool addRequirement(const QUuid &uid);
+
       bool populateUI(uivse_p parent_ui);
+
       void setLanguage(e_VSPrjLangType lang);
-      e_VSPrjLangType getLang() { return lang; }
+      vsinline e_VSPrjLangType getLang() const vsinline_attrib { return lang; }
+
       void setActive(bool active=true);
       vsinline bool isActive() const vsinline_attrib { return check_bit(enflg, IS_ACTIVE); }
+
       bool createCfg(const vcfg_cp parent_config, const vcfgcr_r cr);
       bool selectCfg(const vcfg_cp parent_config);
+      vsinline vcfg_cp currentCfg() const vsinline_attrib;
       vsbb_p getBB(const QString &config) const;
       vsbb_p getBB(const vcfg_cp parent_config) const;
-
-      vsinline vcfg_cp currentCfg() const vsinline_attrib;
 
       /** \fn VSProject::bbs()
        * \brief Get Build-Boxes for this project for non-modifying purposes
@@ -340,6 +355,11 @@ namespace VStudio {
         return true;
       }
 
+      vsinline const KURL& getOutDir() const vsinline_attrib { return outdir; }
+      void setOutDir(const KURL &outdir);
+      vsinline const KURL& getIntDir() const vsinline_attrib { return intdir; }
+      void setIntDir(const KURL &intdir);
+
     protected:
       virtual bool __createUI(uivse_p parent_ui);
 
@@ -355,6 +375,8 @@ namespace VStudio {
       pv_vsbb bboxes;
       e_VSPrjVersion version;
       QDomDocument doc;
+      KURL outdir;
+      KURL intdir;
   };
 
   class VSFilter : public VSEntity,
@@ -421,6 +443,12 @@ namespace VStudio {
 
       vsinline void setDom(const QDomElement& el) vsinline_attrib { dom = el; }
       vsinline vsp_p getProject() const vsinline_attrib { return project; }
+
+      /** \fn VSProject::bbs()
+       * \brief Get Build-Boxes for this project for non-modifying purposes
+       * @return const ref to vector with Build-Boxes
+       */
+      vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
 
     // private:
       bool __createUI(uivse_p parent_ui);
@@ -669,12 +697,13 @@ namespace VStudio {
       virtual ~VSConfig();
 
     // VS Entity interface methods:
-      virtual void setParent(vse_p parent);
-      virtual vse_p getParent() const;
+      virtual void setParent(vse_p parent) {}
+      virtual vse_p getParent() const { return 0; }
 
     // VS Config interface methods:
       e_VSPlatform platform() const { return vspl.platform(); }
       QString toString() const;
+      QString getPlatform() const;
       bool operator == (const vcfg_cr config) const;
       bool operator == (const vcfgcr_r cr) const;
 
@@ -746,7 +775,7 @@ namespace VStudio {
   //END VS build entities
   //===========================================================================
 
-  vcfg_cp VSProject::currentCfg() const {
+  vsinline vcfg_cp VSProject::currentCfg() const {
     if(active_bb != 0) { return &active_bb->config(); }
     return 0;
   }
@@ -761,4 +790,4 @@ namespace VStudio {
   vss_p getParentSln(vse_p entity);
 };
 //END // VStudio namespace
-#endif /*__KDEVPART_VSTUDIOPART_SOLUTION_H__ */
+#endif /* __KDEVPART_VSTUDIOPART_SOLUTION_H__ */

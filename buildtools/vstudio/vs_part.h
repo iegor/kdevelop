@@ -33,6 +33,7 @@
 #include "vs_common.h"
 #include "vs_explorer.h"  // VS Explorer widget
 #include "vs_dlg_addexisting_sln.h"
+#include "vs_view_variables.h"
 #include "vs_model.h"
 // using namespace Extensions;
 
@@ -57,6 +58,9 @@ class VSManagerWidget;
 namespace VStudio {
   class VSPart : public KDevBuildTool {
     Q_OBJECT
+
+  public:
+    typedef map<QString, QString> variables_map_t;
 
   public:
     VSPart(QObject *parent, const char *name, const QStringList &args);
@@ -102,6 +106,8 @@ namespace VStudio {
     vss_p getSlnByName(const QString &name);
     VSExplorer* explorerWidget() const { return m_explorer_widget; }
     bool selectSln(vss_p sln);
+    bool selectPrj(vsp_p prj);
+    bool selectFile(vsfl_p file);
     vss_p getSelectedSln() const;
     bool activateSln(vss_p sln);
     vss_p getActiveSln() const;
@@ -118,6 +124,10 @@ namespace VStudio {
     vcfg_p getCfg(const QString& c) const;
 
     pv_vse_cr solutions() const;
+    vsinline const variables_map_t& vars() const vsinline_attrib { return m_variables; }
+    void setVar(const QString &variable, const QString &value);
+
+    QString expandPath(const QString &path, vse_p entity);
 
   private slots:
     void slotAddSolution();
@@ -162,17 +172,22 @@ namespace VStudio {
     KListViewAction *actConfigPlatform;
 
     QGuardedPtr<VSExplorer> m_explorer_widget;
+    QGuardedPtr<VSViewVars> mVViewWidget; // Variables view
+
     QString m_projectName;
     QString m_projectPath;
     QMap<QString, QDateTime> m_timestamp;
 
     vss_p selected_sln;
+    vsp_p selected_prj;
+    vsfl_p selected_file;
     vss_p active_sln;
     vsp_p active_prj;
     vcfg_p active_cfg; // Selected configuration
 #ifdef USE_BOOST
     pv_vse m_entities;     // Solutions
     pv_vcfg m_configs;
+    variables_map_t m_variables; // Variable stack ( i.e. $(SolutionDir), etc )
 #else
     QPtrList<vse_p> m_entities;
 #endif

@@ -60,6 +60,8 @@ namespace VStudio {
   VSPart::VSPart(QObject *parent, const char *name, const QStringList &/*args*/)
     : KDevBuildTool(&data, parent, name ? name : "VSPart")
     , selected_sln(0)
+    , selected_prj(0)
+    , selected_file(0)
     , active_sln(0)
     , active_prj(0)
     , active_cfg(0) {
@@ -73,6 +75,13 @@ namespace VStudio {
                                             "yet it has some additiona \"power\" features."));
 
     mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"), i18n("VS Explorer, manages vs solution files"));
+
+    // Variables view widget
+    mVViewWidget = new VSViewVars(this, 0, "variables_view");
+    mVViewWidget->setIcon(SmallIcon("gear"));
+    mVViewWidget->setCaption(i18n("VSview: variables"));
+    QWhatsThis::add(mVViewWidget, i18n("Shows varialbes that are used throughout entire dev process"));
+    mainWindow()->embedOutputView(mVViewWidget, "VSVars", i18n("VSView: variables"));
 
     // Add solution action
     actAddSolution = new KAction(i18n("Insert solution"), "fileimport.png", 0, this,
@@ -213,6 +222,54 @@ namespace VStudio {
 
     connect(this, SIGNAL(uisync()), m_explorer_widget, SLOT(slotRefreshUI()));
 
+    // Init variables
+    m_variables[VSPART_V_CFGNAME] = QString::null;
+    m_variables[VSPART_V_DNVDIR] = QString::null;
+    m_variables[VSPART_V_FRWDIR] = QString::null;
+    m_variables[VSPART_V_FRWSDKDIR] = QString::null;
+    m_variables[VSPART_V_FRWVER] = QString::null;
+    m_variables[VSPART_V_FXCOPDIR] = QString::null;
+    m_variables[VSPART_V_INPDIR] = QString::null;
+    m_variables[VSPART_V_INPEXT] = QString::null;
+    m_variables[VSPART_V_INPFLN] = QString::null;
+    m_variables[VSPART_V_INPNAME] = QString::null;
+    m_variables[VSPART_V_INPPATH] = QString::null;
+    m_variables[VSPART_V_INTDIR] = QString::null;
+    m_variables[VSPART_V_OUTDIR] = QString::null;
+    m_variables[VSPART_V_PNTNAME] = QString::null;
+    m_variables[VSPART_V_PLATFNAME] = QString::null;
+    m_variables[VSPART_V_PRJDIR] = QString::null;
+    m_variables[VSPART_V_PRJEXT] = QString::null;
+    m_variables[VSPART_V_PRJFLN] = QString::null;
+    m_variables[VSPART_V_PRJNAME] = QString::null;
+    m_variables[VSPART_V_PRJPATH] = QString::null;
+    m_variables[VSPART_V_REFERENCES] = QString::null;
+    m_variables[VSPART_V_REMOTEM] = QString::null;
+    m_variables[VSPART_V_ROOTNS] = QString::null;
+    m_variables[VSPART_V_INPNAME_S] = QString::null;
+    m_variables[VSPART_V_PNTNAME_S] = QString::null;
+    m_variables[VSPART_V_ROOTNS_S] = QString::null;
+    m_variables[VSPART_V_SLNDIR] = QString::null;
+    m_variables[VSPART_V_SLNEXT] = QString::null;
+    m_variables[VSPART_V_SLNFLN] = QString::null;
+    m_variables[VSPART_V_SLNNAME] = QString::null;
+    m_variables[VSPART_V_SLNPATH] = QString::null;
+    m_variables[VSPART_V_TGTDIR] = QString::null;
+    m_variables[VSPART_V_TGTEXT] = QString::null;
+    m_variables[VSPART_V_TGTFLN] = QString::null;
+    m_variables[VSPART_V_TGTFRW] = QString::null;
+    m_variables[VSPART_V_TGTNAME] = QString::null;
+    m_variables[VSPART_V_TGTPATH] = QString::null;
+    m_variables[VSPART_V_VCINSTDIR] = QString::null;
+    m_variables[VSPART_V_VSINSTDIR] = QString::null;
+    m_variables[VSPART_V_WEBDEPLPATH] = QString::null;
+    m_variables[VSPART_V_WEBDEPLROOT] = QString::null;
+    m_variables[VSPART_V_WINSDKDIR] = QString::null;
+    m_variables[VSPART_V_WINSDKDIR_IA64] = QString::null;
+
+    mVViewWidget->slotRefreshValues();
+
+    // Set part ptr in the model for reference
     VSEntity::setPart(this);
   }
 
@@ -732,14 +789,124 @@ namespace VStudio {
 
   bool VSPart::selectSln(vss_p s) {
     if(s != 0 && s->getType() == vs_solution) {
+      if(selected_sln == s) { return true; }
       selected_sln = s;
+
+      // Set variables
+      setVar(VSPART_V_SLNDIR, selected_sln->getURL().path());
+      setVar(VSPART_V_SLNEXT, selected_sln->getExt());
+      setVar(VSPART_V_SLNFLN, selected_sln->getURL().fileName(false));
+      setVar(VSPART_V_SLNNAME, selected_sln->getName());
+      setVar(VSPART_V_SLNPATH, selected_sln->getURL().path());
+
+      vcfg_cp scfg = selected_sln->currentCfg();
+      if(scfg != 0) {
+        setVar(VSPART_V_CFGNAME, scfg->getName());
+        setVar(VSPART_V_PLATFNAME, scfg->getPlatform());
+      }
+
 #ifdef DEBUG
       kddbg << g_msg_slnselect.arg(s->getName());
 #endif
+
+      mVViewWidget->slotRefreshValues();
       return true;
     }
     kddbg << g_err_nullptr.arg("VSPart::selectSln");
     return false;
+  }
+
+  bool VSPart::selectPrj(vsp_p prj) {
+    if(prj != 0 && prj->getType() == vs_project) {
+      if(prj == selected_prj) { return true; }
+      //TODO: Deselect previous selected maybe !?
+
+      selected_prj = prj;
+
+      if(selected_sln != selected_prj->getParent()) { selectSln(static_cast<vss_p>(selected_prj->getParent())); }
+
+      // Set variables
+      setVar(VSPART_V_INPDIR, selected_prj->getURL().path());
+      setVar(VSPART_V_INPEXT, selected_prj->getExt());
+      setVar(VSPART_V_INPFLN, selected_prj->getURL().fileName(false));
+      setVar(VSPART_V_INPNAME, selected_prj->getName());
+      setVar(VSPART_V_INPPATH, selected_prj->getURL().path());
+
+      setVar(VSPART_V_PRJDIR, selected_prj->getURL().path());
+      setVar(VSPART_V_PRJEXT, selected_prj->getExt());
+      setVar(VSPART_V_PRJFLN, selected_prj->getURL().fileName(false));
+      setVar(VSPART_V_PRJNAME, selected_prj->getName());
+      setVar(VSPART_V_PRJPATH, selected_prj->getURL().path());
+
+      setVar(VSPART_V_INPNAME_S, selected_prj->getName());
+
+      setVar(VSPART_V_PNTNAME, selected_prj->getName());
+      setVar(VSPART_V_PNTNAME_S, selected_prj->getName());
+
+      setVar(VSPART_V_ROOTNS, selected_prj->getName());
+      setVar(VSPART_V_ROOTNS_S, selected_prj->getName());
+
+      vcfg_cp pcfg = selected_prj->currentCfg();
+      if(pcfg != 0) {
+        setVar(VSPART_V_CFGNAME, pcfg->getName());
+        setVar(VSPART_V_PLATFNAME, pcfg->getPlatform());
+      }
+
+      setVar(VSPART_V_OUTDIR, selected_prj->getOutDir().path());
+      setVar(VSPART_V_INTDIR, selected_prj->getIntDir().path());
+
+      mVViewWidget->slotRefreshValues();
+      return true;
+    }
+    return false;
+  }
+
+  bool VSPart::selectFile(vsfl_p f) {
+    if(f != 0 && f->getType() == vs_file) {
+      if(f == selected_file) { return true; }
+      selected_file = f;
+      vsp_p pprj = selected_file->getProject();
+      vse_p pnt = selected_file->getParent();
+
+      // Select parent project
+      if(selected_prj != pprj) { selectPrj(pprj); }
+
+      // Set variables
+      setVar(VSPART_V_INPDIR, selected_file->getURL().path());
+      setVar(VSPART_V_INPEXT, selected_file->getExt());
+      setVar(VSPART_V_INPFLN, selected_file->getURL().fileName(false));
+      setVar(VSPART_V_INPNAME, selected_file->getName());
+      setVar(VSPART_V_INPPATH, selected_file->getURL().path());
+
+      setVar(VSPART_V_INPNAME_S, selected_file->getName());
+
+      switch(pnt->getType()) {
+        case vs_project: {
+          setVar(VSPART_V_PNTNAME, static_cast<vsp_p>(pnt)->getName());
+          setVar(VSPART_V_PNTNAME_S, static_cast<vsp_p>(pnt)->getName());
+          break; }
+        case vs_filter: {
+          setVar(VSPART_V_PNTNAME, static_cast<vsf_p>(pnt)->getName());
+          setVar(VSPART_V_PNTNAME_S, static_cast<vsf_p>(pnt)->getName());
+          break; }
+        default: {
+          break; }
+      }
+
+      mVViewWidget->slotRefreshValues();
+
+      partController()->editDocument(selected_file->getURL());
+      return true;
+    }
+    return false;
+  }
+
+  void VSPart::setVar(const QString &var, const QString &val) {
+    m_variables[var] = val;
+  }
+
+  QString VSPart::expandPath(const QString &path, vse_p ent) {
+    return QString("/fake/exp/path"); // TODO: Stopped here
   }
 
   /*inline*/ vss_p VSPart::getSelectedSln() const {

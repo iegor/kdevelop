@@ -22,6 +22,8 @@
 
 #ifdef USE_BOOST
 #include <boost/container/vector.hpp>
+#include <boost/container/map.hpp>
+#include <boost/container/detail/pair.hpp>
 #include <boost/range/algorithm/find.hpp>
 // #include <boost/range/algorithm/find_first_of.hpp>
 #else
@@ -74,6 +76,69 @@
 // Language of project
 #define VSPART_PRJLANG_CPP "vs_prjlang_c"
 #define VSPART_PRJLANG_CSP "vs_prjlang_cs"
+
+// Project configuration attribute names
+#define VSPART_PCFGATTR_NAME "Name"
+#define VSPART_PCFGATTR_OUTDIR "OutputDirectory"
+#define VSPART_PCFGATTR_INTDIR "IntermediateDirectory"
+#define VSPART_PCFGATTR_CTYPE "ConfigurationType"
+#define VSPART_PCFGATTR_USEMFC "UseOfMFC"
+#define VSPART_PCFGATTR_CHRSET "CharacterSet"
+#define VSPART_PCFGATTR_ATLMIN "ATLMinimizesCRunTimeLibraryUsage"
+#define VSPART_PCFGATTR_INHPSH "InheritedPropertySheets"
+
+// Variables names
+#define VSPART_V_CFGNAME "ConfigurationName"
+#define VSPART_V_DNVDIR "DevEnvDir"
+#define VSPART_V_FRWDIR "FrameworkDir"
+#define VSPART_V_FRWSDKDIR "FrameworkSDKDir"
+#define VSPART_V_FRWVER "FrameworkVersion"
+#define VSPART_V_FXCOPDIR "FxCopDir"
+#define VSPART_V_INPDIR "InputDir"
+#define VSPART_V_INPEXT "InputExt"
+#define VSPART_V_INPFLN "InputFileName"
+#define VSPART_V_INPNAME "InputName"
+#define VSPART_V_INPPATH "InputPath"
+#define VSPART_V_INTDIR "IntDir"
+#define VSPART_V_OUTDIR "OutDir"
+#define VSPART_V_PNTNAME "ParentName"
+#define VSPART_V_PLATFNAME "PlatformName"
+#define VSPART_V_PRJDIR "ProjectDir"
+#define VSPART_V_PRJEXT "ProjectExt"
+#define VSPART_V_PRJFLN "ProjectFileName"
+#define VSPART_V_PRJNAME "ProjectName"
+#define VSPART_V_PRJPATH "ProjectPath"
+#define VSPART_V_REFERENCES "References"
+#define VSPART_V_REMOTEM "RemoteMachine"
+#define VSPART_V_ROOTNS "RootNamespace"
+#define VSPART_V_INPNAME_S "SafeInputName"
+#define VSPART_V_PNTNAME_S "SafeParentName"
+#define VSPART_V_ROOTNS_S "SafeRootNamespace"
+#define VSPART_V_SLNDIR "SolutionDir"
+#define VSPART_V_SLNEXT "SolutionExt"
+#define VSPART_V_SLNFLN "SolutionFileName"
+#define VSPART_V_SLNNAME "SolutionName"
+#define VSPART_V_SLNPATH "SolutionPath"
+#define VSPART_V_TGTDIR "TargetDir"
+#define VSPART_V_TGTEXT "TargetExt"
+#define VSPART_V_TGTFLN "TargetFileName"
+#define VSPART_V_TGTFRW "TargetFramework"
+#define VSPART_V_TGTNAME "TargetName"
+#define VSPART_V_TGTPATH "TargetPath"
+#define VSPART_V_VCINSTDIR "VCInstallDir"
+#define VSPART_V_VSINSTDIR "VSInstallDir"
+#define VSPART_V_WEBDEPLPATH "WebDeployPath"
+#define VSPART_V_WEBDEPLROOT "WebDeployRoot"
+#define VSPART_V_WINSDKDIR "WindowsSdkDir"
+#define VSPART_V_WINSDKDIR_IA64 "WindowsSdkDirIA64"
+
+// Variables classes
+// #define VSPART_VCLS_SYSTEM "sys_var"
+// #define VSPART_VCLS_USERDEF "usr_var"
+// #define VSPART_VCLS_INPUT "inp_var"
+// #define VSPART_VCLS_TARGET "tgt_var"
+// #define VSPART_VCLS_PROJECT "prj_var"
+// #define VSPART_VCLS_SOLUTION "sln_var"
 
 // Project setcion types
 #define VSPART_PRJSECTION_DEPENDENCIES "ProjectDependencies"
@@ -191,6 +256,12 @@ Environment variables and make arguments can be specified in the project setting
 //Widget data
 #define VSPART_SETPATH_WIDGET_NAME "setPathWidget"
 
+// UI size data
+#define VSPART_UIBTN_MINH 18
+#define VSPART_UIBTN_MINW 18
+#define VSPART_UIBTN_MAXH 20
+#define VSPART_UIBTN_MAXW 20
+
 #define glue2(a,b) a ## b
 #define glue3(a,b,c) a ## b ## c
 
@@ -200,17 +271,17 @@ Environment variables and make arguments can be specified in the project setting
 
 #ifdef USE_BOOST
 #define predeclare_vs_tl_iters(pname, citer, iter) \
-  typedef boost::container::vector<pname>::const_iterator citer; \
-  typedef boost::container::vector<pname>::iterator iter;
+  typedef vector<pname>::const_iterator citer; \
+  typedef vector<pname>::iterator iter;
 #define predeclare_vs_tl_vector(name) \
-  typedef boost::container::vector<name> glue2(v_,name); \
-  typedef boost::container::vector<name> * glue3(v_,name,_p); \
-  typedef boost::container::vector<name> & glue3(v_,name,_r); \
-  typedef const boost::container::vector<name> & glue3(v_,name,_cr); \
-  typedef boost::container::vector<name*> glue2(pv_,name);\
-  typedef boost::container::vector<name*> * glue3(pv_,name,_p); \
-  typedef boost::container::vector<name*> & glue3(pv_,name,_r); \
-  typedef const boost::container::vector<name*> & glue3(pv_,name,_cr);
+  typedef vector<name> glue2(v_,name); \
+  typedef vector<name> * glue3(v_,name,_p); \
+  typedef vector<name> & glue3(v_,name,_r); \
+  typedef const vector<name> & glue3(v_,name,_cr); \
+  typedef vector<name*> glue2(pv_,name);\
+  typedef vector<name*> * glue3(pv_,name,_p); \
+  typedef vector<name*> & glue3(pv_,name,_r); \
+  typedef const vector<name*> & glue3(pv_,name,_cr);
 #else
 #error "VStudio: Boost support is no enabled"
 #endif
@@ -237,13 +308,20 @@ Environment variables and make arguments can be specified in the project setting
 #define vsinline inline
 #define vsinline_attrib __attribute__((always_inline))
 #else
-#define vsinline
+#define vsinline inline
 #define vsinline_attrib
 #endif
 
 //BEGIN //VStudio namespace
 namespace VStudio {
   class VSPart;
+
+#ifdef USE_BOOST
+  using boost::container::vector;
+  using boost::container::map;
+  using boost::container::container_detail::pair;
+#else
+#endif
   //===========================================================================
   // General types pre-declaration and simplification
   //===========================================================================
@@ -406,12 +484,12 @@ namespace VStudio {
   bool MakeRelative(QString origin_path, QString path, QString& relative);
 
 #ifdef USE_BOOST
-  typedef boost::container::vector<QString> pv_QString;
-  typedef boost::container::vector<QString>::const_iterator qstr_ci;
-  typedef boost::container::vector<QString>::iterator qstr_i;
-  typedef boost::container::vector<QUuid> pv_QUuid;
-  typedef boost::container::vector<QUuid>::const_iterator quid_ci;
-  typedef boost::container::vector<QUuid>::iterator quid_i;
+  typedef vector<QString> pv_QString;
+  typedef vector<QString>::const_iterator qstr_ci;
+  typedef vector<QString>::iterator qstr_i;
+  typedef vector<QUuid> pv_QUuid;
+  typedef vector<QUuid>::const_iterator quid_ci;
+  typedef vector<QUuid>::iterator quid_i;
 #else
 #endif
 };

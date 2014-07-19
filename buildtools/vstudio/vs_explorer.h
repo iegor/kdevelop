@@ -54,8 +54,8 @@ namespace VStudio {
 
   class ListWidgetItem : public QFrame {
     friend class ListWidget;
-
     Q_OBJECT
+
     public:
       enum e_flags {
         IS_ROOT     = 0x00000001,
@@ -63,6 +63,7 @@ namespace VStudio {
         IS_LMB_DOWN = 0x00000010,
         IS_PRESSED  = 0x00000020,
       };
+
     public:
       ListWidgetItem(QWidget *parent, const char *name=0, WFlags fl=0);
       virtual ~ListWidgetItem();
@@ -77,19 +78,19 @@ namespace VStudio {
       int totalHeight();
       virtual void invalidateHeight();
 
-      vsinline lwi_p parent() const vsinline_attrib;
-      vsinline lwi_p sibling() const vsinline_attrib;
-      vsinline lwi_p child() const vsinline_attrib;
-      vsinline void setParent(lwi_cp parent) vsinline_attrib;
-      vsinline void setChild(lwi_cp child) vsinline_attrib;
-      vsinline void setSibling(lwi_cp sibling) vsinline_attrib;
+      vsinline lwi_p parent() const vsinline_attrib { return pnt; }
+      vsinline void setParent(lwi_cp parent) vsinline_attrib { pnt = const_cast<lwi_p>(parent); }
+      vsinline lwi_p sibling() const vsinline_attrib { return sbl; }
+      vsinline void setSibling(lwi_cp sibling) vsinline_attrib { sbl = const_cast<lwi_p>(sibling); }
+      vsinline lwi_p child() const vsinline_attrib { return chd; }
+      vsinline void setChild(lwi_cp child) vsinline_attrib { chd = const_cast<lwi_p>(child); }
 
-      vsinline int level() const vsinline_attrib;
-      vsinline void setLevel(int lvl) vsinline_attrib;
+      vsinline int level() const vsinline_attrib { return lvl; }
+      vsinline void setLevel(int level) vsinline_attrib { lvl = level; }
 
-      vsinline bool isRoot() const vsinline_attrib;
-      vsinline bool isExpanded() const vsinline_attrib;
-      vsinline bool canExpand() const vsinline_attrib;
+      vsinline bool isRoot() const vsinline_attrib { return check_bit(flags, IS_ROOT); }
+      vsinline bool isExpanded() const vsinline_attrib { return check_bit(flags, IS_EXPANDED); }
+      vsinline bool canExpand() const vsinline_attrib { return (chd == 0) && (numChildren > 0); }
 
       virtual void expand();
       virtual void collapse();
@@ -194,12 +195,14 @@ namespace VStudio {
    */
   class VSExplorerEntity : public ListWidgetItem {
     Q_OBJECT
+
     public:
       enum e_flags {
         IS_OPEN = 0x00000001,
         IS_HOVERED_ON = 0x00000002,
         CONTROLS_VISIBLE = 0x00000004,
       };
+
     public:
       VSExplorerEntity(QWidget *parent=0, const char *name=0, WFlags fl=0);
       virtual ~VSExplorerEntity();
@@ -248,6 +251,7 @@ namespace VStudio {
    */
   class VSExplorerListWidget : public ListWidget {
     Q_OBJECT
+
     public:
       VSExplorerListWidget(QWidget *parent=0, const char *name=0, WFlags fl=0);
       virtual ~VSExplorerListWidget();
@@ -349,6 +353,7 @@ namespace VStudio {
   */
   class VSSlnNode : public VSExplorerEntity {
     Q_OBJECT
+
     public:
       VSSlnNode(vss_p sln, QWidget *parent=0, const char *name=0, WFlags fl=0);
       virtual ~VSSlnNode();
@@ -362,9 +367,9 @@ namespace VStudio {
       virtual void collapse();
 
     // VSExplorerEntity interface
-      virtual vse_p getModel() const;
-      virtual const QUuid& getUID() const;
-      virtual e_VSEntityType getType() const;
+      virtual vse_p getModel() const { return sln; }
+      virtual const QUuid& getUID() const { return uid_null; }
+      virtual e_VSEntityType getType() const { return sln->getType(); }
       virtual void showControls();
       virtual void hideControls();
 
@@ -384,6 +389,7 @@ namespace VStudio {
 
       QHBox *hb_tools;
       QPushButton *btn_cfg;
+      QComboBox *cmb_cfg;
       QPushButton *btn_bld;
       QPushButton *btn_clr;
       QPushButton *btn_expand;
@@ -394,30 +400,42 @@ namespace VStudio {
   */
   class VSPrjNode : public VSExplorerEntity {
     Q_OBJECT
+
   public:
     VSPrjNode(vsp_p prj, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSPrjNode();
 
+  // QTWidget's methods:
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+
+  // ListWidgetItem's methods:
+    virtual void expand();
+    virtual void collapse();
+
   // VSExplorerEntity interface
-    virtual vse_p getModel() const;
-    virtual const QUuid& getUID() const;
-    virtual e_VSEntityType getType() const;
+    virtual vse_p getModel() const { return prj; }
+    virtual const QUuid& getUID() const { return prj->getUID(); }
+    virtual e_VSEntityType getType() const { return prj->getType(); }
+    virtual void showControls();
+    virtual void hideControls();
 
+  // VSPrjNode's methods:
   public:
-  // private slots:
+    vsinline uivss_p getSolution() const vsinline_attrib { return sln; }
+
+  public: // private slots:
     virtual void slotRefreshText();
-
-  public:
-  // VSPrjNode interface
-    uivss_p getSolution() const { return sln; }
 
   private:
     vsp_p prj;
     uivss_p sln; // Parent solution
-    pv_uivsfl files;
-    pv_uivsf filters;
+    // pv_uivsfl files;
+    // pv_uivsf filters;
 
+    QHBox *hb_tools;
     QPushButton *btn_cfg;
+    QComboBox *cmb_cfg;
     QPushButton *btn_bld;
     QPushButton *btn_clr;
     QPushButton *btn_expand;
@@ -428,59 +446,80 @@ namespace VStudio {
   */
   class VSFltNode : public VSExplorerEntity {
     Q_OBJECT
+
   public:
     VSFltNode(vsf_p filter, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSFltNode();
 
-  // VSExplorerEntity interface
-    virtual vse_p getModel() const;
-    virtual const QUuid& getUID() const;
-    virtual e_VSEntityType getType() const;
+  // QTWidget's methods:
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+
+  // ListWidgetItem's methods:
+    virtual void expand();
+    virtual void collapse();
+
+  // VSExplorerEntity's methods:
+    virtual vse_p getModel() const { return flt; }
+    virtual const QUuid& getUID() const { return flt->getUID(); }
+    virtual e_VSEntityType getType() const { return flt->getType(); }
+    virtual void showControls();
+    virtual void hideControls();
+
+  // VSFltNode's methods:
+  public:
+    vsinline uivse_p getUIContainer() const vsinline_attrib { return container; }
 
   // private slots:
     virtual void slotRefreshText();
-
-  public:
-  // VSFltNode interface
-    vsinline uivse_p getUIContainer() const vsinline_attrib;
 
   private:
     vsf_p flt;  // VSFilter, model representation
     uivse_p container; // Parent container, solution or project UI
 
+    QHBox *hb_tools;
     QPushButton *btn_bld;
     QPushButton *btn_clr;
     QPushButton *btn_expand;
   };
 
-  /**
-  * File node for vs widget
+  /** \class VStudio::VSFilNode
+  * \brief File node for vs explorer widget
   */
   class VSFilNode : public VSExplorerEntity {
     Q_OBJECT
+
   public:
     VSFilNode(vsfl_p file, QWidget *parent=0, const char *name=0, WFlags fl=0);
     virtual ~VSFilNode();
 
-  // VSExplorerEntity interface
-    virtual vse_p getModel() const;
-    virtual const QUuid& getUID() const;
-    virtual e_VSEntityType getType() const;
+  // QTWidget's methods:
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+
+  // VSExplorerEntity methods:
+    virtual vse_p getModel() const { return file; }
+    virtual const QUuid& getUID() const { return uid_null; }
+    virtual e_VSEntityType getType() const { return file->getType(); }
+    virtual void showControls();
+    virtual void hideControls();
+
+  // VSFilNode methods:
+  public:
+    vsinline uivse_p getUIContainer() const vsinline_attrib { return container; }
+    void setState(const QString &state);
 
   // private slots:
     virtual void slotRefreshText();
-
-  public:
-  // VSFilNode interface
-    vsinline uivse_p getUIContainer() const vsinline_attrib;
-    void setState(const QString &state);
 
   private:
     vsfl_p file;
     uivse_p container; // Parent filter|project
 
+    QHBox *hb_tools;
     QPushButton *btn_cfg;
-    QPushButton *btn_bld; //NOTE: meaning is "compile file"
+    QComboBox *cmb_cfg;
+    QPushButton *btn_bld;
     QPushButton *btn_clr;
   };
 };
