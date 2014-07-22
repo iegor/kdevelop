@@ -27,6 +27,7 @@
 #include <qvbox.h>
 #include <qscrollview.h>
 #include <qlabel.h>
+#include <qlayout.h>
 
 /* KDE */
 //#include <kpushbutton.h>
@@ -38,6 +39,7 @@
 #include "vs_model.h"
 #include "vs_explorer_widget.h" // Base widget class
 
+// class QLayout;
 class QPushButton;
 class QGridLayout;
 
@@ -55,11 +57,13 @@ namespace VStudio {
   class ListWidgetItem : public QFrame {
     friend class ListWidget;
     Q_OBJECT
+    //Q_PROPERTY(bool isExpandable READ isExpandable WRITE setExpandable)
 
     public:
       enum e_flags {
         IS_ROOT     = 0x00000001,
         IS_EXPANDED = 0x00000002,
+        IS_EXPANDABLE = 0x00000004,
         IS_LMB_DOWN = 0x00000010,
         IS_PRESSED  = 0x00000020,
       };
@@ -75,10 +79,11 @@ namespace VStudio {
       virtual void enterEvent(QEvent *event);
       virtual void leaveEvent(QEvent *event);
 
+    // ListWidgetItem's methods:
       int totalHeight();
       virtual void invalidateHeight();
 
-      vsinline lwi_p parent() const vsinline_attrib { return pnt; }
+      vsinline lwi_p getParent() const vsinline_attrib { return pnt; }
       vsinline void setParent(lwi_cp parent) vsinline_attrib { pnt = const_cast<lwi_p>(parent); }
       vsinline lwi_p sibling() const vsinline_attrib { return sbl; }
       vsinline void setSibling(lwi_cp sibling) vsinline_attrib { sbl = const_cast<lwi_p>(sibling); }
@@ -89,21 +94,30 @@ namespace VStudio {
       vsinline void setLevel(int level) vsinline_attrib { lvl = level; }
 
       vsinline bool isRoot() const vsinline_attrib { return check_bit(flags, IS_ROOT); }
-      vsinline bool isExpanded() const vsinline_attrib { return check_bit(flags, IS_EXPANDED); }
-      vsinline bool canExpand() const vsinline_attrib { return (chd == 0) && (numChildren > 0); }
 
+      vsinline bool isExpanded() const vsinline_attrib { return check_bit(flags, IS_EXPANDED); }
+      vsinline bool canExpand() const vsinline_attrib { return (chd != 0) && (numChildren > 0); }
+
+      virtual bool isExpandable() const;
+      virtual void setExpandable(bool is_expandable);
       virtual void expand();
       virtual void collapse();
 
       virtual void addChild(lwi_p child);
-      virtual void sort();
-      virtual void updateArrangement();
-
+      virtual void sort_children();
       virtual bool hit_item(const QPoint &point) const;
 
     signals:
       void released();
       void clicked();
+
+    protected:
+      //void remap_siblings();
+      //virtual void update_children();
+      void __expand_show();
+      void __collapse_hide();
+      vsinline void __attachToList() vsinline_attrib;
+      vsinline void __detachFromList() vsinline_attrib;
 
     protected:
       lwi_p pnt; // Parent node
@@ -119,33 +133,9 @@ namespace VStudio {
 
   class ListWidget : public QScrollView {
     Q_OBJECT
-    Q_PROPERTY( int childCount READ childCount )
-    Q_PROPERTY( int itemMargin READ itemMargin WRITE setItemMargin )
-    Q_PROPERTY( int levelShift READ lvlShift WRITE setLvlShift )
-
-    public:
-      /** \class ListWidget::LayoutMapper
-       * \brief Maps list widget items thus creates layout for widget
-       */
-      class LayoutMapper {
-        public:
-          LayoutMapper(lw_p host);
-          virtual ~LayoutMapper();
-
-          virtual void map();
-
-          const lw_p host;
-      };
-
-      class Tree_LM : public LayoutMapper {
-        public:
-          Tree_LM(lw_p host);
-          virtual ~Tree_LM();
-
-          virtual void map();
-
-          int lvl_shift;
-      };
+    //Q_PROPERTY( int childCount READ childCount )
+    //Q_PROPERTY( int itemMargin READ itemMargin WRITE setItemMargin )
+    //Q_PROPERTY( int levelShift READ lvlShift WRITE setLvlShift )
 
     private:
       class RootItem : public ListWidgetItem {
@@ -162,16 +152,19 @@ namespace VStudio {
       virtual void paintEvent(QPaintEvent *event);
 
     // QScrollView's methods:
-      virtual void drawContents(QPainter *painter, int cx, int cy, int cw, int ch);
+      //virtual void drawContents(QPainter *painter, int cx, int cy, int cw, int ch);
 
-      // int lvlShift() const;
-      // virtual void setLvlShift(int shift);
+      vsinline int lvlShift() const vsinline_attrib { return lvl_shift; }
+      vsinline void setLvlShift(int shift) vsinline_attrib { lvl_shift = shift; }
       virtual bool insertItem(lwi_p pItem, lwi_p pParent=0);
       void setFocused(lwi_p item);
       void select(lwi_p item);
 
+      void recalcContents();
+
     public slots:
-      void slotRemapItems();
+      void slotUpdateContents();
+      //void slotMapChildren(lwi_p item);
 
     signals:
       void selectionChanged(lwi_p);
@@ -186,9 +179,20 @@ namespace VStudio {
       RootItem *root;
       pv_lwi items;
       pv_lwi dqueue;
-      // int lvl_shift;
-      LayoutMapper *imapper;
+      int lvl_shift;
   };
+
+  vsinline void ListWidgetItem::__attachToList() {
+    //list->insertChild(this);
+    //list->layout()->add(this);
+    setEnabled(true); show();
+  }
+
+  vsinline void ListWidgetItem::__detachFromList() {
+    hide(); setEnabled(false);
+    //list->layout()->remove(this);
+    //list->removeChild(this);
+  }
 
   /** \class VSExplorerEntity
    * \brief Base class for all VS UI entities
@@ -212,11 +216,11 @@ namespace VStudio {
       virtual void leaveEvent(QEvent *event);
 
     // ListWidgetItem's methods:
-      virtual void invalidateHeight();
+      //virtual void invalidateHeight();
       virtual void expand();
       virtual void collapse();
-      virtual void addChild(lwi_p child);
       virtual bool hit_item(const QPoint &point) const;
+      virtual void setExpandable(bool is_expandable);
 
     // VStudio UI entity methods:
       virtual vse_p getModel() const = 0;
@@ -237,6 +241,7 @@ namespace VStudio {
     protected:
       QHBoxLayout *hbl_main;
       QVBox *vb_ctrl; // UI controls vbox, expand, select, etc.
+      QPushButton *btn_expand;
       QSpacerItem *spc_vbctrl; // UI controls vbox spacer, to keek controls up
       QVBoxLayout *vbl_elem;
       QHBox *hb_top;
@@ -362,10 +367,6 @@ namespace VStudio {
       virtual void enterEvent(QEvent *event);
       virtual void leaveEvent(QEvent *event);
 
-    // ListWidgetItem's methods:
-      virtual void expand();
-      virtual void collapse();
-
     // VSExplorerEntity interface
       virtual vse_p getModel() const { return sln; }
       virtual const QUuid& getUID() const { return uid_null; }
@@ -392,7 +393,6 @@ namespace VStudio {
       QComboBox *cmb_cfg;
       QPushButton *btn_bld;
       QPushButton *btn_clr;
-      QPushButton *btn_expand;
   };
 
   /**
@@ -408,10 +408,6 @@ namespace VStudio {
   // QTWidget's methods:
     virtual void enterEvent(QEvent *event);
     virtual void leaveEvent(QEvent *event);
-
-  // ListWidgetItem's methods:
-    virtual void expand();
-    virtual void collapse();
 
   // VSExplorerEntity interface
     virtual vse_p getModel() const { return prj; }
@@ -438,7 +434,6 @@ namespace VStudio {
     QComboBox *cmb_cfg;
     QPushButton *btn_bld;
     QPushButton *btn_clr;
-    QPushButton *btn_expand;
   };
 
   /**
@@ -454,10 +449,6 @@ namespace VStudio {
   // QTWidget's methods:
     virtual void enterEvent(QEvent *event);
     virtual void leaveEvent(QEvent *event);
-
-  // ListWidgetItem's methods:
-    virtual void expand();
-    virtual void collapse();
 
   // VSExplorerEntity's methods:
     virtual vse_p getModel() const { return flt; }
@@ -480,7 +471,6 @@ namespace VStudio {
     QHBox *hb_tools;
     QPushButton *btn_bld;
     QPushButton *btn_clr;
-    QPushButton *btn_expand;
   };
 
   /** \class VStudio::VSFilNode
