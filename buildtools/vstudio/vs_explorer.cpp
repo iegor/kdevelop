@@ -328,7 +328,6 @@ namespace VStudio {
 
       p->adjustSize();
       p->updateGeometry();
-      slotUpdateContents();
       return true;
     }
     return false;
@@ -914,66 +913,268 @@ namespace VStudio {
   }
 
   uivss_p VSExplorer::addSolutionNode(vss_p sln) {
-    uivss_p item = new VSSlnNode(sln, explorer->viewport());
-    if(item != 0) {
-      BOOSTVEC_PUSHBACK(uients, item);
-      explorer->insertItem(item, 0);
-      return item;
+    if(sln->getUI() == 0) {
+      // Solution item
+      uivss_p uisln = new VSSlnNode(sln, explorer->viewport());
+      if(uisln != 0) {
+        BOOSTVEC_PUSHBACK(uients, uisln);
+        explorer->insertItem(uisln, 0);
+#ifdef DEBUG
+        kddbg << QString("UISLN [%1] +\n").arg(sln->getName());
+#endif
+        sln->setUI(uisln);
+
+        //TODO: Think about referencing to the parent UI sln before UI sln is actually in the list
+        // since insertion happens below
+
+        // Insert filters, if any
+        //NOTE: Filters must be populated first, because we track UI dependencies via filters
+        //  all UI project|files are not attached to "model" representation in that matter
+        if(!sln->filts().empty()) {
+          BOOSTVEC_FOR(vsf_ci, it, sln->filts()) {
+            vsf_p flt(*it);
+            if(flt != 0 && flt->getUI() == 0) {
+              uivsf_p uiflt = addFilterNode(uisln, flt);
+#ifdef DEBUG
+              if(uiflt != 0) {
+                kddbg << QString("UISLN [%1] << UIFLT [%2].\n").arg(sln->getName()).arg(flt->getName());
+              }
+              else {
+                kddbg << QString(VSPART_ERROR"UISLN [%1] can't create UIFLT [%2].\n").
+                    arg(sln->getName()).arg(flt->getName());
+                //delete uisln;
+                //return 0;
+              }
+#endif
+            }
+            //else { //NOTE: corrupted list report
+            //}
+          }
+        }
+
+        // Create UI items for all projects that are not in filters
+        if(!sln->projs().empty()) {
+          BOOSTVEC_FOR(vsp_ci, it, sln->projs()) {
+            vsp_p prj(*it);
+            if(prj != 0 && prj->getUI() == 0) {
+              uivsp_p uiprj = addProjectNode(uisln, prj);
+#ifdef DEBUG
+              if(uiprj != 0) {
+                kddbg << QString("UISLN [%1] << UIPRJ [%2].\n").arg(sln->getName()).arg(prj->getName());
+              }
+              else {
+                kddbg << QString(VSPART_ERROR"UISLN [%1] can't create UIPRJ [%2].\n").
+                    arg(sln->getName()).arg(prj->getName());
+                //delete uisln;
+                //return 0;
+              }
+#endif
+            }
+            //else { //NOTE: corrupted list report
+            //}
+          }
+        }
+
+        explorer->slotUpdateContents();
+        return uisln;
+      }
+      else { kddbg << g_err_notenoughmem.arg(QString("uivss: [%1]").arg(sln->getName())).
+        arg("VSExplorer::addSolutionNode"); }
     }
-    else { kddbg << g_err_notenoughmem.arg("uivss"); }
     return 0;
   }
 
-  uivsp_p VSExplorer::addProjectNode(uivse_p pnt, vsp_p prj) {
-    switch(pnt->getType()) {
-      case vs_filter:
-      case vs_solution: {
-        uivsp_p item = new VSPrjNode(prj, explorer->viewport());
-        if(item != 0) {
-          BOOSTVEC_PUSHBACK(uients, item);
-          explorer->insertItem(item, static_cast<lwi_p>(pnt));
-          return item;
-        }
-        else { kddbg << g_err_notenoughmem.arg("uivsp"); }
-        return 0; }
-      default: {
-        return 0; }
+  uivsp_p VSExplorer::addProjectNode(uivse_p uipnt, vsp_p prj) {
+    if(prj->getUI() == 0) {
+      switch(uipnt->getType()) {
+        case vs_filter:
+        case vs_solution: {
+          // Project item
+          uivsp_p uiprj = new VSPrjNode(prj, explorer->viewport());
+          if(uiprj != 0) {
+            BOOSTVEC_PUSHBACK(uients, uiprj);
+            explorer->insertItem(uiprj, uipnt);
+#ifdef DEBUG
+            kddbg << QString("UIPRJ [%1] +\n").arg(prj->getName());
+#endif
+            prj->setUI(uiprj);
+
+            // Filters in the project
+            //NOTE: We populate filters first, because in UI context they contain their children.
+            // In "model" context parent can be only project|solution
+            if(!prj->filts().empty()) {
+              BOOSTVEC_FOR(vsf_ci, it, prj->filts()) {
+                vsf_p flt(*it);
+                if(flt != 0 && flt->getUI() == 0) {
+                  uivsf_p uiflt = addFilterNode(uiprj, flt);
+#ifdef DEBUG
+                  if(uiflt != 0) {
+                    kddbg << QString("UIPRJ [%1] << UIFLT [%2].\n").arg(prj->getName()).arg(flt->getName());
+                  }
+                  else {
+                    kddbg << QString(VSPART_ERROR"UIPRJ [%1] can't create UIFLT [%2].\n").
+                        arg(prj->getName()).arg(flt->getName());
+                    //delete uiprj;
+                    //return 0;
+                  }
+#endif
+                }
+                //else { //NOTE: corrupted list report
+                //}
+              }
+            }
+
+            // Files in the project
+            if(!prj->fls().empty()) {
+              BOOSTVEC_FOR(vsfl_ci, it, prj->fls()) {
+                vsfl_p fl(*it);
+                if(fl != 0 && fl->getUI() == 0) {
+                  uivsfl_p uifl = addFileNode(uiprj, fl);
+#ifdef DEBUG
+                  if(uifl != 0) {
+                    kddbg << QString("UIPRJ [%1] << UIFL [%2].\n").arg(prj->getName()).arg(fl->getName());
+                  }
+                  else {
+                    kddbg << QString(VSPART_ERROR"UIPRJ [%1] can't create UIFL [%2].\n").
+                        arg(prj->getName()).arg(fl->getName());
+                    //delete uiprj;
+                    //return 0;
+                  }
+#endif
+                }
+                //else { //NOTE: corrupted list report
+                //}
+              }
+            }
+
+            return uiprj;
+          }
+          else { kddbg << g_err_notenoughmem.arg(QString("uivsp: [%1]").arg(prj->getName())).
+            arg("VSExplorer::addProjectNode"); }
+          break; }
+        default: { break; }
+      }
     }
+    return 0;
   }
 
-  uivsf_p VSExplorer::addFilterNode(uivse_p pnt, vsf_p flt) {
-    switch(pnt->getType()) {
-      case vs_solution:
-      case vs_project:
-      case vs_filter: {
-        uivsf_p item = new VSFltNode(flt, explorer->viewport());
-        if(item != 0) {
-          BOOSTVEC_PUSHBACK(uients, item);
-          explorer->insertItem(item, static_cast<lwi_p>(pnt));
-          return item;
-        }
-        else { kddbg << g_err_notenoughmem.arg("uivsf"); }
-        return 0; }
-      default: {
-        return 0; }
+  uivsf_p VSExplorer::addFilterNode(uivse_p uipnt, vsf_p flt) {
+    if(flt->getUI() == 0) {
+      switch(uipnt->getType()) {
+        case vs_solution:
+        case vs_project:
+        case vs_filter: {
+          // Filter item
+          uivsf_p uiflt = new VSFltNode(flt, explorer->viewport());
+          if(uiflt != 0) {
+            BOOSTVEC_PUSHBACK(uients, uiflt);
+            explorer->insertItem(uiflt, uipnt);
+#ifdef DEBUG
+            kddbg << QString("UIFLT [%1] +\n").arg(flt->getName());
+#endif
+            flt->setUI(uiflt);
+
+            // Contents of filter
+            if(!flt->children().empty()) {
+              BOOSTVEC_FOR(vse_ci, it, flt->children()) {
+                vse_p ent(*it);
+                if(ent != 0) {
+                  switch(ent->getType()) {
+                    case vs_project: {
+                      vsp_p prj = static_cast<vsp_p>(ent);
+                      if(prj->getUI() == 0) {
+                        uivsp_p uiprj = addProjectNode(uiflt, prj);
+#ifdef DEBUG
+                        if(uiprj != 0) {
+                          kddbg << QString("UIFLT [%1] << UIPRJ [%2].\n").arg(flt->getName()).arg(prj->getName());
+                        }
+                        else {
+                          kddbg << QString(VSPART_ERROR"UIFLT [%1] can't create UIPRJ [%2].\n").
+                              arg(flt->getName()).arg(prj->getName());
+                          delete uiflt;
+                          return 0;
+                        }
+#endif
+                      }
+                      break; }
+                    case vs_filter: {
+                      vsf_p eflt = static_cast<vsf_p>(ent);
+                      if(eflt->getUI() == 0) {
+                        uivsf_p euiflt = addFilterNode(uiflt, eflt);
+#ifdef DEBUG
+                        if(euiflt != 0) {
+                          kddbg << QString("UIFLT [%1] << UIFLT [%2].\n").arg(flt->getName()).arg(eflt->getName());
+                        }
+                        else {
+                          kddbg << QString(VSPART_ERROR"UIFLT [%1] can't create UIFLT [%2].\n").
+                              arg(flt->getName()).arg(eflt->getName());
+                          delete uiflt;
+                          return 0;
+                        }
+#endif
+                      }
+                      break; }
+                    case vs_file: {
+                      vsfl_p fl = static_cast<vsfl_p>(ent);
+                      if(fl->getUI() == 0) {
+                        uivsfl_p uifl = addFileNode(uiflt, fl);
+#ifdef DEBUG
+                        if(uifl != 0) {
+                          kddbg << QString("UIFLT [%1] << UIFL [%2].\n").arg(flt->getName()).arg(fl->getName());
+                        }
+                        else {
+                          kddbg << QString(VSPART_ERROR"UIFLT [%1] can't create UIFL [%2].\n").
+                              arg(flt->getName()).arg(fl->getName());
+                          delete uiflt;
+                          return 0;
+                        }
+#endif
+                      }
+                      break; }
+                    default: { break; }
+                  }
+                }
+                else { //NOTE: corrupted list report
+                  kddbg << g_err_list_corrupted.arg("children").arg("VSExplorer::addFilterNode");
+                  return 0;
+                }
+              } /* BOOSTVEC( for each child ) */
+            }
+
+            return uiflt;
+          }
+          else { kddbg << g_err_notenoughmem.arg(QString("uivsf: [%1]").arg(flt->getName())).
+            arg("VSExplorer::addFilterNode"); }
+          break; }
+        default: { break; }
+      }
     }
+    return 0;
   }
 
-  uivsfl_p VSExplorer::addFileNode(uivse_p pnt, vsfl_p fl) {
-    switch(pnt->getType()) {
-      case vs_project:
-      case vs_filter: {
-        uivsfl_p item = new VSFilNode(fl, explorer->viewport());
-        if(item != 0) {
-          BOOSTVEC_PUSHBACK(uients, item);
-          explorer->insertItem(item, static_cast<lwi_p>(pnt));
-          return item;
-        }
-        else { kddbg << g_err_notenoughmem.arg("uivsfl"); }
-        return 0; }
-      default: {
-        return 0; }
+  uivsfl_p VSExplorer::addFileNode(uivse_p uipnt, vsfl_p fl) {
+    if(fl->getUI() == 0) {
+      switch(uipnt->getType()) {
+        case vs_project:
+        case vs_filter: {
+          // UI File item
+          uivsfl_p uifl = new VSFilNode(fl, explorer->viewport());
+          if(uifl != 0) {
+            BOOSTVEC_PUSHBACK(uients, uifl);
+            explorer->insertItem(uifl, uipnt);
+#ifdef DEBUG
+            kddbg << QString("UIFL [%1] +\n").arg(fl->getName());
+#endif
+            fl->setUI(uifl);
+            return uifl;
+          }
+          else { kddbg << g_err_notenoughmem.arg(QString("uivsfl: [%1]").arg(fl->getName())).
+            arg("VSExplorer::addFileNode"); }
+          return 0; }
+        default: { break; }
+      }
     }
+    return 0;
   }
 
   uivse_p VSExplorer::getByUID(const QUuid &uid) const {

@@ -289,7 +289,7 @@ namespace VStudio {
       virtual ~VSExplorer();
       // bool selectItem(ItemDom item);
       uivss_p addSolutionNode(vss_p sln);
-      uivsp_p addProjectNode(uivse_p sln, vsp_p prj);
+      uivsp_p addProjectNode(uivse_p parent, vsp_p prj);
       uivsf_p addFilterNode(uivse_p parent, vsf_p filter);
       uivsfl_p addFileNode(uivse_p parent, vsfl_p file);
 

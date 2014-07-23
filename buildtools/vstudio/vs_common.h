@@ -298,7 +298,7 @@ Environment variables and make arguments can be specified in the project setting
 
 #ifdef USE_BOOST
 #define BOOSTVEC_FOR(ityp, i, v) for(ityp i=v.begin(); i!=v.end(); ++i)
-#define BOOSTVEC_OFOR(iter, v) for(; iter!=v.end(); ++iter)
+#define BOOSTVEC_OFOR(iter, v) for(iter=v.begin(); iter!=v.end(); ++iter)
 #define BOOSTVEC_PUSHBACK(vector, value) (vector).push_back((value))
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement later

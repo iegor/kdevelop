@@ -51,9 +51,8 @@
 #include "vs_part.h"
 #include "vs_model.h"
 
-static const KDevPluginInfo data("kdevpart_vs");
-
 namespace VStudio {
+  static const KDevPluginInfo data("kdevpart_vs");
   typedef KDevGenericFactory<VSPart> VSFactory;
   K_EXPORT_COMPONENT_FACTORY(libkdevvs, VSFactory(data))
 
@@ -303,7 +302,24 @@ namespace VStudio {
     m_projectName = projectName;
 
     QDomDocument &dom = *projectDom();
+    QDomElement project = DomUtil::elementByPath(dom, VSPART_XML_SECTION);
     QDomElement general = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
+
+    // Remove backup node from last save
+    QDomNode old_general = project.namedItem("general_backup");
+    if(old_general.isNull()) {
+      kddbg << VSPART_WARNING"Backup node isn't found.\n";
+    }
+    else {
+      if(project.removeChild(old_general).isNull()) {
+        kddbg << VSPART_ERROR"Can't remove general_backup node.\n";
+      }
+#ifdef DEBUG
+      else {
+        kddbg << "Node: general_backup is removed.\n";
+      }
+#endif
+    }
 
     // Read all project configs along with sln configs
     QDomElement subEl = general.firstChild().toElement();
@@ -356,10 +372,23 @@ namespace VStudio {
           return;
         }
 
-        KURL url(KURL::fromPathOrURL(m_projectPath));
-        kddbg << url.url() << endl;
-        url.addPath(sln_path);
-        sln->setPath(url.pathOrURL());
+        KURL sln_url(KURL::fromPathOrURL(m_projectPath), sln_path);
+        //KURL sln_url(KURL::fromPathOrURL(sln_path));
+#ifdef DEBUG
+        kddbg << "SLN url \"" << sln_url.path() << "\"\n";
+#endif
+
+        // Make url absolute if it was give in relative form
+        /*if(KURL::isRelativeURL(sln_path)) {
+          KURL kprj_url(KURL::fromPathOrURL(m_projectPath));
+#ifdef DEBUG
+          kddbg << "KPRJ url \"" << kprj_url.url() << "\"\n";
+#endif
+          kprj_url.addPath(sln_path);
+          sln_url = kprj_url;
+        }*/
+
+        sln->setPath(sln_url.pathOrURL());
 
         //NOTE: We adding "incolmplete" sln to be sure we will save all solutions that were
         //  stored in .kdevelop file
@@ -376,7 +405,12 @@ namespace VStudio {
               kddbg << VSPART_ERROR"Can't activate a prj: " << active_prj << " in sln: " << sln->getName() << endl;
             }
           }
-          else { kddbg << VSPART_WARNING"Sln: " << sln_iname << " no active project.\n"; }
+          else { // Setting first project as active is no active project was read
+#ifdef DEBUG
+            kddbg << QString(VSPART_WARNING"SLN [%1] has no active project recorded.\n").arg(sln_iname);
+#endif
+            //sln->setActivePrj(sln->projs()[0]);
+          }
         } else {
           kddbg << g_err_slnload.arg(sln_iname);
           // subEl = subEl.nextSibling().toElement();
@@ -389,8 +423,9 @@ namespace VStudio {
         }
 
         // Create UI representation
-        if(!sln->populateUI()) {
-          kddbg << VSPART_ERROR"Can't use sln. UI update failed.\n";
+        uivss_p uisln = m_explorer_widget->addSolutionNode(sln);
+        if(uisln == 0) {
+          kddbg << QString(VSPART_ERROR"Can't add UI for SLN [%1].\n").arg(sln->getName());
         }
       }
       subEl = subEl.nextSibling().toElement();
@@ -456,14 +491,20 @@ namespace VStudio {
     }
 
     // Set active solution
-    QString activesln = DomUtil::readEntry(dom, VSPART_XML_SECTION_ACTIVESLN);
-    vss_p sln = static_cast<vss_p>(getSlnByName(activesln));
-    if(sln == 0) {
-      kddbg << g_err_slnactivate.arg(activesln);
-      return;
-    } else {
-      activateSln(sln);
-      selectSln(sln);
+    if(!m_entities.empty()) {
+      QString activesln = DomUtil::readEntry(dom, VSPART_XML_SECTION_ACTIVESLN);
+      vss_p sln = getSlnByName(activesln);
+      if(sln != 0) {
+        activateSln(sln);
+        selectSln(sln);
+      }
+      else {
+        kddbg << g_err_slnactivate.arg(activesln);
+        return;
+      }
+    }
+    else { // Empty project with no solutions
+      kddbg << QString(VSPART_WARNING"KPRJ [%1] has no VS items in it.\n").arg(m_projectName);
     }
 
     // Set active configuration
@@ -483,15 +524,18 @@ namespace VStudio {
   }
 
   void VSPart::closeProject() {
-    return;
 #ifdef DEBUG
     kddbg << VSPART_WARNING"Closing project file.\n";
 #endif
     QDomDocument &dom = *projectDom();
     QDomElement project = DomUtil::elementByPath(dom, VSPART_XML_SECTION);
-    QDomElement general = dom.createElement("general");
-    QDomElement old_general = DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
+
+    // Backup old section, so that user would be able to restore it
+    QDomElement old_general = project.namedItem("general").toElement();
+    //DomUtil::elementByPath(dom, VSPART_XML_SECTION_GENERAL);
     old_general.setTagName("general_backup");
+
+    QDomElement general = dom.createElement("general");
 
     if(project.isNull()) {
       kddbg << VSPART_ERROR"Can't add project DOM node.\n";
@@ -503,16 +547,30 @@ namespace VStudio {
 
     // Write included solutions
     BOOSTVEC_FOR(vse_ci, it, m_entities) {
-      vss_p sln = static_cast<vss_p>(*it);
-      if(sln != 0) {
-        QDomElement vssln = dom.createElement(VSPART_SOLUTION);
-        vssln.setAttribute("path", KURL::relativeURL(prj_url, sln->getURL()));
-        vssln.setAttribute("name", sln->getName());
-        QString active_prj = (sln->isLoaded()) ? sln->getActivePrj()->getName() : QString("");
-        vssln.setAttribute("active", active_prj);
+      vse_p ent(*it);
+      if(ent != 0) {
+        switch(ent->getType()) {
+          case vs_solution: {
+            QString active_prj("");
+            vss_p sln = static_cast<vss_p>(ent);
 
-        if(!general.appendChild(vssln).isNull()) { kddbg << "Writing solution: " << sln->getName() << endl; }
-        else { kddbg << "Can't write solution: " << sln->getName() << endl; return; }
+            QDomElement vssln = dom.createElement(VSPART_SOLUTION);
+            vssln.setAttribute("name", sln->getName());
+            vssln.setAttribute("path", KURL::relativeURL(prj_url, sln->getURL()));
+
+            if(sln->isLoaded()) {
+              vsp_p acp = sln->getActivePrj();
+              if(acp != 0) {
+                active_prj = acp->getName();
+              }
+            }
+            vssln.setAttribute("active", active_prj);
+
+            if(!general.appendChild(vssln).isNull()) { kddbg << "Writing solution: " << sln->getName() << endl; }
+            else { kddbg << QString(VSPART_ERROR"SLN [%1] failed to write.\n").arg(sln->getName()); return; }
+            break; }
+          default: { break; }
+        }
       }
       else { kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSPart::closeProject"); return; }
     }
@@ -546,7 +604,7 @@ namespace VStudio {
               }
               else {
                 kddbg << g_err_ent_notfound.arg(VSPART_BUILDBOX).arg(cfg->toString()).arg("VSPart::closeProject");
-                return;
+                //return;
               }
             }
           }
@@ -572,20 +630,15 @@ namespace VStudio {
       return;
     }
 
-    // Rename general node and remove old general node
-    //general.setTagName("general");
-    if(!project.removeChild(old_general).isNull()) {
-      kddbg << VSPART_ERROR"Can't remove general_backup node.\n";
-    }
-    else {
-      kddbg << "Node: general_backup is removed.\n";
-    }
-
     // Write active config
-    DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVECFG, active_cfg->toString());
+    if(!m_configs.empty() && active_cfg != 0) {
+      DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVECFG, active_cfg->toString());
+    }
 
     // Write active solution
-    DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVESLN, active_sln->getName());
+    if(!m_entities.empty() && active_sln != 0) {
+      DomUtil::writeEntry(dom, VSPART_XML_SECTION_ACTIVESLN, active_sln->getName());
+    }
 
 #ifdef DEBUG
     kddbg << "Project is saved.\n";
@@ -714,9 +767,13 @@ namespace VStudio {
       }
 
       // Create UI representation
-      if(!sln->populateUI()) {
-        kddbg << VSPART_ERROR"Can't use sln. UI update failed.\n";
+      uivss_p uisln = m_explorer_widget->addSolutionNode(sln);
+      if(uisln == 0) {
+        kddbg << QString(VSPART_ERROR"Can't add UI for SLN [%1].\n").arg(sln->getName());
       }
+
+      // Set active project
+      sln->setActivePrj(sln->projs()[0]); //TODO: Maybe there is something more usable than this
 
       return true;
     }

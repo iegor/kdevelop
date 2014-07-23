@@ -976,31 +976,6 @@ namespace VStudio {
     return 0;
   }
 
-  bool VSSolution::populateUI() {
-    // Solution item
-    if(!__createUI()) { kddbg << QString(VSPART_ERROR"SLN [%1] can't creat UI.\n").arg(name); return false; }
-
-    // Insert filters, if any
-    //NOTE: Filters must be populated first, because we track UI dependencies via filters
-    //  all UI project|files are not attached to "model" representation in that matter
-    BOOSTVEC_FOR(vsf_ci, it, filters) {
-      vsf_p flt(*it);
-      if(flt != 0) {
-        if(!flt->populateUI(uisln)) { return false; }
-      }
-    }
-
-    // Create UI items for all projects that are not in filters
-    BOOSTVEC_FOR(vsp_ci, it, projects) {
-      vsp_p prj(*it);
-      if(prj != 0) {
-        if(!prj->populateUI(uisln)) { return false; }
-      }
-    }
-
-    return true;
-  }
-
   VSSolution::vsmd_p VSSolution::metaDependency(const QUuid &uuid) {
     vsmd_p md = 0;
 #ifdef USE_BOOST
@@ -1249,23 +1224,30 @@ namespace VStudio {
     return 0;
   }
 
-  vsbb_p VSSolution::getBB(const vcfg_p parent_cfg) const {
+  vsbb_p VSSolution::getBB(vcfg_cp parent_cfg) const {
     // Print all bboxes for this solution
 #ifdef DEBUG
     BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-      if((*it) != 0) {
-        kddbg << "BBOX: {" << "pcfg: " << ( (*it)->parentConfig() ? (*it)->parentConfig()->toString() : "0" )
-            << " cfg: " << (*it)->config().toString() << " }.\n";
+      vsbb_p bb(*it);
+      if(bb != 0) {
+        kddbg << QString("enum BBOX [%1] parent [%2].\n").arg(bb->config().toString()).
+            arg(bb->parentConfig() ? bb->parentConfig()->toString() : "NONE" );
       }
     }
 #endif
     if(parent_cfg != 0) {
       BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
-        if((*it) != 0) {
-          if((*it)->parentConfig() != 0) {
-            if((*it)->belongs(parent_cfg)) { return (*it); }
+        vsbb_p bb(*it);
+        if(bb != 0) {
+          //TODO: Maybe this is something caller should check, not calee ?
+          if(bb->parentConfig() != 0) {
+            if(bb->belongs(parent_cfg)) { return bb; }
           }
-          else { kddbg << VSPART_ERROR"Parent cfg is 0 in: " << (*it)->config().toString() << endl; return 0; }
+#ifdef DEBUG
+          else {
+            kddbg << QString(VSPART_WARNING"SLNBB [%1] no parent cfg\n").arg(bb->config().toString());
+          }
+#endif
         }
         else {
           kddbg << g_err_list_corrupted.arg(VSPART_BUILDBOX).arg("VSSolution::getBB");
@@ -1305,15 +1287,13 @@ namespace VStudio {
     // For now I'll leave it just cleaning the meta-deps tree
   }
 
-  bool VSSolution::__createUI() {
+  void VSSolution::setUI(uivss_p usln) {
     if(uisln == 0) {
-      uisln = part()->explorerWidget()->addSolutionNode(this);
-      if(uisln == 0) { kddbg << "failed to add sln UI node" << endl; return false; }
-#ifdef DEBUG
-      // kddbg << QString("UI for [%1]:[%2] created\n").arg(type2String(type)).arg(name);
-#endif
+      uisln = usln;
     }
-    return true;
+    else {
+      kddbg << QString(VSPART_ERROR"SLN [%1] can't setUI, uisln != 0.\n").arg(name);
+    }
   }
 
   bool VSSolution::__read_parse_shdr(QTextIStream &s, QString &nm, QString &prm) {
@@ -1448,6 +1428,15 @@ namespace VStudio {
   /* vsfl_p VSProject::getByUID(const QUuid &uid) const {
     return 0;
   } */
+
+  void VSProject::setUI(uivsp_p uip) {
+    if(uiprj == 0) {
+      uiprj = uip;
+    }
+    else {
+      kddbg << QString(VSPART_ERROR"PRJ [%1] can't setUI, uiprj != 0.\n").arg(name);
+    }
+  }
 
   bool VSProject::dumpLayout(QTextStream &s) {
     // Write project header
@@ -1695,28 +1684,6 @@ namespace VStudio {
     return addRequirement(static_cast<vsp_p>(sln->getByUID(uid)));
   }
 
-  /** \fn VSProject::populateUI
-   * \brief This will populate/update UI items tree
-   * @p pnt pointer to parent UI object (Solution|Filter)
-   */
-  bool VSProject::populateUI(uivse_p pnt) {
-    // Project item UI
-    if(!__createUI(pnt)) { kddbg << QString("PRJ [%1] can't create UI.\n").arg(name); return false; }
-
-    // Filters
-    //NOTE: We populate filters first, because in UI context they contain their children.
-    // In "model" context parent can be only project|solution
-    BOOSTVEC_FOR(vsf_ci, it, filters) {
-      if(!(*it)->populateUI(uiprj)) { return false; }
-    }
-
-    // Files
-    BOOSTVEC_FOR(vsfl_ci, it, files) {
-      if(!(*it)->__createUI(uiprj)) { return false; }
-    }
-    return true;
-  }
-
   void VSProject::setLanguage(e_VSPrjLangType lng) {
     switch(lng) {
       case vs_prjlang_c: {
@@ -1861,30 +1828,6 @@ namespace VStudio {
     intdir = idir;
   }
 
-  /** \fn VSProject::__createUI(uivse_p pnt)
-   * \brief [UTIL] Creates UI representation for all required UI tools
-   * @p pnt pointer to parent UI object (Solution|Filter)
-   * @return \a TRUE if everything went ok
-   */
-  bool VSProject::__createUI(uivse_p pnt) {
-    if((uiprj == 0) && (pnt != 0)) {
-      switch(pnt->getType()) {
-        case vs_solution:
-          case vs_filter: {
-            uiprj = part()->explorerWidget()->addProjectNode(pnt, this);
-            if(uiprj == 0) { kddbg << "failed to add prj UI node" << endl; return false; }
-#ifdef DEBUG
-          // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          //     arg(type2String(p->getType())).arg(p->text(0));
-#endif
-            return true; }
-            default: {
-              break; }
-      }
-    }
-    return false;
-  }
-
   vsbb_p VSProject::getBB(const QString &c) const {
     if(c != QString::null) {
       BOOSTVEC_FOR(vsbb_ci, it, bboxes) {
@@ -1969,36 +1912,20 @@ namespace VStudio {
 
   vse_p VSFilter::getParent() const { return parent; }
 
-  // QString VSFilter::getRelativePath() const {
-  //   return ""; //TODO: make it return path relative to entity it's in
-  // }
-
-  // bool VSFilter::setRelativePath(const QString &pth) {
-  //   //TODO: make it change parents, based upon type of it's parent (maybe, don't quite know yet)
-  //   // so that it became not necessary to store relative path in instance and this "property"
-  //   // became procedural
-  //   return false;
-  // }
-
   /** \fn VSFilter::getByUID(const QUuid &uid)
    * \brief Retrieves project|filter contained in this filter
    * @p uid uid of filter|project that is being searched for
    * @return vse_p of filter|project
    */
-  vse_p VSFilter::getByUID(const QUuid &uid) const {
+  vse_p VSFilter::getByUID(const QUuid &uuid) const {
     vse_ci it=chld.begin();
     BOOSTVEC_OFOR(it, chld) {
       vse_p ent(*it);
       if(ent != 0) {
         switch(ent->getType()) {
-          case vs_project: {
-            if(static_cast<vsp_p>(ent)->getUID() == uid) { break; }
-            break; }
-          case vs_filter: {
-            if(static_cast<vsf_p>(ent)->getUID() == uid) { break; }
-            break; }
-          default: {
-            break; }
+          case vs_project: { if(static_cast<vsp_p>(ent)->getUID() == uuid) { break; } break; }
+          case vs_filter: { if(static_cast<vsf_p>(ent)->getUID() == uuid) { break; } break; }
+          default: { break; }
         }
       } else {
         kddbg << g_err_list_corrupted.arg("VSEntity").arg("VSFilter::getByUID");
@@ -2010,8 +1937,17 @@ namespace VStudio {
 #else
 #error "VStudio: Boost support is not enabled" //TODO: Implement this
 #endif
-    else { kddbg << "Child " << guid2String(uid) << " not found.\n"; }
+    else { kddbg << "Child " << guid2String(uuid) << " not found.\n"; }
     return 0;
+  }
+
+  void VSFilter::setUI(uivsf_p uif) {
+    if(uiflt == 0) {
+      uiflt = uif;
+    }
+    else {
+      kddbg << QString(VSPART_ERROR"FLT [%1] can't setUI, uiflt != 0.\n").arg(name);
+    }
   }
 
   bool VSFilter::dumpLayout(QTextStream &s) {
@@ -2045,63 +1981,6 @@ namespace VStudio {
         default: {
           kddbg << g_err_unsupportedtyp.arg(parent->getType()).arg("VSFilter::getParentUID");
           break; }
-      }
-    }
-    return false;
-  }
-
-  bool VSFilter::populateUI(uivse_p pnt) {
-    if(pnt != 0) {
-      // Filter UI item
-      if(!__createUI(pnt)) { kddbg << QString(VSPART_ERROR"FILTER [%1] can't create UI.\n").arg(name); return false; }
-
-      // Contents of filter
-      BOOSTVEC_FOR(vse_ci, it, chld) {
-        vse_p ent(*it);
-        if(ent != 0) {
-          switch(ent->getType()) {
-            case vs_project: {
-              if(!static_cast<vsp_p>(ent)->populateUI(static_cast<uivse_p>(uiflt))) { return false; }
-              break; }
-            case vs_filter: {
-              if(!static_cast<vsf_p>(ent)->populateUI(static_cast<uivse_p>(uiflt))) { return false; }
-              break; }
-            case vs_file: {
-              if(!static_cast<vsfl_p>(ent)->__createUI(static_cast<uivse_p>(uiflt))) { return false; }
-              break; }
-            default: {
-              break; }
-          }
-        }
-        else {
-          kddbg << g_err_list_corrupted.arg("vs_entity").arg("VSFilter::populateUI");
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  /** \fn VSFilter::__createUI(uivse_p pnt)
-   * \brief [UTIL] Will create UI ites for all required UI tools
-   * @p pnt parent item in UI context of VSExplorer widget
-   * NOTE: Caller must ensure that @p pnt is not 0
-   * @return \a TRUE if everything went ok
-   */
-  bool VSFilter::__createUI(uivse_p pnt) {
-    if(uiflt == 0) {
-      switch(pnt->getType()) {
-        case vs_solution:
-        case vs_project:
-        case vs_filter: {
-          uiflt = part()->explorerWidget()->addFilterNode(pnt, this);
-          if(uiflt == 0) { kddbg << "failed to add filter UI node" << endl; return false; }
-#ifdef DEBUG
-          // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          //     arg(type2String(pnt->getType())).arg(pnt->text(0));
-#endif
-          return true; }
-        default: { break; }
       }
     }
     return false;
@@ -2257,28 +2136,13 @@ namespace VStudio {
     return 0;
   }
 
-  /** \fn VSFile::__createUI(uivse_p pnt)
-   * \brief [UTIL] Will create UI items for all UI required tools
-   * @p pnt pointer to parent UI item
-   * @return \b TRUE if everything went ok
-   */
-  bool VSFile::__createUI(uivse_p pnt) {
-    if((uifl == 0) && (pnt != 0)) {
-      switch(pnt->getType()) {
-        case vs_solution:
-        case vs_project:
-        case vs_filter: {
-          uifl = part()->explorerWidget()->addFileNode(pnt, this);
-          if(uifl==0) { kddbg << "failed to add file UI node" << endl; return false; }
-#ifdef DEBUG
-          // kddbg << QString("UI for [%1]:[%2] created in [%3][%4]\n").arg(type2String(type)).arg(name).
-          //    arg(type2String(pnt->getType())).arg(pnt->text(0));
-#endif
-          return true; }
-        default: { break; }
-      }
+  void VSFile::setUI(uivsfl_p ufl) {
+    if(uifl == 0) {
+      uifl = ufl;
     }
-    return false;
+    else {
+      kddbg << QString(VSPART_ERROR"FL [%1] can't setUI, uifl != 0.\n").arg(name);
+    }
   }
   //END // Basic entity types
 

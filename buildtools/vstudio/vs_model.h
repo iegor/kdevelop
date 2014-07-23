@@ -243,14 +243,14 @@ namespace VStudio {
     // VS Solution methods:
       vsp_p getByUID(const QUuid &uid) const;
       vsinline uivss_p getUI() const vsinline_attrib { return uisln; }
+      void setUI(uivss_p uisln);
       vsf_p getFltByUID(const QUuid &uid) const;
-      bool populateUI();
       vsmd_p metaDependency(const QUuid &uid);
       bool updateDependencies();
       bool createCfg(const vcfg_p parent_config, const vcfgcr_r pc);
       bool selectCfg(const vcfg_p parent_config);
       vsbb_p getBB(const QString &config) const;
-      vsbb_p getBB(const vcfg_p parent_config) const;
+      vsbb_p getBB(vcfg_cp parent_config) const;
       vcfg_cp currentCfg() const;
 
       void setActive(bool active=true);
@@ -269,7 +269,6 @@ namespace VStudio {
       vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
 
     private:
-      bool __createUI();
       bool __read_parse_shdr(QTextIStream &stream, QString &name, QString &param);
       bool __read_parse_uid(QTextIStream &stream, QChar &control_chr, QUuid &uid);
 
@@ -312,9 +311,9 @@ namespace VStudio {
 
     // VS Project methods:
       vsinline uivsp_p getUI() const vsinline_attrib { return uiprj; }
+      void setUI(uivsp_p uiprj);
 
       bool dumpLayout(QTextStream &stream);
-      //bool dumpConfigLayout(QTextStream &stream);
 
       vsp_p getReqByUID(const QUuid &uid) const;
       vsp_p getDepByUID(const QUuid &uid) const;
@@ -345,6 +344,16 @@ namespace VStudio {
        * @return const ref to vector with Build-Boxes
        */
       vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
+      /** \fn VSProject::filts()
+       * \brief Get constant reference to filters list of this project
+       * @return constant reference to filters list of this project
+       */
+      vsinline pv_vsf_cr filts() const vsinline_attrib { return filters; }
+      /** \fn VSProject::fls()
+       * \brief Get constant reference to files list of this project
+       * @return constant reference to list of files in this project
+       */
+      vsinline pv_vsfl_cr fls() const vsinline_attrib { return files; }
 
       bool build();
 
@@ -359,9 +368,6 @@ namespace VStudio {
       void setOutDir(const KURL &outdir);
       vsinline const KURL& getIntDir() const vsinline_attrib { return intdir; }
       void setIntDir(const KURL &intdir);
-
-    protected:
-      virtual bool __createUI(uivse_p parent_ui);
 
     protected:
       e_VSPrjLangType lang; // Project choosen language
@@ -393,14 +399,20 @@ namespace VStudio {
 
     // VS Filter methods:
       vse_p getByUID(const QUuid &uid) const;
+
       vsinline uivsf_p getUI() const vsinline_attrib { return uiflt; }
+      void setUI(uivsf_p uiflt);
+
       bool dumpLayout(QTextStream &layout);
+
       e_VSEntityType getParentType() const { return parent->getType(); }
       bool getParentUID(QUuid* uid) const;
-      bool populateUI(uivse_p parent_ui);
 
-    private:
-      bool __createUI(uivse_p parent_ui);
+      /** \fn VSFilter::children()
+       * \brief Get constant reference to children list of this filter
+       * @return constant reference to children list of this filter
+       */
+      vsinline pv_vse_cr children() const vsinline_attrib { return chld; }
 
     private:
       vse_p parent; // Parent solution|filter|project
@@ -439,6 +451,7 @@ namespace VStudio {
     // VS File methods:
       vsp_p getByUID(const QUuid &uid) const;
       vsinline uivsfl_p getUI() const vsinline_attrib { return uifl; }
+      void setUI(uivsfl_p uifl);
       bool read(QDomElement dom, bool synchronize=true);
 
       vsinline void setDom(const QDomElement& el) vsinline_attrib { dom = el; }
@@ -449,9 +462,6 @@ namespace VStudio {
        * @return const ref to vector with Build-Boxes
        */
       vsinline pv_vsbb_cr bbs() const vsinline_attrib { return bboxes; }
-
-    // private:
-      bool __createUI(uivse_p parent_ui);
 
     private:
       vsp_p project; // Current parent project
@@ -697,7 +707,7 @@ namespace VStudio {
       virtual ~VSConfig();
 
     // VS Entity interface methods:
-      virtual void setParent(vse_p parent) {}
+      virtual void setParent(vse_p /*parent*/) {}
       virtual vse_p getParent() const { return 0; }
 
     // VS Config interface methods:
