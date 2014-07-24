@@ -1,4 +1,11 @@
-SUBDIRS = kapp kpartapp kpartplugin kcmodule kicker kioslave kdevpart kdevpart2 chello cpphello kscreensaver kofficepart chello_gba dcopservice konqnavpanel qmakesimple qmakeapp qt4makeapp khello khello2 kateplugin kateplugin2 qtopiaapp kdedcop wxhello cppsdlhello kconfig35 kdevlang noatunvisual noatunui kmod kfileplugin clanlib opieapp opieapplet opieinput opiemenu opienet opietoday kxt gtk2mmapp cppcurseshello win32hello win32gui cmakesimple cmakesimplec cmakelibcpp cmakelibc kscons_kxt kscons_kmdi qt4hello qmakeempty automakeempty makefileempty qtopia4app kde4app
+SUBDIRS = automakeempty c_vs9hello chello chello_gba clanlib cmakelibc \
+	cmakelibcpp cmakesimple cmakesimplec cppcurseshello cpphello cppsdlhello \
+	dcopservice gtk2mmapp kapp kateplugin kateplugin2 kcmodule kconfig35 kde4app \
+	kdedcop kdevlang kdevpart kdevpart2 kfileplugin khello khello2 kicker kioslave \
+	kmod kofficepart konqnavpanel kpartapp kpartplugin kscons_kmdi kscons_kxt \
+	kscreensaver kxt makefileempty noatunui noatunvisual opieapp opieapplet opieinput \
+	opiemenu opienet opietoday qmakeapp qmakeempty qmakesimple qt4hello qt4makeapp \
+	qtopia4app qtopiaapp win32gui win32hello wxhello
 
 profilescdir = $(kde_datadir)/kdevelop/profiles/IDE/CompiledLanguageIDE/CandCppIDE/CIDE
 profilesc_DATA = c.appwizard
