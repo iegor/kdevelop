@@ -21,6 +21,7 @@
       <includestyle>3</includestyle>
       <designerintegration>EmbeddedKDevDesigner</designerintegration>
     </qt>
+    <references/>
   </kdevcppsupport>
 
  <kdevautoproject>

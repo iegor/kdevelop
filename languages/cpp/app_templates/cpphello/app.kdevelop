@@ -38,6 +38,9 @@
       </debug>
     </configurations>
  </kdevautoproject>
+ <kdevcppsupport>
+   <references/>
+ </kdevcppsupport>
  <kdevdoctreeview>
     <ignoretocs>
       <toc>ada</toc>

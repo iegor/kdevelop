@@ -138,6 +138,7 @@
       <codeCompletionDelay>250</codeCompletionDelay>
       <argumentsHintDelay>400</argumentsHintDelay>
     </codecompletion>
+    <references/>
   </kdevcppsupport>
   <kdevdocumentation>
     <projectdoc>
