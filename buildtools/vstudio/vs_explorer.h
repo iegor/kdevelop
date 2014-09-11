@@ -350,6 +350,18 @@ namespace VStudio {
     virtual void languageChange();
   };
 
+  /** \class VStudio::VSKPrjNode
+   * \brief The top (root) node for explorer tree, represents KDevelop project
+   */
+  class VSKPrjNode : public VSExplorerEntity {
+    public:
+      VSKPrjNode(VSPart *part, QWidget parent=0, const char *name=0, WFlags fl=0);
+      virtual ~VSKPrjNode();
+
+    private:
+      VSPart *kprj;
+  };
+
   /**
   * Solution node for vs widget
   */
