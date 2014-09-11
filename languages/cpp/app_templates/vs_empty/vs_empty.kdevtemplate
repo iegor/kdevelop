@@ -1,0 +1,54 @@
+# KDE Config File
+[General]
+Name=Simple VS9 Hello world
+Icon=c_vs9hello.png
+Category=C
+Comment=Generates a simple Hello world program in C
+FileTemplates=h,CStyle,c,CStyle
+ShowFilesAfterGeneration=%{dest}/src/%{APPNAMELC}/hello.c
+Archive=c_vs9hello.tar.gz
+
+[INCADMIN]
+Type=include
+File=%{kdevelop}/template-common/incadmin.kdevtemplate
+
+[GNU]
+Type=include
+File=%{kdevelop}/template-common/gnu.kdevtemplate
+
+[FILE1]
+Type=install
+Source=%{src}/app.kdevelop
+Dest=%{dest}/%{APPNAMELC}.kdevelop
+
+[MkDir1]
+Type=mkdir
+Dir=%{dest}/src
+
+[MkDir2]
+Type=mkdir
+Dir=%{dest}/sln
+
+[MkDir3]
+Type=mkdir
+Dir=%{dest}/src/%{APPNAMELC}
+
+[FILE2]
+Type=install
+Source=%{src}/app.sln
+Dest=%{dest}/sln/%{APPNAMELC}.sln
+
+[FILE3]
+Type=install
+Source=%{src}/app.vcproj
+Dest=%{dest}/src/%{APPNAMELC}/app.vcproj
+
+[FILE4]
+Type=install
+Source=%{src}/hello.c
+Dest=%{dest}/src/%{APPNAMELC}/hello.c
+
+[MGS]
+Type=message
+Comment=A simple C project was created in %{dest}.
+Archive=chello.tar.gz
