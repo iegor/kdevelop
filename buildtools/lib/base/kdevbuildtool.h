@@ -1,6 +1,7 @@
 /* This file is part of the KDE project
    Copyright (C) 1999-2001 Bernd Gehrmann <bernd@kdevelop.org>
    Copyright (C) 2004 Alexander Dymo <adymo@kdevelop.org>
+   Copyright (C) 2014 Iegor Danylchenko <rmtdev@gmail.com>
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public
@@ -20,22 +21,23 @@
 #ifndef KDEVBUILDTOOL_H
 #define KDEVBUILDTOOL_H
 
+/* KDevelop */
 #include <kdevproject.h>
 
 class KDevMakeFrontend;
 class KDevAppFrontend;
+class KDevCompilerFrontend;
 
 /**Base class for KDevelop build tool support plugins.*/
 class KDevBuildTool: public KDevProject
 {
 public:
     KDevBuildTool(const KDevPluginInfo* info, QObject* parent, const char* name);
+    virtual ~KDevBuildTool();
 
-    /**@return The make frontend.*/
-    KDevMakeFrontend *makeFrontend();
-    /**@return The application frontend.*/
-    KDevAppFrontend *appFrontend();
-
+    KDevMakeFrontend* makeFrontend(); /// @return The make frontend.
+    KDevAppFrontend* appFrontend(); /// @return The application frontend.
+    KDevCompilerFrontend* compilerFrontend(); /// @return The compiler front-end (a.k.a. compiler stack)
 };
 
-#endif
+#endif /* KDEVBUILDTOOL_H */

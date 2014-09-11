@@ -20,19 +20,26 @@
 
 #include <kdevmakefrontend.h>
 #include <kdevappfrontend.h>
+#include <kdevcompilerfrontend.h>
 
 KDevBuildTool::KDevBuildTool(const KDevPluginInfo* info, QObject* parent, const char* name)
     :KDevProject(info, parent, name)
 {
 }
 
-KDevMakeFrontend * KDevBuildTool::makeFrontend()
+KDevBuildTool::~KDevBuildTool() {
+}
+
+KDevMakeFrontend* KDevBuildTool::makeFrontend()
 {
     return extension<KDevMakeFrontend>("KDevelop/MakeFrontend");
 }
 
-KDevAppFrontend * KDevBuildTool::appFrontend()
+KDevAppFrontend* KDevBuildTool::appFrontend()
 {
     return extension<KDevAppFrontend>("KDevelop/AppFrontend");
 }
 
+KDevCompilerFrontend* KDevBuildTool::compilerFrontend() {
+  return extension<KDevCompilerFrontend>("KDevelop/CompilerFrontend");
+}
