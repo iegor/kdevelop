@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=ServiceType
+X-KDE-ServiceType=KDevelop/CompilerFrontend
+X-KDE-Derived=KDevelop/Plugin
+Name=Make Frontend Interface
+
+# versioning - prevent DLL hell
+[PropertyDef::X-KDevelop-Version]
+Type=int
+
