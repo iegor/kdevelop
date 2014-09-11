@@ -685,6 +685,8 @@ void PartController::integratePart(KParts::Part *part, const KURL &url,
 
   emit loadedFile( ro_part->url() );
 
+
+  //TODO: Make add this SLOT only for text files processed by kate, not icons, etc
   connect( part, SIGNAL(modifiedOnDisc(Kate::Document*, bool, unsigned char)), this, SLOT(slotDocumentDirty(Kate::Document*, bool, unsigned char)) );
 
   // let's get notified when a document has been changed
