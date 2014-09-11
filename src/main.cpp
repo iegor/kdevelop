@@ -120,34 +120,33 @@ int main(int argc, char *argv[])
   }
 
   bool openProject = false;
-  if( args->count() == 0 ){
-      ProjectManager::getInstance()->loadDefaultProject();
+  if( args->count() == 0 ) {
+    ProjectManager::getInstance()->loadDefaultProject();
+    openProject = true;
+  }
+  else if( args->count() > 0 ) {
+    KURL url = args->url( 0 );
+    QString ext = QFileInfo( url.fileName() ).extension();
+    if( ext == "kdevelop" ){
+      ProjectManager::getInstance()->loadProject( url );
       openProject = true;
-  } else if( args->count() > 0 ){
-      KURL url = args->url( 0 );
-      QString ext = QFileInfo( url.fileName() ).extension();
-      if( ext == "kdevelop" ){
-	  ProjectManager::getInstance()->loadProject( url );
-	  openProject = true;
-      }
+    }
   }
 
   if( !openProject ){
-      for( int a=0; a<args->count(); ++a ){
-	  PartController::getInstance()->editDocument( KURL(args->url(a)) );
-      }
+    for( int a=0; a<args->count(); ++a ) {
+      PartController::getInstance()->editDocument( KURL(args->url(a)) );
+    }
   }
 
   kapp->dcopClient()->registerAs("kdevelop");
-
   int ret = app.exec();
 
-  ProjectManager::getInstance()->closeProject( true ); // exiting
+  // exiting...
+  ProjectManager::getInstance()->closeProject( true );
   delete ProjectManager::getInstance();
-
   delete PluginController::getInstance();
-  if (TopLevel::mainWindowValid())
-      delete TopLevel::getInstance();
+  if (TopLevel::mainWindowValid()) { delete TopLevel::getInstance(); }
 
   return ret;
 }
