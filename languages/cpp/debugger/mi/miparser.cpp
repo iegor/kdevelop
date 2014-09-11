@@ -46,7 +46,7 @@ MIParser::~MIParser()
 {
 }
 
-Record *MIParser::parse(FileSymbol *file)
+Record * MIParser::parse(FileSymbol *file)
 {
     lex = 0;
 
@@ -137,7 +137,7 @@ bool MIParser::parseResultRecord(Record *&record)
     }
 
     lex->nextToken();
-    
+
     if (!parseCSV(*res))
         return false;
 
@@ -195,7 +195,7 @@ bool MIParser::parseValue(Value *&value)
 bool MIParser::parseTuple(Value *&value)
 {
     TupleValue* val;
-    
+
     if (!parseCSV(&val, '{', '}'))
         return false;
 
@@ -252,7 +252,7 @@ bool MIParser::parseCSV(TupleValue** value,
 
     if (!parseCSV(*tuple, start, end))
         return false;
- 
+
     *value = tuple.get();
     tuple.release();
     return true;
@@ -274,7 +274,7 @@ bool MIParser::parseCSV(GDBMI::TupleValue& value,
             return false;
 
         value.results.append(result);
-        value.results_by_name.insert(result->variable, result);      
+        value.results_by_name.insert(result->variable, result);
 
         if (lex->lookAhead() == ',')
             lex->nextToken();
@@ -288,7 +288,7 @@ bool MIParser::parseCSV(GDBMI::TupleValue& value,
     return true;
 }
 
-                        
+
 QString MIParser::parseStringLiteral()
 {
     QCString message = lex->currentTokenText();
@@ -335,7 +335,7 @@ QString MIParser::parseStringLiteral()
         else
         {
             message2[target_index++] = message[i];
-        }        
+        }
     }
     message2.setLength(target_index);
 
