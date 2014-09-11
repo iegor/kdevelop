@@ -39,7 +39,7 @@ Data should be a const static object. This way it complies with the requirements
 for data objecs of KDevGenericFactory constructor.
 
 <b>Important:</b><br>
-There is no need to create @ref KAboutData objects. It is more useful to create 
+There is no need to create @ref KAboutData objects. It is more useful to create
 a static const @ref KDevPluginInfo object which can be used also in the constructor
 of a plugin.
 
@@ -73,8 +73,8 @@ public:
     - license type number.
     .
     data object should live as long as factory lives.*/
-    KDevGenericFactory(KAboutData *data)
-        :KGenericFactory<T, ParentType>(data->appName()), aboutData(data)
+    KDevGenericFactory(KAboutData *about_data)
+      :KGenericFactory<T, ParentType>(about_data->appName()), aboutData(about_data)
     {
     }
 

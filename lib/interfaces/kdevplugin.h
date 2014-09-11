@@ -92,11 +92,13 @@ Plugin scope can be either:
 - Global
 - Project
 .
-Global plugins are plugins which require only shell to be loaded and do not operate on @ref KDevProject interface and/or do not use project wide information.\n
-Core plugins are global plugins which offer some important "core" functionality and thus
-are not selectable by user in plugin configuration pages.\n
+Global plugins are plugins which require only shell to be loaded and do not operate on @ref KDevProject interface and/or
+ do not use project wide information.\n
+Core plugins are global plugins which offer some important "core" functionality and thus are not selectable by user in
+ plugin configuration pages.\n
 Project plugins require a project to be loaded and are usually loaded/unloaded among with the project.
-If your plugin use @ref KDevProject interface and/or operate on project-related information then this is the project plugin.
+ If your plugin use @ref KDevProject interface and/or operate on project-related information then this is the project
+ plugin.
 
 @sa KDevGenericFactory class documentation for an information about plugin instantiation
 and writing factories for plugins.

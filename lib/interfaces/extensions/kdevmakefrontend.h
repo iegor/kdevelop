@@ -26,7 +26,10 @@
 #ifndef KDEVMAKEFRONTEND_H
 #define KDEVMAKEFRONTEND_H
 
+/* Qt */
 #include <qstringlist.h>
+
+/* KDevelop */
 #include <kdevplugin.h>
 
 /**
@@ -103,4 +106,4 @@ signals:
     void commandFailed(const QString &command);
 };
 
-#endif
+#endif /* KDEVMAKEFRONTEND_H */
