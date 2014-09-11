@@ -37,8 +37,10 @@
 #include <kdevcore.h>
 #include <kdevmakefrontend.h>
 #include <kdevappfrontend.h>
+#include <kdevcompilerfrontend.h>
 #include <kdevmainwindow.h>
 #include <kdevpartcontroller.h>
+#include <kdevplugincontroller.h>
 #include <configwidgetproxy.h>
 #include <kdevplugininfo.h>
 #include <urlutil.h>
@@ -267,6 +269,11 @@ namespace VStudio {
 
     // Set part ptr in the model for reference
     VSEntity::setPart(this);
+
+    //test
+    KDevPlugin *frnt = pluginController()->loadPlugin("KDevelop/CompilerFrontend", "");
+    float a = 0.5f;
+    float b = a;
   }
 
   VSPart::~VSPart() {
