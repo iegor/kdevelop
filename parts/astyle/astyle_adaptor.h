@@ -1,4 +1,3 @@
-//kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
 #ifndef __ASTYLE_ADAPTOR_H__
 #define __ASTYLE_ADAPTOR_H__
 

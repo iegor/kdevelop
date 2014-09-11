@@ -1,5 +1,4 @@
-//kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/*
  *   astyle.h
  *
  *   Copyright (C) 2014 by Iegor Danylchenko <rmtdev@gmail.com>
@@ -24,7 +23,6 @@
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with Artistic Style.  If not, see <http://www.gnu.org/licenses/>.
  *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
 
 #ifndef ASTYLE_H

@@ -1,7 +1,4 @@
-/*
-*kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
-*
-*  C/C++ Implementation: vs_dlg_addexisting_sln
+/*  C/C++ Implementation: vs_dlg_addexisting_sln
 *
 * Description: Contains declarations for classes and functions required to support dialog boxes:
 *  - add existing solution

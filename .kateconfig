@@ -20,6 +20,6 @@ kate: remove-trailing-space on;
 kate: keep-indent-profile off;
 kate: word-wrap-column 120;
 kate: smart-home on;
-kate: selection-color #B1B8D5
 kate: word-wrap-marker-color #FF0000
 kate: icon-bar-color #81A8C3
+kate: selection-color #B8BDBF

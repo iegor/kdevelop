@@ -1,13 +1,8 @@
-/*
-*kate: space-indent on; tab-width 2; indent-width 2; indent-mode cstyle; encoding UTF-8;
-*
-*  C/C++ Implementation: vs_common
+/* C/C++ Implementation: vs_common
 *
 * Description:
 *
-*
 * Author: iegor <rmtdev@gmail.com>, (C) 2014
-*
 * Copyright: See COPYING file that comes with this distribution
 */
 #ifndef __KDEVPART_VSTUDIOPART_COMMON_H__
