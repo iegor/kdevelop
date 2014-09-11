@@ -1,6 +1,3 @@
-#include "astyle_adaptor.h"
-#include "astyle_widget.h"
-
 #include <string>
 
 /* Qt */
@@ -13,6 +10,9 @@
 #include <kdebug.h>
 #include <kapplication.h>
 #include <kconfig.h>
+
+#include "astyle_adaptor.h"
+#include "astyle_widget.h"
 
 /**
   Converts style string from kdevelop config to astyle enum value
@@ -130,8 +130,11 @@ std::string ASStringIterator::nextLine(bool /*deleted*/) {
 }
 
 std::string ASStringIterator::peekNextLine() {
-  std::string str = (*peek).utf8().data();
-  ++peek;
+  std::string str;
+  if(peek != contents.end()) {
+    str = (*peek).utf8().data();
+    ++peek;
+  }
   return str;
 }
 
