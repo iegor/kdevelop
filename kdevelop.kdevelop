@@ -107,7 +107,7 @@
   </kdevfilecreate>
   <kdevcppsupport>
     <qt>
-      <used>true</used>
+      <used>false</used>
       <version>3</version>
       <includestyle>3</includestyle>
       <root>/usr/qt/3</root>
@@ -132,7 +132,7 @@
       <processPrimaryTypes>true</processPrimaryTypes>
       <processFunctionArguments>true</processFunctionArguments>
       <preProcessAllHeaders>true</preProcessAllHeaders>
-      <parseMissingHeadersExperimental>true</parseMissingHeadersExperimental>
+      <parseMissingHeadersExperimental>false</parseMissingHeadersExperimental>
       <resolveIncludePathsUsingMakeExperimental>false</resolveIncludePathsUsingMakeExperimental>
       <alwaysParseInBackground>true</alwaysParseInBackground>
       <usePermanentCaching>true</usePermanentCaching>
@@ -153,10 +153,10 @@
       <orientation>Vertical</orientation>
     </splitheadersource>
     <references>
-      <pcs>kde_includes</pcs>
+      <pcs>automatic_%2Fhome%2Frainman%2Fprojects%2Fkde%2Fkdebase</pcs>
+      <pcs>automatic_%2Fhome%2Frainman%2Fprojects%2Fkde%2Fkdelibs</pcs>
       <pcs>boost</pcs>
       <pcs>qt3trunk</pcs>
-      <pcs>automatic_%2Fhome%2Frainman%2Fprojects%2Fkde%2Fkdevelop</pcs>
     </references>
   </kdevcppsupport>
   <kdevautoproject>
@@ -166,8 +166,8 @@
         <envvar value="1" name="WANT_AUTOMAKE_1_11" />
       </envvars>
       <abortonerror>true</abortonerror>
-      <runmultiplejobs>false</runmultiplejobs>
-      <numberofjobs>1</numberofjobs>
+      <runmultiplejobs>true</runmultiplejobs>
+      <numberofjobs>4</numberofjobs>
       <dontact>false</dontact>
       <makebin>gmake</makebin>
       <prio>0</prio>
@@ -203,8 +203,8 @@
         <ccompilerbinary/>
         <cxxcompilerbinary/>
         <f77compilerbinary/>
-        <cflags>-O0 -Wall -ggdb3 -ansi -pipe -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value</cflags>
-        <cxxflags>-O0 -Wall -ggdb3 -ansi -pipe -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value</cxxflags>
+        <cflags>-O0 -Wall -ggdb3 -ansi -pipe -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value -Wshadow</cflags>
+        <cxxflags>-O0 -Wall -ggdb3 -ansi -pipe -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value -Wshadow</cxxflags>
         <f77flags/>
       </debug_gcc_x86_64>
       <debug_gcc_i686>
@@ -224,6 +224,23 @@
         <cxxflags>-O0 -ggdb3 -Wall</cxxflags>
         <f77flags/>
       </debug_gcc_i686>
+      <optimized_gcc_x86_64>
+        <envvars/>
+        <configargs>--build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --localstatedir=/var/lib --with-kdelibsdoxy-dir=/usr/kde/git/share/doc/HTML/en/kdelibs-apidocs --enable-boost --enable-vstudio --disable-java --enable-python --disable-ruby --disable-ada --enable-fortran --disable-pascal --enable-perl --disable-php --disable-sql --disable-antproject --disable-cvs --disable-clearcase --disable-perforce --disable-subversion --with-db-includedir=/usr/include/db4.8 --with-db-lib=db-4.8 --with-qt-dir=/usr/qt/3 --enable-mt --with-qt-libraries=/usr/qt/3/lib --enable-debug=no --without-arts --prefix=/usr/kde/git --mandir=/usr/kde/git/share/man --infodir=/usr/kde/git/share/info --datadir=/usr/kde/git/share --sysconfdir=/usr/kde/git/etc</configargs>
+        <builddir>/var/tmp/portage/opt_kdevelop_x86_64_linux</builddir>
+        <topsourcedir/>
+        <cppflags>-DNDEBUG</cppflags>
+        <ldflags/>
+        <ccompiler>kdevgccoptions</ccompiler>
+        <cxxcompiler>kdevgppoptions</cxxcompiler>
+        <f77compiler>kdevpgf77options</f77compiler>
+        <ccompilerbinary/>
+        <cxxcompilerbinary/>
+        <f77compilerbinary/>
+        <cflags>-O2 -Wall -ansi -pipe -fomit-frame-pointer -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value</cflags>
+        <cxxflags>-O2 -Wall -ansi -pipe -fomit-frame-pointer -Werror=address -Werror=conversion-null -Werror=return-type -Werror=unused-value</cxxflags>
+        <f77flags/>
+      </optimized_gcc_x86_64>
     </configurations>
     <general>
       <useconfiguration>debug_gcc_x86_64</useconfiguration>
@@ -233,12 +250,12 @@
       <mainprogram>/usr/kde/git/bin/kdevelop</mainprogram>
       <programargs/>
       <globaldebugarguments/>
-      <globalcwd>/home/rainman/projects/kde/kdevelop/debug_gcc_x86_64</globalcwd>
+      <globalcwd>/usr/kde/git/bin/</globalcwd>
       <useglobalprogram>true</useglobalprogram>
-      <terminal>false</terminal>
+      <terminal>true</terminal>
       <autocompile>false</autocompile>
-      <autoinstall>false</autoinstall>
-      <autokdesu>false</autokdesu>
+      <autoinstall>true</autoinstall>
+      <autokdesu>true</autokdesu>
       <envvars/>
     </run>
   </kdevautoproject>
@@ -259,8 +276,8 @@
     <customArguments/>
     <customTagfilePath>/home/rainman/projects/kde/kdevelop/tags</customTagfilePath>
     <activeTagsFiles>
-      <file>/home/rainman/projects/boost.ctags</file>
       <file>/home/rainman/projects/qt/dev.ctags</file>
+      <file>/home/rainman/projects/boost.ctags</file>
     </activeTagsFiles>
   </ctagspart>
 </kdevelop>
