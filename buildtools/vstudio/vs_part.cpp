@@ -72,7 +72,7 @@ namespace VStudio {
     QWhatsThis::add(m_explorer_widget, i18n("<b>VS explorer</b><p> The tree looks like a standard VS project explorer,"
                                             "yet it has some additiona \"power\" features."));
 
-    mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"), i18n("VS Explorer, manages vs solution files"));
+    mainWindow()->embedSelectView(m_explorer_widget, i18n("VS Explorer"), i18n("VS Explorer, manages vs sln files"));
 
     // Variables view widget
     mVViewWidget = new VSViewVars(this, 0, "variables_view");
