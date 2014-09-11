@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Service
+Exec=blubb
+Comment=Compilers collection manager
+Name=compilerstack
+GenericName=compilerstack
+Icon=kdevelop
+ServiceTypes=KDevelop/Plugin
+X-KDE-Library=libcompilerstack
+X-KDevelop-Version=5
+X-KDevelop-Scope=Project
