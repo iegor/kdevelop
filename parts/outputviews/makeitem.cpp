@@ -38,7 +38,7 @@ QString MakeItem::color( bool bright_bg )
 	case Error:
 		return bright_bg ? "maroon" : "red";
 	case Warning:
-		return bright_bg ? "#666" : "#999";
+		return bright_bg ? "#228" : "#22A";
 	case Diagnostic:
 		return bright_bg ? "black" : "white";
 	default:
@@ -135,7 +135,7 @@ ExitStatusItem::ExitStatusItem( bool normalExit, int exitStatus )
 
 QString ExitStatusItem::text( EOutputLevel )
 {
-	return m_text;	
+	return m_text;
 }
 
 bool DirectoryItem::m_showDirectoryMessages = true;

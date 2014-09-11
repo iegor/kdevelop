@@ -49,7 +49,7 @@ MakeViewPart::MakeViewPart(QObject *parent, const char *name, const QStringList 
                                    "This will automatically open the source file and set the "
                                    "cursor to the line that caused the compiler error/warning."));
 
-    mainWindow()->embedOutputView(m_widget, i18n("Messages"), i18n("Compiler output messages"));
+    mainWindow()->embedOutputView(m_widget, i18n("Make: messages"), i18n("Compiler output messages"));
 
     KAction *action;
     action = new KAction( i18n("&Next Error"), Key_F4, m_widget, SLOT(nextError()),

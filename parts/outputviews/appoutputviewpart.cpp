@@ -51,8 +51,7 @@ AppOutputViewPart::AppOutputViewPart(QObject *parent, const char *name, const QS
     mainWindow()->embedOutputView(m_widget, i18n("Application"), i18n("Output of the executed user program"));
     hideView();
 
-    connect( core(), SIGNAL(stopButtonClicked(KDevPlugin*)),
-             this, SLOT(slotStopButtonClicked(KDevPlugin*)) );
+    connect( core(), SIGNAL(stopButtonClicked(KDevPlugin*)), this, SLOT(slotStopButtonClicked(KDevPlugin*)) );
     connect(m_widget, SIGNAL(processExited(KProcess*)), this, SLOT(slotProcessExited()));
     connect(m_widget, SIGNAL(processExited(KProcess*)), SIGNAL(processExited()));
 }
