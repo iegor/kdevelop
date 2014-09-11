@@ -58,11 +58,11 @@ namespace VStudio {
 
     public:
       typedef map<QString, QString> variables_map_t;
-  
+
     public:
       VSPart(QObject *parent, const char *name, const QStringList &args);
       virtual ~VSPart();
-  
+
       //===========================================================================
       // KDevProject methods
       //===========================================================================
@@ -83,15 +83,15 @@ namespace VStudio {
       virtual void addFiles(const QStringList& fileList);
       virtual void removeFile(const QString &fileName);
       virtual void removeFiles(const QStringList& fileList);
-  
+
       virtual Options options() const;
-  
+
       //===========================================================================
       // Implementation of the KDevPlugin interface.
       //===========================================================================
       virtual void restorePartialProjectSession(const QDomElement* el);
       virtual void savePartialProjectSession(QDomElement* el);
-  
+
       //===========================================================================
       // Own methods (e.g. vs projects and solutions loading)
       //===========================================================================
@@ -112,20 +112,20 @@ namespace VStudio {
       vsp_p getActivePrj() const;
       bool saveSln(vss_p sln);
       bool saveSlnAs(vss_p sln, const QString &new_path);
-  
+
       // Configurations works
       bool createCfg(const QString &name, e_VSPlatform platform, bool fix_sln=false, bool fix_prj=false);
       bool selectCfg(const vcfgcr_r pc);
       bool selectCfg(const vcfg_p config);
       bool createSlnCfg(vss_p sln);
       vcfg_p getCfg(const QString& c) const;
-  
+
       pv_vse_cr solutions() const;
       vsinline const variables_map_t& vars() const vsinline_attrib { return m_variables; }
       void setVar(const QString &variable, const QString &value);
-  
+
       QString expandPath(const QString &path, vse_p entity);
-  
+
     private slots:
       void slotAddSolution();
       void slotBuildSolution();
@@ -141,14 +141,14 @@ namespace VStudio {
       void slotAddFilter();
       void slotBuildFilter();
       void slotCleanFilter();
-  
+
       void slotCreateConfig();
       void slotSelectCfgName(QListViewItem *item);
       void slotSelectCfgPlatform(QListViewItem *item);
-  
+
     public:
       KAction *actCreateConfig;
-  
+
     private:
       KAction *actAddSolution;
       KAction *actBuildSolution;
@@ -164,17 +164,17 @@ namespace VStudio {
       KAction *actAddFilter;
       KAction *actBuildFilter;
       KAction *actCleanFilter;
-  
+
       KListViewAction *actConfigName;
       KListViewAction *actConfigPlatform;
-  
+
       QGuardedPtr<VSExplorer> m_explorer_widget;
       QGuardedPtr<VSViewVars> mVViewWidget; // Variables view
-  
+
       QString m_projectName;
       QString m_projectPath;
       QMap<QString, QDateTime> m_timestamp;
-  
+
       vss_p selected_sln;
       vsp_p selected_prj;
       vsfl_p selected_file;
@@ -190,7 +190,7 @@ namespace VStudio {
 #endif
       // QString m_prjpath;
       // QString m_prjname;
-  
+
     signals:
       void uisync();
   };
